@@ -7,13 +7,18 @@ import schedule
 import time 
 from datetime import  timedelta, datetime
 
+i=0
+# scripname="NIFTY"
+# Expiry_DATE="11-May-2023"
+# Option_chain=Intraday_live_data.getoptionchain(scripname,Expiry_DATE)
+# Option_chain.to_excel('data.xlsx', index=False)
 
-scripname="NIFTY"
-Expiry_DATE="04-May-2023"
-Option_chain=Intraday_live_data.getoptionchain(scripname,Expiry_DATE)
-Option_chain.to_excel('data.xlsx', index=False)
+def loading_data(book,ws,script,expiry_date):
 
-def loading_data():
+    #######################stocks and the index computation###############################################
+
+    # stocks_and_index=["NIFTY","BANKNIFTY"]
+
 
     ################## Time Computation ########################
 
@@ -33,15 +38,24 @@ def loading_data():
         hours = 12
     formatted_time = "{:02d}:{:02d}:{:02d} {}".format(hours, minutes, seconds, suffix)
 
+    print(formatted_time)
+
+
     # Print the current time in 12-hour format with AM/PM
 
-    ##########Loading Option chain data#######################
-    book = load_workbook('data.xlsx')
-    ws = book['Sheet1']
+    #########Loading Option chain data#######################
+    # book = load_workbook('data.xlsx')
+    # ws = book['Sheet1']
+
+
+    # new_sheet_name = 'NewSheetName'
+    # ws.title = new_sheet_name
+
+
     new_data = {'Name': ["OI_Data",""], 'Time': [f"{formatted_time}",""], 'Interval': ["15 Mins",""]}
     df = pd.DataFrame(new_data)
-    scripname="NIFTY"
-    Expiry_DATE="04-May-2023"
+    scripname=script
+    Expiry_DATE=expiry_date
     Option_chain=Intraday_live_data.getoptionchain(scripname,Expiry_DATE)
     df_1=Option_chain
     # Write the new data to the sheet
@@ -54,10 +68,40 @@ def loading_data():
     # Save the Excel file
     book.save('data.xlsx')
 
-schedule.every(5).minutes.until(timedelta(hours=6)).do(loading_data)
+
+
+
+
+def calling():
+
+    global i
+
+    index=["NIFTY","BANKNIFTY"]
+    expiry="11-May-2023"
+
+    if i<1:
+
+        i=i+1
+        book = load_workbook('data.xlsx')
+
+        for k in range(1,(len(index)+1)):
+
+            ws = book['Sheet{k}'.format(k=k)]
+            new_sheet_name =index[-k]
+            ws.title = new_sheet_name
+            loading_data(book,ws,index[-k],expiry)
+
+    else:
+
+        for k in range(1,(len(index)+1)):
+
+            book = load_workbook('data.xlsx')
+            ws = book[index[-k]]
+            loading_data(book,ws,index[-k],expiry)
+
+
+schedule.every(5).minutes.until(timedelta(hours=5)).do(calling)
 
 while True:
     schedule.run_pending()
     time.sleep(1)
-
-
