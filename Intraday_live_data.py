@@ -1,6 +1,8 @@
 import requests
 import pandas as pd
 import time
+import matplotlib.pyplot as plt
+import json
 
 sesi=requests.Session()
 headers={}
@@ -61,6 +63,7 @@ def getoptionchain(name,expiry):
   optionchain["PE_ASK_PRICE"]=Option_chain_pe_Expand["askPrice"]
   optionchain["PE_ASK_QTY"]=Option_chain_pe_Expand["askQty"]
   optionchain["PE_OI"]=Option_chain_pe_Expand['openInterest']
+  optionchain["Nifty Current Price"] = Option_chain_pe_Expand['underlyingValue']
 
   return optionchain
 
@@ -77,9 +80,7 @@ def PCR_calculation(Option_chain,present_nifty_value):
   near_option_ATM_3_minus=Option_chain.iloc[index-3]
   near_option_ATM_4_Plus=Option_chain.iloc[index+4]
   near_option_ATM_4_minus=Option_chain.iloc[index-4]
-  near_option_ATM_5_Plus=Option_chain.iloc[index+5]
-  near_option_ATM_5_minus=Option_chain.iloc[index-5]
-  new=pd.concat([near_option_ATM_5_minus,near_option_ATM_4_minus,near_option_ATM_3_minus,near_option_ATM_2_minus,near_option_ATM_1_minus,near_option_ATM,near_option_ATM_1_Plus,near_option_ATM_2_Plus,near_option_ATM_3_Plus,near_option_ATM_4_Plus,near_option_ATM_5_Plus],axis=1)
+  new=pd.concat([near_option_ATM_4_minus,near_option_ATM_3_minus,near_option_ATM_2_minus,near_option_ATM_1_minus,near_option_ATM,near_option_ATM_1_Plus,near_option_ATM_2_Plus,near_option_ATM_3_Plus,near_option_ATM_4_Plus],axis=1)
   final_new=new.T
   x=final_new["PE_OI"]/final_new["CE_OI"]
   y=final_new["CE_OI"]/final_new["PE_OI"]
@@ -88,6 +89,43 @@ def PCR_calculation(Option_chain,present_nifty_value):
   newest=pd.concat([newest,pd.DataFrame(y)],axis=1)
   newest=newest.rename(columns={0:"CPR"})
   return newest
+
+def plotting(newest):
+    S_R_data=newest[["CPR","PCR"]]
+    S_R_data = S_R_data.round(2)
+    S_R_data.set_index(newest["strikePrice"], inplace=True)
+    ax = S_R_data.plot(kind='bar',color=['blue', 'red'], edgecolor='black')
+    for i, bar in enumerate(ax.containers):
+        ax.bar_label(bar, label_type='edge', fontsize=10)
+    ax.legend(['Resistance','Support'])
+    fig = plt.gcf()
+    fig.set_size_inches(8, 8)
+    plt.show()
+
+
+# def nifty_live_data():
+#    sesi=requests.Session()
+#    headers={}
+#    headers['user-agent']='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
+#    a=sesi.get("https://www.nseindia.com/",headers=headers,timeout=20)
+
+#    url='https://www.nseindia.com/api/marketStatus'
+#    a=sesi.get(url,headers=headers)
+#    json_string=a.text
+
+
+#    data = json.loads(json_string)
+
+#   # Retrieve the NIFTY 50 index last price
+#    nifty_last_price = None
+#    for market_state in data['marketState']:
+#       if market_state['index'] == 'NIFTY 50':
+#           nifty_last_price = market_state['last']
+#           break
+      
+
+#    return nifty_last_price
+
 
 if __name__=='__main__':  
     pass

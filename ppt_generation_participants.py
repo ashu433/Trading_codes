@@ -10,7 +10,7 @@ from pptx.enum.text import PP_ALIGN
 prs=Presentation()
 path="D:/ashu/Finance/algo_trading/images/"
 
-Date="12-05-2023"
+Date="17-05-2023"
 
 ############################################ Title_slide slide 1 #################################################
 
@@ -390,7 +390,7 @@ top1 = Inches(2.5)
 height1 = Inches(5)
 picture1 = slide17.shapes.add_picture(image_file12, left1, top1, height=height1)
 
-image_file10 = path+'Net_OI_build_up_of_the_different_participants_in_Options.png'
+image_file12 = path+'Net_OI_build_up_of_the_different_participants_in_Options.png'
 #image_title1 = 'Micro and Macro sentiment'
 
 # Add the first image to the slide

@@ -1,404 +1,89 @@
-import collections 
-import collections.abc
-import pptx
-from pptx import Presentation
+import Daily_Option_chain_data
 import pandas as pd
-from pptx.util import Inches
-from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN
-
-prs=Presentation()
-path="D:/ashu/Finance/algo_trading/images/"
-
-Date="12-05-2023"
-
-############################################ Title_slide slide 1 #################################################
-
-slide1=prs.slides.add_slide(prs.slide_layouts[0])
-title=slide1.shapes.title
-title.text="Daily market Report of different participants"
-
-subtitle = slide1.placeholders[1]
-subtitle.text = Date
-
-############################################ Slide 2 #################################################
-
-slide2 = prs.slides.add_slide(prs.slide_layouts[1])
-title_2=slide2.shapes.title
-title_2.text="Content"
-
-bullet_points=slide2.shapes
-points=bullet_points.placeholders[1]
-points.text = 'FII Daily market Report\nParticipants wise daily market report in Futures\nParticipants wise daily market report in Options\nOver all market report'
-
-############################################ Slide 3 #################################################
-
-df_1=pd.read_csv(path+"FII_stats.csv")
-new_data_frame=df_1.iloc[:11]
-
-slide3 = prs.slides.add_slide(prs.slide_layouts[1])
-title_3=slide3.shapes.title
-title_3.text="Fii Stats Report in Futures and Options"
-bullet_points_3=slide3.shapes
-points_3=bullet_points_3.placeholders[1]
-points_3.text="FII F&O stats in the index"
-# create a table on the slide
-rows = new_data_frame.shape[0] + 1  # add 1 for header row
-cols = new_data_frame.shape[1]
-left = Inches(1)
-top = Inches(3)
-width = Inches(8)
-height = Inches(2)
-table = slide3.shapes.add_table(rows, cols, left, top, width, height).table
-
-# set the header row
-header_row = table.rows[0]
-for i, col_name in enumerate(new_data_frame.columns):
-    header_row.cells[i].text = col_name
-    header_row.cells[i].text_frame.paragraphs[0].font.size = pptx.util.Pt(12)
-
-# set the data rows
-for i in range(new_data_frame.shape[0]):
-    row = table.rows[i+1]  # add 1 for header row
-    for j in range(new_data_frame.shape[1]):
-        cell = row.cells[j]
-        cell.text = str(new_data_frame.iloc[i, j])
-        cell.text_frame.paragraphs[0].font.size = pptx.util.Pt(10)  # set font size for data cells
-
-
-################################### Slide 4 ########################################################
-
-slide4 = prs.slides.add_slide(prs.slide_layouts[5])
-title_4=slide4.shapes.title
-title_4.text="Fii Index share in F&O and Macro and Micro view"
 
-image_file1 = path+'Micro and Macro sentiment of the FII.png'
-#image_title1 = 'Micro and Macro sentiment'
 
-# Add the first image to the slide
-left1 = Inches(0)
-top1 = Inches(2.5)
-height1 = Inches(3.8)
-picture1 = slide4.shapes.add_picture(image_file1, left1, top1, height=height1)
+path="D:/ashu/Finance/algo_trading/Option_chain_data/"
+file_1="data1.xlsx"
+coloumns_number=77
+length_of_time=25
+time_array=[11,9,23]
 
-image_file1 = path+'FII Index share in each instrument.png'
-#image_title1 = 'Micro and Macro sentiment'
+finial_file=Daily_Option_chain_data.Daily_option_chain_report_generation(path+file_1,coloumns_number,length_of_time)
 
-# Add the first image to the slide
-left1 = Inches(5)
-top1 = Inches(2.5)
-height1 = Inches(3.75)
-picture1 = slide4.shapes.add_picture(image_file1, left1, top1, height=height1)
+#finial_file.to_excel(path+'finial_file.xlsx', index=False)
 
+for i in range(len(time_array)):
+    file=f"data{i+2}.xlsx"
+    time_length=time_array[i]
+    file_gen=Daily_Option_chain_data.Daily_option_chain_report_generation(path+file,coloumns_number,time_length)
+    print(i)
+    finial_file = pd.concat([finial_file, file_gen], axis=0)
 
-################################### Slide 5 ########################################################
-
-new_data_frame_fut=pd.read_csv(path+"Participant_Futures.csv")
-
-new_data_frame_fut["percentage_long"]=new_data_frame_fut["percentage_long"].round(2)
-new_data_frame_fut["percentage_short"]=new_data_frame_fut["percentage_short"].round(2)
-new_data_frame_fut["Long_vs_Short"]=new_data_frame_fut["Long_vs_Short"].round(2)
+finial_file.to_excel(path+'full_and_finial_file.xlsx', index=False)
 
-slide5 = prs.slides.add_slide(prs.slide_layouts[1])
-title_5=slide5.shapes.title
-title_5.text="Participants report in Futures"
-bullet_points_5=slide5.shapes
-points_5=bullet_points_5.placeholders[1]
-points_5.text="Participant wise Open Interest in Equity Derivatives as on "+Date
-# create a table on the slide
-rows = new_data_frame_fut.shape[0] + 1  # add 1 for header row
-cols = new_data_frame_fut.shape[1]
-left = Inches(0.5)
-top = Inches(3)
-width = Inches(9)
-height = Inches(2)
-table = slide5.shapes.add_table(rows, cols, left, top, width, height).table
-
-# set the header row
-header_row = table.rows[0]
-for i, col_name in enumerate(new_data_frame_fut.columns):
-    header_row.cells[i].text = col_name
-    header_row.cells[i].text_frame.paragraphs[0].font.size = pptx.util.Pt(12)
-
-# set the data rows
-for i in range(new_data_frame_fut.shape[0]):
-    row = table.rows[i+1]  # add 1 for header row
-    for j in range(new_data_frame_fut.shape[1]):
-        cell = row.cells[j]
-        cell.text = str(new_data_frame_fut.iloc[i, j])
-        cell.text_frame.paragraphs[0].font.size = pptx.util.Pt(10)  # set font size for data cells
-
-
-################################### Slide 6 ########################################################
-
-slide6 = prs.slides.add_slide(prs.slide_layouts[5])
-title_6=slide6.shapes.title
-title_6.text="% OI of the different participants in Futures"
-
-image_file2 = path+'Total_Open_Interest_of_the_different_participants_Futures.png'
-#image_title1 = 'Micro and Macro sentiment'
-
-# Add the first image to the slide
-left1 = Inches(1.2)
-top1 = Inches(2)
-height1 = Inches(5.2)
-picture1 = slide6.shapes.add_picture(image_file2, left1, top1, height=height1)
-
-
-################################### Slide 7 ########################################################
-
-slide7 = prs.slides.add_slide(prs.slide_layouts[5])
-title_7=slide7.shapes.title
-title_7.text="Total Long pogitions of different clients in Futures"
-
-image_file3 = path+'Total_Long_Pogition_in_Futures.png'
-#image_title1 = 'Micro and Macro sentiment'
-
-# Add the first image to the slide
-left1 = Inches(0)
-top1 = Inches(2.5)
-height1 = Inches(3.8)
-picture1 = slide7.shapes.add_picture(image_file3, left1, top1, height=height1)
-
-image_file3 = path+'Total_Long_Pogition_of_big_clients_Futures.png'
-#image_title1 = 'Micro and Macro sentiment'
-
-# Add the first image to the slide
-left1 = Inches(5)
-top1 = Inches(2.5)
-height1 = Inches(3.75)
-picture1 = slide7.shapes.add_picture(image_file3, left1, top1, height=height1)
-
-
-
-################################### Slide 8 ########################################################
-
-slide8 = prs.slides.add_slide(prs.slide_layouts[5])
-title_8=slide8.shapes.title
-title_8.text="Total Shot pogitions of different clients in Futures"
-
-image_file4 = path+'Total_Short_Pogition_in_Futures.png'
-#image_title1 = 'Micro and Macro sentiment'
-
-# Add the first image to the slide
-left1 = Inches(0)
-top1 = Inches(2.5)
-height1 = Inches(3.8)
-picture1 = slide8.shapes.add_picture(image_file4, left1, top1, height=height1)
-
-image_file4 = path+'Total_Shot_Pogition_of_big_clients_Futures.png'
-#image_title1 = 'Micro and Macro sentiment'
-
-# Add the first image to the slide
-left1 = Inches(5)
-top1 = Inches(2.5)
-height1 = Inches(3.75)
-picture1 = slide8.shapes.add_picture(image_file4, left1, top1, height=height1)
-
-################################### Slide 9 ########################################################
-
-new_data_frame_opt=pd.read_csv(path+"Participant_Option.csv")
-
-new_data_frame_opt["percentage_long_option"]=new_data_frame_opt["percentage_long_option"].round(2)
-new_data_frame_opt["percentage_short_option"]=new_data_frame_opt["percentage_short_option"].round(2)
-new_data_frame_opt["Long_vs_Short"]=new_data_frame_opt["Long_vs_Short"].round(2)
-
-slide9 = prs.slides.add_slide(prs.slide_layouts[1])
-title_9=slide9.shapes.title
-title_9.text="Participants report in Options"
-bullet_points_9=slide9.shapes
-points_9=bullet_points_9.placeholders[1]
-points_9.text="Participant wise Open Interest in Equity Derivatives as on "+Date
-# create a table on the slide
-rows = new_data_frame_opt.shape[0] + 1  # add 1 for header row
-cols = new_data_frame_opt.shape[1]
-left = Inches(0)
-top = Inches(3)
-width = Inches(10)
-height = Inches(2)
-table = slide9.shapes.add_table(rows, cols, left, top, width, height).table
-
-# set the header row
-header_row = table.rows[0]
-for i, col_name in enumerate(new_data_frame_opt.columns):
-    header_row.cells[i].text = col_name
-    header_row.cells[i].text_frame.paragraphs[0].font.size = pptx.util.Pt(12)
-
-# set the data rows
-for i in range(new_data_frame_opt.shape[0]):
-    row = table.rows[i+1]  # add 1 for header row
-    for j in range(new_data_frame_opt.shape[1]):
-        cell = row.cells[j]
-        cell.text = str(new_data_frame_opt.iloc[i, j])
-        cell.text_frame.paragraphs[0].font.size = pptx.util.Pt(10)  # set font size for data cells
-
-################################### Slide 10 ########################################################
-
-slide10 = prs.slides.add_slide(prs.slide_layouts[5])
-title_10=slide10.shapes.title
-title_10.text="% OI of the different participants in Options"
-
-image_file5 = path+'Total_Open_Interest_of_the_different_participants_Options.png'
-#image_title1 = 'Micro and Macro sentiment'
-
-# Add the first image to the slide
-left1 = Inches(1.2)
-top1 = Inches(2)
-height1 = Inches(5.2)
-picture1 = slide10.shapes.add_picture(image_file5, left1, top1, height=height1)
-
-
-################################### Slide 11 ########################################################
-
-slide11 = prs.slides.add_slide(prs.slide_layouts[5])
-title_11=slide11.shapes.title
-title_11.text="Total Long pogitions of different clients in Options"
-
-image_file6 = path+'Total_Long_pogition_of_different_participants_Options.png'
-#image_title1 = 'Micro and Macro sentiment'
-
-# Add the first image to the slide
-left1 = Inches(0)
-top1 = Inches(2.5)
-height1 = Inches(3.8)
-picture1 = slide11.shapes.add_picture(image_file6, left1, top1, height=height1)
-
-image_file6 = path+'Total_Long_Pogition_of_big_clients_Options.png'
-#image_title1 = 'Micro and Macro sentiment'
-
-# Add the first image to the slide
-left1 = Inches(5)
-top1 = Inches(2.5)
-height1 = Inches(3.75)
-picture1 = slide11.shapes.add_picture(image_file6, left1, top1, height=height1)
-
-################################### Slide 12 ########################################################
-
-slide12 = prs.slides.add_slide(prs.slide_layouts[5])
-title_12=slide12.shapes.title
-title_12.text="Total Shot pogitions of different clients in Options"
-
-image_file7 = path+'Total_Short_Pogition_in_Options.png'
-#image_title1 = 'Micro and Macro sentiment'
-
-# Add the first image to the slide
-left1 = Inches(0)
-top1 = Inches(2.5)
-height1 = Inches(3.8)
-picture1 = slide12.shapes.add_picture(image_file7, left1, top1, height=height1)
-
-image_file7 = path+'Total_Shot_Pogition_of_big_clients_Options.png'
-#image_title1 = 'Micro and Macro sentiment'
-
-# Add the first image to the slide
-left1 = Inches(5)
-top1 = Inches(2.5)
-height1 = Inches(3.75)
-picture1 = slide12.shapes.add_picture(image_file7, left1, top1, height=height1)
-
-################################### Slide 13 ########################################################
-
-slide13 = prs.slides.add_slide(prs.slide_layouts[5])
-title_13=slide13.shapes.title
-title_13.text="Over all % Long and the Short pogition of the different client in F&O"
 
-image_file8 = path+'%_long_and_short_of_the_each_Participants_OI_in_Futures.png'
-#image_title1 = 'Micro and Macro sentiment'
+# open_price=18338.1
+# close_price=18202.4
+# Open_strike_price = round(open_price / 50) * 50
+# Close_strike_price=round(close_price / 50) * 50
+# x_min=min(Open_strike_price,Close_strike_price)
+# y_max=max(Open_strike_price,Close_strike_price)
+# x_min=x_min-50
+# y_max=y_max
 
-# Add the first image to the slide
-left1 = Inches(0)
-top1 = Inches(2.5)
-height1 = Inches(5)
-picture1 = slide13.shapes.add_picture(image_file8, left1, top1, height=height1)
+# file_1=pd.read_excel(path+"full_and_finial_file.xlsx")
+# filtered_df = file_1[(file_1['strikePrice'] >= x_min) & (file_1['strikePrice'] <= y_max)]
 
-image_file8 = path+'%_long_and_short_of_the_each_Participants_OI_in_Options.png'
-#image_title1 = 'Micro and Macro sentiment'
 
-# Add the first image to the slide
-left1 = Inches(5)
-top1 = Inches(2.5)
-height1 = Inches(5)
-picture1 = slide13.shapes.add_picture(image_file8, left1, top1, height=height1)
 
-################################### Slide 14 ########################################################
+# import matplotlib.pyplot as plt
 
-slide14 = prs.slides.add_slide(prs.slide_layouts[5])
-title_14=slide14.shapes.title
-title_14.text="Historical OI change in the futures for Nifty 50"
+# grouped_data = filtered_df.groupby('strikePrice')
 
-image_file9 = path+'Over_all_Change_in_Futures_OI_and_Nifty_50_Closing_Price.png'
-#image_title1 = 'Micro and Macro sentiment'
+# # Create the subplots
+# fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 10))
 
-# Add the first image to the slide
-left1 = Inches(2)
-top1 = Inches(2)
-height1 = Inches(5.1)
-picture1 = slide14.shapes.add_picture(image_file9, left1, top1, height=height1)
+# # Plot on the first subplot
+# for strike_price, group in grouped_data:
+#     ax1.plot(group['Time'], group['CE_CHNG_IN_OI'], label=f'Strike Price: {strike_price}')
+# ax1.set(xlabel='Time', ylabel='COI')
+# ax1.set_title('Change in OI on call side VS Time')
+# ax1.grid(True)
+# ax1.autoscale(enable=True, axis='both', tight=True)
+# ax1.autoscale(enable=True, axis='x', tight=True)
+# ax1.set_xlim(group['Time'].iloc[0], group['Time'].iloc[-1])
+# ax1.legend()
 
+# # Plot on the second subplot
+# for strike_price, group in grouped_data:
+#     ax2.plot(group['Time'], group['CE_CHNG'], label=f'Strike Price: {strike_price}')
+# ax2.set(xlabel='Time', ylabel='COP')
+# ax2.set_title('Change in Premium on call side VS Time')
+# ax2.grid(True)
+# ax2.autoscale(enable=True, axis='both', tight=True)
+# ax2.autoscale(enable=True, axis='x', tight=True)
+# ax2.set_xlim(group['Time'].iloc[0], group['Time'].iloc[-1])
+# ax2.legend()
 
-################################### Slide 15 ########################################################
+# # Set up the zooming functionality
+# def on_scroll(event):
+#     for ax in [ax1, ax2]:
+#         x_min, x_max = ax.get_xlim()
+#         x_range = x_max - x_min
+#         if event.button == 'up':
+#             ax.set(xlim=(x_min + x_range * 0.1, x_max - x_range * 0.1))
+#         elif event.button == 'down':
+#             ax.set(xlim=(x_min - x_range * 0.1, x_max + x_range * 0.1))
+#     plt.draw()
 
-slide15 = prs.slides.add_slide(prs.slide_layouts[5])
-title_15=slide15.shapes.title
-title_15.text="Change in OI for the different participants and Net OI Build up in Futures"
+# fig.canvas.mpl_connect('scroll_event', on_scroll)
 
-image_file10 = path+'Change_in_Futures_OI_and_Nifty_50_Closing_Price.png'
-#image_title1 = 'Micro and Macro sentiment'
 
-# Add the first image to the slide
-left1 = Inches(0)
-top1 = Inches(2.5)
-height1 = Inches(5)
-picture1 = slide15.shapes.add_picture(image_file10, left1, top1, height=height1)
+# ax1.set_xticklabels([])
 
-image_file10 = path+'Net_OI_build_up_of_the_different_participants_in_Futures.png'
-#image_title1 = 'Micro and Macro sentiment'
 
-# Add the first image to the slide
-left1 = Inches(5)
-top1 = Inches(2.5)
-height1 = Inches(5)
-picture1 = slide15.shapes.add_picture(image_file10, left1, top1, height=height1)
+# plt.xticks(rotation=90)
 
-################################### Slide 16 ########################################################
-
-slide16 = prs.slides.add_slide(prs.slide_layouts[5])
-title_16=slide16.shapes.title
-title_16.text="Historical OI change in the Options for Nifty 50"
-
-image_file11 = path+'Over_all_Change_in_Options_OI_and_Nifty_50_Closing_Price.png'
-#image_title1 = 'Micro and Macro sentiment'
-
-# Add the first image to the slide
-left1 = Inches(2)
-top1 = Inches(2)
-height1 = Inches(5.1)
-picture1 = slide16.shapes.add_picture(image_file11, left1, top1, height=height1)
-
-################################### Slide 17 ########################################################
-
-slide17 = prs.slides.add_slide(prs.slide_layouts[5])
-title_17=slide17.shapes.title
-title_17.text="Change in OI for the different participants and Net OI Build up in Options"
-
-image_file12 = path+'Change_in_Options_OI_and_Nifty_50_Closing_Price.png'
-#image_title1 = 'Micro and Macro sentiment'
-
-# Add the first image to the slide
-left1 = Inches(0)
-top1 = Inches(2.5)
-height1 = Inches(5)
-picture1 = slide17.shapes.add_picture(image_file12, left1, top1, height=height1)
-
-image_file10 = path+'Net_OI_build_up_of_the_different_participants_in_Options.png'
-#image_title1 = 'Micro and Macro sentiment'
-
-# Add the first image to the slide
-left1 = Inches(5)
-top1 = Inches(2.5)
-height1 = Inches(5)
-picture1 = slide17.shapes.add_picture(image_file12, left1, top1, height=height1)
-
-
-
-prs.save(path+"Daily_market_Report_"+Date+".pptx")
+# # Show the plots
+# plt.tight_layout()
+# plt.show()
