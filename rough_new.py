@@ -1,89 +1,134 @@
-import Daily_Option_chain_data
+import Intraday_live_data
 import pandas as pd
+import time
+from datetime import  timedelta, datetime
+import schedule
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from tkinter import Tk, Button, Frame
+import threading
 
 
 path="D:/ashu/Finance/algo_trading/Option_chain_data/"
-file_1="data1.xlsx"
-coloumns_number=77
-length_of_time=25
-time_array=[11,9,23]
 
-finial_file=Daily_Option_chain_data.Daily_option_chain_report_generation(path+file_1,coloumns_number,length_of_time)
+def plot_live_data(csv_file_path):
+    # Create a figure and axes for the plots
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+    fig.subplots_adjust(hspace=0.5)
 
-#finial_file.to_excel(path+'finial_file.xlsx', index=False)
+    # Set the titles and labels for each subplot
 
-for i in range(len(time_array)):
-    file=f"data{i+2}.xlsx"
-    time_length=time_array[i]
-    file_gen=Daily_Option_chain_data.Daily_option_chain_report_generation(path+file,coloumns_number,time_length)
-    print(i)
-    finial_file = pd.concat([finial_file, file_gen], axis=0)
+    titles = ['COI on call side VS Time', 'Premium on Call side VS Time',
+              'COI by Volume Call VS Time', 'COI on put side VS Time',
+              'Premium on Put side VS Time', 'COI by Volume Put VS Time']
+    xlabels = ['Time', 'Time', 'Time', 'Time', 'Time', 'Time']
+    ylabels = ['COI on Call side', 'Call side premium', 'COI by Volume Call', 'COI on Put side',
+               'Put side premium', 'COI by Volume Put']
 
-finial_file.to_excel(path+'full_and_finial_file.xlsx', index=False)
+    # titles = ['COI on call side VS Time', 'COI on put side VS Time',
+    #           'Premium on Call side VS Time', 'Premium on Put side VS Time',
+    #           'COI by Volume Call VS Time', 'COI by Volume Put VS Time']
+    # xlabels = ['Time', 'Time', 'Time', 'Time', 'Time', 'Time']
+    # ylabels = ['COI on Call side', 'COI on Put side', 'Call side premium', 'Put side premium',
+    #            'COI by Volume Call', 'COI by Volume Put']
+
+    # Create a Tkinter window
+    root = Tk()
+
+    # Create a frame to hold the buttons
+    button_frame = Frame(root)
+    button_frame.pack()
+
+    # Create a canvas for the plots and embed it in the window
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack()
+
+    # Variables to keep track of the legend visibility for each subplot
+    legend_visible = [False] * len(titles)
+
+    # Function to toggle the visibility of legends
+    def toggle_legend(i):
+        nonlocal legend_visible
+        legend_visible[i] = not legend_visible[i]
+        axes.flat[i].legend().set_visible(legend_visible[i])
+        canvas.draw()
+
+    # Create buttons for each subplot
+    buttons = []
+    for i, title in enumerate(titles):
+        button = Button(button_frame, text=f'Toggle Legend - Plot {i+1}',
+                        command=lambda i=i: toggle_legend(i))
+        button.pack(side='left')
+        buttons.append(button)
+
+    # Function to update the plots with new data
+    def update_plots():
+        # Read the CSV file into a dataframe
+        data = pd.read_csv(csv_file_path)
+
+        # Group the data by 'strikePrice'
+        grouped_data = data.groupby('strikePrice')
+
+        # Clear the previous plots
+        for ax in axes.flat:
+            ax.clear()
+
+        # Plot the data in each subplot
+        for i, (title, xlabel, ylabel) in enumerate(zip(titles, xlabels, ylabels)):
+            ax = axes.flat[i]
+            for strike_price, group in grouped_data:
+                if i == 0:
+                    ax.plot(group['Time'], group['CE_CHNG_IN_OI'], label=f'Strike Price: {strike_price}')
+                elif i == 1:
+                    ax.plot(group['Time'], group['CE_LTP'], label=f'Strike Price: {strike_price}')
+                elif i == 2:
+                    ax.plot(group['Time'], group['COI_by_Volume_Call'], label=f'Strike Price: {strike_price}')
+                elif i == 3:
+                    ax.plot(group['Time'], group['PE_CHNG_IN_OI'], label=f'Strike Price: {strike_price}')
+                elif i == 4:
+                    ax.plot(group['Time'], group['PE_LTP'], label=f'Strike Price: {strike_price}')
+                elif i == 5:
+                    ax.plot(group['Time'], group['COI_by_Volume_Put'], label=f'Strike Price: {strike_price}')
 
 
-# open_price=18338.1
-# close_price=18202.4
-# Open_strike_price = round(open_price / 50) * 50
-# Close_strike_price=round(close_price / 50) * 50
-# x_min=min(Open_strike_price,Close_strike_price)
-# y_max=max(Open_strike_price,Close_strike_price)
-# x_min=x_min-50
-# y_max=y_max
+                # if i == 0:
+                #     ax.plot(group['Time'], group['CE_CHNG_IN_OI'], label=f'Strike Price: {strike_price}')
+                # elif i == 1:
+                #     ax.plot(group['Time'], group['PE_CHNG_IN_OI'], label=f'Strike Price: {strike_price}')
+                # elif i == 2:
+                #     ax.plot(group['Time'], group['CE_LTP'], label=f'Strike Price: {strike_price}')
+                # elif i == 3:
+                #     ax.plot(group['Time'], group['PE_LTP'], label=f'Strike Price: {strike_price}')
+                # elif i == 4:
+                #     ax.plot(group['Time'], group['COI_by_Volume_Call'], label=f'Strike Price: {strike_price}')
+                # elif i == 5:
+                #     ax.plot(group['Time'], group['COI_by_Volume_Put'], label=f'Strike Price: {strike_price}')
 
-# file_1=pd.read_excel(path+"full_and_finial_file.xlsx")
-# filtered_df = file_1[(file_1['strikePrice'] >= x_min) & (file_1['strikePrice'] <= y_max)]
+            # Check if current subplot is in the top row
+            if i < 3:
+                ax.set_xticklabels([])
 
+            ax.set_ylabel(ylabel)
+            ax.set_title(title)
+            ax.legend().set_visible(legend_visible[i])
+            ax.tick_params(axis='x', rotation=90)
 
+        # Refresh the canvas
+        canvas.draw()
 
-# import matplotlib.pyplot as plt
+        # Schedule the next update
+        root.after(300000, update_plots)
 
-# grouped_data = filtered_df.groupby('strikePrice')
+    # Schedule the first update
+    root.after(0, update_plots)
 
-# # Create the subplots
-# fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 10))
-
-# # Plot on the first subplot
-# for strike_price, group in grouped_data:
-#     ax1.plot(group['Time'], group['CE_CHNG_IN_OI'], label=f'Strike Price: {strike_price}')
-# ax1.set(xlabel='Time', ylabel='COI')
-# ax1.set_title('Change in OI on call side VS Time')
-# ax1.grid(True)
-# ax1.autoscale(enable=True, axis='both', tight=True)
-# ax1.autoscale(enable=True, axis='x', tight=True)
-# ax1.set_xlim(group['Time'].iloc[0], group['Time'].iloc[-1])
-# ax1.legend()
-
-# # Plot on the second subplot
-# for strike_price, group in grouped_data:
-#     ax2.plot(group['Time'], group['CE_CHNG'], label=f'Strike Price: {strike_price}')
-# ax2.set(xlabel='Time', ylabel='COP')
-# ax2.set_title('Change in Premium on call side VS Time')
-# ax2.grid(True)
-# ax2.autoscale(enable=True, axis='both', tight=True)
-# ax2.autoscale(enable=True, axis='x', tight=True)
-# ax2.set_xlim(group['Time'].iloc[0], group['Time'].iloc[-1])
-# ax2.legend()
-
-# # Set up the zooming functionality
-# def on_scroll(event):
-#     for ax in [ax1, ax2]:
-#         x_min, x_max = ax.get_xlim()
-#         x_range = x_max - x_min
-#         if event.button == 'up':
-#             ax.set(xlim=(x_min + x_range * 0.1, x_max - x_range * 0.1))
-#         elif event.button == 'down':
-#             ax.set(xlim=(x_min - x_range * 0.1, x_max + x_range * 0.1))
-#     plt.draw()
-
-# fig.canvas.mpl_connect('scroll_event', on_scroll)
+    # Run the Tkinter event loop
+    root.mainloop()
 
 
-# ax1.set_xticklabels([])
+# Set the path to your CSV file
+csv_file_path = path+'Option_chain_data_saving.csv'
 
-
-# plt.xticks(rotation=90)
-
-# # Show the plots
-# plt.tight_layout()
-# plt.show()
+# Call the function to plot the live data
+plot_live_data(csv_file_path)

@@ -103,29 +103,5 @@ def plotting(newest):
     plt.show()
 
 
-# def nifty_live_data():
-#    sesi=requests.Session()
-#    headers={}
-#    headers['user-agent']='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
-#    a=sesi.get("https://www.nseindia.com/",headers=headers,timeout=20)
-
-#    url='https://www.nseindia.com/api/marketStatus'
-#    a=sesi.get(url,headers=headers)
-#    json_string=a.text
-
-
-#    data = json.loads(json_string)
-
-#   # Retrieve the NIFTY 50 index last price
-#    nifty_last_price = None
-#    for market_state in data['marketState']:
-#       if market_state['index'] == 'NIFTY 50':
-#           nifty_last_price = market_state['last']
-#           break
-      
-
-#    return nifty_last_price
-
-
 if __name__=='__main__':  
     pass

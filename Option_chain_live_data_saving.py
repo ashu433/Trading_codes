@@ -75,7 +75,7 @@ def calling():
     global path
     print(6)
     index=["NIFTY"]
-    expiry="01-Jun-2023"
+    expiry="22-Jun-2023"
 
     if i<1:
 
