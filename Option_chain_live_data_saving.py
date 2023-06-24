@@ -75,7 +75,7 @@ def calling():
     global path
     print(6)
     index=["NIFTY"]
-    expiry="22-Jun-2023"
+    expiry="29-Jun-2023"
 
     if i<1:
 
@@ -149,3 +149,4 @@ except Exception as e:
     print(2)
     print("Check the Expiry Date")
     print(f"Error occurred: {e}")
+    

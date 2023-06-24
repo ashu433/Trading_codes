@@ -4,131 +4,114 @@ import time
 from datetime import  timedelta, datetime
 import schedule
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from tkinter import Tk, Button, Frame
+from tkinter import Tk
 import threading
+from matplotlib.animation import FuncAnimation
+from itertools import count
+import requests
 
 
 path="D:/ashu/Finance/algo_trading/Option_chain_data/"
+MAX_ATTEMPTS=50
+DELAY_BETWEEN_ATTEMPTS = 5
 
-def plot_live_data(csv_file_path):
-    # Create a figure and axes for the plots
-    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
-    fig.subplots_adjust(hspace=0.5)
+def live_OI_data_computing():
 
-    # Set the titles and labels for each subplot
+    global path
 
-    titles = ['COI on call side VS Time', 'Premium on Call side VS Time',
-              'COI by Volume Call VS Time', 'COI on put side VS Time',
-              'Premium on Put side VS Time', 'COI by Volume Put VS Time']
-    xlabels = ['Time', 'Time', 'Time', 'Time', 'Time', 'Time']
-    ylabels = ['COI on Call side', 'Call side premium', 'COI by Volume Call', 'COI on Put side',
-               'Put side premium', 'COI by Volume Put']
+    current_time = time.strftime("%H:%M:%S")
 
-    # titles = ['COI on call side VS Time', 'COI on put side VS Time',
-    #           'Premium on Call side VS Time', 'Premium on Put side VS Time',
-    #           'COI by Volume Call VS Time', 'COI by Volume Put VS Time']
-    # xlabels = ['Time', 'Time', 'Time', 'Time', 'Time', 'Time']
-    # ylabels = ['COI on Call side', 'COI on Put side', 'Call side premium', 'Put side premium',
-    #            'COI by Volume Call', 'COI by Volume Put']
+    # Convert the 24-hour format to 12-hour format with AM/PM
+    time_parts = current_time.split(":")
+    hours = int(time_parts[0])
+    minutes = int(time_parts[1])
+    seconds = int(time_parts[2])
+    if hours >= 12:
+        suffix = "PM"
+        hours -= 12
+    else:
+        suffix = "AM"
+    if hours == 0:
+        hours = 12
+    formatted_time = "{:02d}:{:02d}:{:02d} {}".format(hours, minutes, seconds, suffix)
 
-    # Create a Tkinter window
-    root = Tk()
+    print(formatted_time)
 
-    # Create a frame to hold the buttons
-    button_frame = Frame(root)
-    button_frame.pack()
+    name="NIFTY"
+    expiry="29-Jun-2023"
 
-    # Create a canvas for the plots and embed it in the window
-    canvas = FigureCanvasTkAgg(fig, master=root)
-    canvas.draw()
-    canvas.get_tk_widget().pack()
+    final_new=Intraday_live_data.getoptionchain(name,expiry)
+    final_new.reset_index(drop=True, inplace=True)
+    # Nifty_current_price=final_new["Nifty Current Price"].iloc[1]
 
-    # Variables to keep track of the legend visibility for each subplot
-    legend_visible = [False] * len(titles)
-
-    # Function to toggle the visibility of legends
-    def toggle_legend(i):
-        nonlocal legend_visible
-        legend_visible[i] = not legend_visible[i]
-        axes.flat[i].legend().set_visible(legend_visible[i])
-        canvas.draw()
-
-    # Create buttons for each subplot
-    buttons = []
-    for i, title in enumerate(titles):
-        button = Button(button_frame, text=f'Toggle Legend - Plot {i+1}',
-                        command=lambda i=i: toggle_legend(i))
-        button.pack(side='left')
-        buttons.append(button)
-
-    # Function to update the plots with new data
-    def update_plots():
-        # Read the CSV file into a dataframe
-        data = pd.read_csv(csv_file_path)
-
-        # Group the data by 'strikePrice'
-        grouped_data = data.groupby('strikePrice')
-
-        # Clear the previous plots
-        for ax in axes.flat:
-            ax.clear()
-
-        # Plot the data in each subplot
-        for i, (title, xlabel, ylabel) in enumerate(zip(titles, xlabels, ylabels)):
-            ax = axes.flat[i]
-            for strike_price, group in grouped_data:
-                if i == 0:
-                    ax.plot(group['Time'], group['CE_CHNG_IN_OI'], label=f'Strike Price: {strike_price}')
-                elif i == 1:
-                    ax.plot(group['Time'], group['CE_LTP'], label=f'Strike Price: {strike_price}')
-                elif i == 2:
-                    ax.plot(group['Time'], group['COI_by_Volume_Call'], label=f'Strike Price: {strike_price}')
-                elif i == 3:
-                    ax.plot(group['Time'], group['PE_CHNG_IN_OI'], label=f'Strike Price: {strike_price}')
-                elif i == 4:
-                    ax.plot(group['Time'], group['PE_LTP'], label=f'Strike Price: {strike_price}')
-                elif i == 5:
-                    ax.plot(group['Time'], group['COI_by_Volume_Put'], label=f'Strike Price: {strike_price}')
+    # index = (Option_chain['strikePrice'] - Nifty_current_price).abs().idxmin()
+    # near_option_ATM=Option_chain.iloc[index]
+    # near_option_ATM_1_Plus=Option_chain.iloc[index+1]
+    # near_option_ATM_1_minus=Option_chain.iloc[index-1]
+    # near_option_ATM_2_Plus=Option_chain.iloc[index+2]
+    # near_option_ATM_2_minus=Option_chain.iloc[index-2]
+    # near_option_ATM_3_Plus=Option_chain.iloc[index+3]
+    # near_option_ATM_3_minus=Option_chain.iloc[index-3]
+    # new=pd.concat([near_option_ATM_3_minus,near_option_ATM_2_minus,near_option_ATM_1_minus,near_option_ATM,near_option_ATM_1_Plus,near_option_ATM_2_Plus,near_option_ATM_3_Plus],axis=1)
+    # final_new=new.T
+    COI_by_Volume_Call = 50 * final_new["CE_CHNG_IN_OI"] / final_new["CE_Volume"]
+    final_new = pd.concat([final_new, pd.DataFrame(COI_by_Volume_Call)], axis=1)
+    final_new = final_new.rename(columns={0: "COI_by_Volume_Call"})
+    COI_by_Volume_Put = 50 * (final_new["PE_CHNG_IN_OI"] / final_new["PE_Volume"])
+    final_new = pd.concat([final_new, pd.DataFrame(COI_by_Volume_Put)], axis=1)
+    final_new = final_new.rename(columns={0: "COI_by_Volume_Put"})
+    final_new.insert(0, "Time", formatted_time)
+    final_new.iloc[:, 0] = formatted_time
+    return final_new
 
 
-                # if i == 0:
-                #     ax.plot(group['Time'], group['CE_CHNG_IN_OI'], label=f'Strike Price: {strike_price}')
-                # elif i == 1:
-                #     ax.plot(group['Time'], group['PE_CHNG_IN_OI'], label=f'Strike Price: {strike_price}')
-                # elif i == 2:
-                #     ax.plot(group['Time'], group['CE_LTP'], label=f'Strike Price: {strike_price}')
-                # elif i == 3:
-                #     ax.plot(group['Time'], group['PE_LTP'], label=f'Strike Price: {strike_price}')
-                # elif i == 4:
-                #     ax.plot(group['Time'], group['COI_by_Volume_Call'], label=f'Strike Price: {strike_price}')
-                # elif i == 5:
-                #     ax.plot(group['Time'], group['COI_by_Volume_Put'], label=f'Strike Price: {strike_price}')
-
-            # Check if current subplot is in the top row
-            if i < 3:
-                ax.set_xticklabels([])
-
-            ax.set_ylabel(ylabel)
-            ax.set_title(title)
-            ax.legend().set_visible(legend_visible[i])
-            ax.tick_params(axis='x', rotation=90)
-
-        # Refresh the canvas
-        canvas.draw()
-
-        # Schedule the next update
-        root.after(300000, update_plots)
-
-    # Schedule the first update
-    root.after(0, update_plots)
-
-    # Run the Tkinter event loop
-    root.mainloop()
+def file_appending():
+    global path
+    present_data=live_OI_data_computing()
+    old_data=pd.read_csv(path+'Option_chain_data_saving.csv')
+    finial_file = pd.concat([old_data, present_data], axis=0)
+    finial_file.to_csv(path+'Option_chain_data_saving.csv', index=False)
 
 
-# Set the path to your CSV file
-csv_file_path = path+'Option_chain_data_saving.csv'
 
-# Call the function to plot the live data
-plot_live_data(csv_file_path)
+
+def running():
+    print(5)
+    schedule.every(5).minutes.until(timedelta(hours=6)).do(file_appending)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
+
+
+def make_request_again():
+    global path
+    attempt = 1
+    while attempt <= MAX_ATTEMPTS:
+        try:
+            print(3)
+            running()
+        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+            print(4)
+            print(f"Attempt {attempt} failed: {e}")
+            attempt += 1
+            time.sleep(DELAY_BETWEEN_ATTEMPTS)
+
+
+    
+    # If the maximum number of attempts is reached without a successful response, raise an exception
+    raise Exception("Maximum number of attempts reached without a successful response")
+
+
+ 
+
+
+try:
+    print(1)
+    initial_data=live_OI_data_computing()
+    initial_data.to_csv(path+'Option_chain_data_saving.csv', index=False)
+    make_request_again()    
+except Exception as e:
+    print(f"Error occurred: {e}")
