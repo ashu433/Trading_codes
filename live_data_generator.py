@@ -8,11 +8,17 @@ from tkinter import Tk
 import threading
 from matplotlib.animation import FuncAnimation
 from itertools import count
+import requests
+import Option_chain_live_data_saving
 
 
 path="D:/ashu/Finance/algo_trading/Option_chain_data/"
+MAX_ATTEMPTS=50
+DELAY_BETWEEN_ATTEMPTS = 5
 
 def live_OI_data_computing():
+
+    global path
 
     current_time = time.strftime("%H:%M:%S")
 
@@ -33,22 +39,11 @@ def live_OI_data_computing():
     print(formatted_time)
 
     name="NIFTY"
-    expiry="22-Jun-2023"
+    expiry="13-Jul-2023"
 
-    Option_chain=Intraday_live_data.getoptionchain(name,expiry)
-    Option_chain.reset_index(drop=True, inplace=True)
-    Nifty_current_price=Option_chain["Nifty Current Price"].iloc[1]
-
-    index = (Option_chain['strikePrice'] - Nifty_current_price).abs().idxmin()
-    near_option_ATM=Option_chain.iloc[index]
-    near_option_ATM_1_Plus=Option_chain.iloc[index+1]
-    near_option_ATM_1_minus=Option_chain.iloc[index-1]
-    near_option_ATM_2_Plus=Option_chain.iloc[index+2]
-    near_option_ATM_2_minus=Option_chain.iloc[index-2]
-    near_option_ATM_3_Plus=Option_chain.iloc[index+3]
-    near_option_ATM_3_minus=Option_chain.iloc[index-3]
-    new=pd.concat([near_option_ATM_3_minus,near_option_ATM_2_minus,near_option_ATM_1_minus,near_option_ATM,near_option_ATM_1_Plus,near_option_ATM_2_Plus,near_option_ATM_3_Plus],axis=1)
-    final_new=new.T
+    final_new=Intraday_live_data.getoptionchain(name,expiry)
+    final_new.reset_index(drop=True, inplace=True)
+    final_new=final_new.fillna(0)
     COI_by_Volume_Call = 50 * final_new["CE_CHNG_IN_OI"] / final_new["CE_Volume"]
     final_new = pd.concat([final_new, pd.DataFrame(COI_by_Volume_Call)], axis=1)
     final_new = final_new.rename(columns={0: "COI_by_Volume_Call"})
@@ -56,11 +51,11 @@ def live_OI_data_computing():
     final_new = pd.concat([final_new, pd.DataFrame(COI_by_Volume_Put)], axis=1)
     final_new = final_new.rename(columns={0: "COI_by_Volume_Put"})
     final_new.insert(0, "Time", formatted_time)
-    final_new.iloc[0:7, 0] = formatted_time
+    final_new.iloc[:, 0] = formatted_time
     return final_new
 
+
 def file_appending():
-    # path="D:/ashu/Finance/algo_trading/Option_chain_data/"
     global path
     present_data=live_OI_data_computing()
     old_data=pd.read_csv(path+'Option_chain_data_saving.csv')
@@ -79,10 +74,52 @@ def running():
         time.sleep(1)
 
 
-initial_data=live_OI_data_computing()
-
-initial_data.to_csv(path+'Option_chain_data_saving.csv', index=False)
-
-running()
 
 
+def make_request_again():
+    global path
+    attempt = 1
+    while attempt <= MAX_ATTEMPTS:
+        try:
+            print(3)
+            running()
+        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+            print(4)
+            print(f"Attempt {attempt} failed: {e}")
+            attempt += 1
+            time.sleep(DELAY_BETWEEN_ATTEMPTS)
+
+
+    
+    # If the maximum number of attempts is reached without a successful response, raise an exception
+    raise Exception("Maximum number of attempts reached without a successful response")
+
+
+ 
+############### Please Update the K if there is any Intrupption so that Old OI data is retained for the day #####################################
+def live_csv_creation():
+    try:
+        k=1
+        if k==1:
+            print(1)
+            initial_data=live_OI_data_computing()
+            initial_data.to_csv(path+'Option_chain_data_saving.csv', index=False)
+            make_request_again()    
+        else:
+            make_request_again()
+
+    except Exception as e:
+        print(f"Error occurred: {e}")
+
+
+
+def data_saving():
+    Option_chain_live_data_saving.OI_data_collection()
+
+
+thread_1 = threading.Thread(target=live_csv_creation)
+thread_2 = threading.Thread(target=data_saving)
+
+# Start both threads
+thread_1.start()
+thread_2.start()

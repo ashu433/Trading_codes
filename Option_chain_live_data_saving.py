@@ -54,6 +54,7 @@ def loading_data(book,ws,script=None,expiry_date=None):
         Expiry_DATE=expiry_date
 
         Option_chain=Intraday_live_data.getoptionchain(scripname,Expiry_DATE)
+        Option_chain=Option_chain.fillna(0)
         df_1=Option_chain
                 # Write the new data to the sheet
         for r in dataframe_to_rows(df, index=False, header=True):
@@ -75,7 +76,7 @@ def calling():
     global path
     print(6)
     index=["NIFTY"]
-    expiry="29-Jun-2023"
+    expiry="13-Jul-2023"
 
     if i<1:
 
@@ -140,13 +141,14 @@ def make_request_again():
 
 
 
-try:
-    print(1)
-    make_request_again()
-    
-except Exception as e:
-    # Handle the exception here or log the error message
-    print(2)
-    print("Check the Expiry Date")
-    print(f"Error occurred: {e}")
+def OI_data_collection():
+    try:
+        print(1)
+        make_request_again()
+        
+    except Exception as e:
+        # Handle the exception here or log the error message
+        print(2)
+        print("Check the Expiry Date")
+        print(f"Error occurred: {e}")
     

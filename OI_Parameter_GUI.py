@@ -71,6 +71,9 @@ def plot_live_data(csv_file_path):
     l8=Label(f1, text="ATM-2",font="comicsansms 9 bold")
     l8.grid(row=11,pady=4)
 
+    l9=Label(f1, text="Last Update",font="comicsansms 9 bold")
+    l9.grid(row=12,pady=10)
+
     def insert_strike_price():
         strike_prices = entry_1.get().split(',')
         strike_prices = [int(price.strip()) for price in strike_prices if price.strip() != '']
@@ -129,11 +132,13 @@ def plot_live_data(csv_file_path):
     def update_plots():
         # Read the CSV file into a dataframe
         data = pd.read_csv(csv_file_path)
+        x=data.shape[0]
+        Last_data_updated_time=data.iloc[x-1,0]
 
         ############################################ ATM STRIKE PRICE COMPUTATION ##############################################################
 
         name="NIFTY"
-        expiry="29-Jun-2023"
+        expiry="13-Jul-2023"
 
         final_new=Intraday_live_data.getoptionchain(name,expiry)
         final_new.reset_index(drop=True, inplace=True)
@@ -151,6 +156,7 @@ def plot_live_data(csv_file_path):
         l6.config(text=f"ATM-1: {ATM_Minus_one}")
         l7.config(text=f"ATM+2: {ATM_Plus_two}")
         l8.config(text=f"ATM-2: {ATM_Minus_two}")
+        l9.config(text=f"Last Update: {Last_data_updated_time}")
         ############################################ ATM STRIKE PRICE COMPUTATION ##############################################################
 
         with open("Strike_prices.txt", "r") as file:
