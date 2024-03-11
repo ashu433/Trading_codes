@@ -1,0 +1,1 @@
+"C:/Program Files/Python310/python.exe" "d:/ashu/Finance/algo_trading/Zerodha_GUI/Kite_Zerodha-main/Kite_Zerodha-main/OI_build_up_3Expiry_data_collection.py"

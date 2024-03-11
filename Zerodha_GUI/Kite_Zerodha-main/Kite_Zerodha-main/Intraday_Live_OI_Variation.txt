@@ -1,0 +1,375 @@
+
+import datetime
+from kite_trade import *
+import pandas as pd
+import ast
+import Intraday_live_data
+from datetime import datetime
+import matplotlib.pyplot as plt
+import numpy as np
+from tkinter import *
+from tkinter import ttk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+
+Closing_price=19258.15
+specific_date = "2023-09-01"
+Month_end=0
+
+path="D:/ashu/Finance/algo_trading/Zerodha_GUI/OI_Raw_Data_Collected/"
+
+
+path_main="D:/ashu/Finance/algo_trading/Zerodha_GUI/Kite_Zerodha-main/Kite_Zerodha-main/"
+
+with open(path_main+"Enctoken.txt",'r') as file:
+    content_enctoken=file.read()
+
+enctoken = content_enctoken
+
+kite = KiteApp(enctoken=enctoken)
+
+
+color_ce_list=[]
+color_pe_list=[]
+
+
+with open(path_main+"Expiry_Day.txt",'r') as file:
+    content_expiry_day=file.read()
+
+name="NIFTY"
+expiry=content_expiry_day
+
+
+def comparision(row):
+        if ((row['COI'] > 0 and row['COP'] > 0)):
+            return 'LB'
+        elif ((row['COI'] < 0 and row['COP'] < 0)):
+            return 'LC'
+        elif ((row['COI'] > 0 and row['COP'] < 0)):
+            return 'SB'
+        elif ((row['COI'] < 0 and row['COP'] > 0)):
+            return 'SC'
+        else:
+            pass
+
+def comparision_CE(row):
+        if (row['Conclusion CE'] =="LB"):
+            return 0
+        elif (row['Conclusion CE'] =="LC"):
+            return 0
+        elif (row['Conclusion CE'] =="SB"):
+            return -1
+        elif (row['Conclusion CE'] =="SC"):
+            return -1
+        else:
+            pass
+
+def comparision_PE(row):
+        if (row['Conclusion PE'] =="LB"):
+            return 0
+        elif (row['Conclusion PE'] =="LC"):
+            return 0
+        elif (row['Conclusion PE'] =="SB"):
+            return 1
+        elif (row['Conclusion PE'] =="SC"):
+            return 1
+        else:
+            pass
+
+
+
+final_new=Intraday_live_data.getoptionchain(name,expiry)
+final_new.reset_index(drop=True, inplace=True)
+
+index = (final_new['strikePrice'] - Closing_price).abs().idxmin()
+ATM_Strike_Price=final_new['strikePrice'].iloc[index]
+ATM_Strike_Price_Plus_1=ATM_Strike_Price+50
+ATM_Strike_Price_Minus_1=ATM_Strike_Price-50
+
+Strike_Prices=[ATM_Strike_Price_Minus_1,ATM_Strike_Price,ATM_Strike_Price_Plus_1]
+print(Strike_Prices)
+
+
+
+if Month_end==0:
+    call_list=[]
+    put_list=[]
+    token_CE=[]
+    token_PE=[]
+    call_put_dict={}
+
+    from datetime import datetime
+
+    parsed_date = datetime.strptime(expiry, '%d-%b-%Y')
+    formatted_date = parsed_date.strftime('%y%m%d')
+
+    char_list = list(formatted_date)
+
+    if char_list[2]=='0':
+        char_list.pop(2)
+
+    formatted_date=''.join(char_list)
+
+    for i in range(len(Strike_Prices)):
+        quote_CE=name+formatted_date+str(Strike_Prices[i])+"CE"
+        quote_PE=name+formatted_date+str(Strike_Prices[i])+"PE"
+        call_list.append(quote_CE)
+        put_list.append(quote_PE)
+
+    for j in range(len(Strike_Prices)):
+        atm_token_ce=kite.ltp("NFO:"+call_list[j])
+        atm_token_pe=kite.ltp("NFO:"+put_list[j])
+        ATM_Token_CE=atm_token_ce["NFO:"+call_list[j]]['instrument_token']
+        ATM_Token_PE=atm_token_pe["NFO:"+put_list[j]]['instrument_token']
+        token_CE.append(ATM_Token_CE)
+        token_PE.append(ATM_Token_PE)
+
+    call_put_dict["quote_call"]=call_list
+    call_put_dict["quote_put"]=put_list
+    call_put_dict["token_call"]=token_CE
+    call_put_dict["token_put"]=token_PE
+    call_put_dict["Strike Prices"]=Strike_Prices
+
+    print(call_put_dict)
+
+    with open(path+"Call_put_quote_token.txt",'w') as file:
+        file.write(str(call_put_dict))
+
+elif Month_end==1:
+    call_list=[]
+    put_list=[]
+    token_CE=[]
+    token_PE=[]
+    call_put_dict={}
+    parsed_date = datetime.strptime(expiry, '%d-%b-%Y')
+    formatted_date = parsed_date.strftime('%Y%b').upper()
+
+
+    formatted_date=formatted_date[2:]
+
+    for i in range(len(Strike_Prices)):
+        quote_CE=name+formatted_date+str(Strike_Prices[i])+"CE"
+        quote_PE=name+formatted_date+str(Strike_Prices[i])+"PE"
+        call_list.append(quote_CE)
+        put_list.append(quote_PE)
+
+
+    for j in range(len(Strike_Prices)):
+        atm_token_ce=kite.ltp("NFO:"+call_list[j])
+        atm_token_pe=kite.ltp("NFO:"+put_list[j])
+        ATM_Token_CE=atm_token_ce["NFO:"+call_list[j]]['instrument_token']
+        ATM_Token_PE=atm_token_pe["NFO:"+put_list[j]]['instrument_token']
+        token_CE.append(ATM_Token_CE)
+        token_PE.append(ATM_Token_PE)
+
+
+import datetime
+
+
+for ii in range(len(Strike_Prices)):
+    instrument_token_CE = token_CE[ii]
+    instrument_token_PE = token_PE[ii]
+
+    from_datetime = datetime.datetime.now() - datetime.timedelta(days=10)     # From last & days
+    to_datetime = datetime.datetime.now()
+    interval = "minute"
+    content_CE=kite.historical_data(instrument_token_CE, from_datetime, to_datetime, interval, continuous=False, oi=True)
+    content_PE=kite.historical_data(instrument_token_PE, from_datetime, to_datetime, interval, continuous=False, oi=True)
+
+    Content_CE=str(content_CE)
+    Content_PE=str(content_PE)
+
+    cleaned_contents_CE = Content_CE.replace("datetime.datetime", "").replace(", tzinfo=tzoffset(None, 19800)", "")
+    cleaned_contents_PE = Content_PE.replace("datetime.datetime", "").replace(", tzinfo=tzoffset(None, 19800)", "")
+
+    data_CE = ast.literal_eval(cleaned_contents_CE)
+    data_PE = ast.literal_eval(cleaned_contents_PE)
+
+    df_CE = pd.DataFrame(data_CE)
+    df_PE = pd.DataFrame(data_PE)
+
+    df_CE['date'] = df_CE['date'].apply(lambda x: pd.Timestamp(year=x[0], month=x[1], day=x[2], hour=x[3], minute=x[4]))
+    df_CE['Date'] = df_CE['date'].dt.strftime('%Y-%m-%d')
+    df_CE['Time'] = df_CE['date'].dt.strftime('%H:%M')
+    df_CE = df_CE.drop(columns=['date'])
+
+    df_PE['date'] = df_PE['date'].apply(lambda x: pd.Timestamp(year=x[0], month=x[1], day=x[2], hour=x[3], minute=x[4]))
+    df_PE['Date'] = df_PE['date'].dt.strftime('%Y-%m-%d')
+    df_PE['Time'] = df_PE['date'].dt.strftime('%H:%M')
+    df_PE = df_PE.drop(columns=['date'])
+
+    df_CE = df_CE[['Date', 'Time', 'open', 'high', 'low', 'close','volume','oi']]
+    df_PE = df_PE[['Date', 'Time', 'open', 'high', 'low', 'close','volume','oi']]
+
+
+    rows_CE=df_CE.shape[0]
+    rows_PE=df_PE.shape[0]
+
+    df_CE["COI"]=0
+    df_PE["COI"]=0
+
+    df_CE["COP"]=0
+    df_PE["COP"]=0
+
+    for i in range(1,rows_CE):
+        df_CE.iloc[i,8]=df_CE.iloc[i,7]-df_CE.iloc[(i-1),7]
+        df_CE.iloc[i,9]=df_CE.iloc[i,5]-df_CE.iloc[(i-1),5]
+
+    for i in range(1,rows_PE):
+        df_PE.iloc[i,8]=df_PE.iloc[i,7]-df_PE.iloc[(i-1),7]
+        df_PE.iloc[i,9]=df_PE.iloc[i,5]-df_PE.iloc[(i-1),5]
+
+
+    df_CE["Date"] = pd.to_datetime(df_CE["Date"])
+    df_CE = df_CE[df_CE["Date"] == specific_date]
+
+    df_PE["Date"] = pd.to_datetime(df_PE["Date"])
+    df_PE = df_PE[df_PE["Date"] == specific_date]
+
+    df_CE.reset_index(drop=True, inplace=True)
+    df_PE.reset_index(drop=True, inplace=True)
+
+    columns_to_remove = ["open", "high", "low"]
+    df_CE = df_CE.drop(columns=columns_to_remove)
+    df_PE = df_PE.drop(columns=columns_to_remove)
+
+    df_CE["Conclusion CE"]=df_CE.apply(comparision,axis=1)
+    df_PE["Conclusion PE"]=df_PE.apply(comparision,axis=1)
+
+
+    new_column_names_CE = {
+    'COI': 'COI CE',
+    "close": "close CE",
+    "volume": "volume CE",
+    "oi": "oi CE",
+    "COP": "COP CE",
+    # Add more columns as needed
+    }
+    new_column_names_PE = {
+        'COI': 'COI PE',
+        "close": "close PE",
+        "volume": "volume PE",
+        "oi": "oi PE",
+        "COP": "COP PE",
+        # Add more columns as needed
+    }
+
+    df_CE.rename(columns=new_column_names_CE, inplace=True)
+    df_PE.rename(columns=new_column_names_PE, inplace=True)
+
+    columns_to_remove = ["Date", "Time"]
+    df_PE = df_PE.drop(columns=columns_to_remove)
+
+    finial_file = pd.concat([df_CE, df_PE], axis=1)
+    finial_file=finial_file[(finial_file["COI CE"] != 0) | (finial_file["COI PE"] != 0)]
+
+    color_map_ce = {
+    'SB': 'red',
+    'LC': 'red',
+    'LB': 'green',
+    'SC': 'green',
+    None: "black"
+    }
+
+    color_map_pe = {
+        'LB': 'red',
+        'SC': 'red',
+        'SB': 'green',
+        'LC': 'green',
+        None: "black"
+    }
+
+    color_ce=[color_map_ce[conclusion] for conclusion in finial_file['Conclusion CE']]
+    color_pe=[color_map_pe[conclusion] for conclusion in finial_file['Conclusion PE']]
+
+    color_ce_list.append(color_ce)
+    color_pe_list.append(color_pe)
+
+
+
+    finial_file["Bullishness CE"]=finial_file.apply(comparision_CE,axis=1)
+    finial_file["Bullishness PE"]=finial_file.apply(comparision_PE,axis=1)
+
+    finial_file["Bullishness CE"]=finial_file["Bullishness CE"]*finial_file["COI CE"]
+    finial_file["Bullishness PE"]=finial_file["Bullishness PE"]*finial_file["COI PE"]
+    finial_file["Over All Bullishness"]=finial_file["Bullishness CE"]+finial_file["Bullishness PE"]
+    finial_file.reset_index(drop=True, inplace=True)
+    row_final=finial_file.shape[0]
+    finial_file.fillna(0, inplace=True)
+    finial_file["Cumulative Bullishness"]=0
+    finial_file.iloc[0,17]=finial_file.iloc[0,16]
+    for i in range(1,row_final):
+        finial_file.iloc[i,17]=finial_file.iloc[i,16]+finial_file.iloc[(i-1),17]
+
+    finial_file.to_csv(path+name+str(Strike_Prices[ii])+".csv",index=False)
+
+
+
+
+final_file1=pd.read_csv(path+name+str(Strike_Prices[0])+".csv")
+final_file2=pd.read_csv(path+name+str(Strike_Prices[1])+".csv")
+final_file3=pd.read_csv(path+name+str(Strike_Prices[2])+".csv")
+
+
+bar_width = 0.35
+fig1, axs1 = plt.subplots(nrows=3, ncols=1, figsize=(10, 18))  # Create a 3x1 grid of subplots
+
+run=0
+
+for i,(ax, finial_file, color_ce, color_pe) in enumerate(zip(axs1, [final_file1, final_file2, final_file3], color_ce_list, color_pe_list)):
+
+    finial_file.set_index("Time", inplace=True)
+    index = np.arange(len(finial_file))  # Index for the x-axis
+
+    
+    ce_bars = ax.bar(index, finial_file["COI CE"], width=bar_width, color=color_ce, edgecolor='black', label="COI CE")
+    pe_bars = ax.bar(index + bar_width, finial_file["COI PE"], width=bar_width, color=color_pe, edgecolor='black', label="COI PE")
+
+    if i < 2:
+        ax.set_xticklabels([])
+
+    ax.set_ylabel("COI")
+    ax.set_xticks(index + bar_width / 2)
+    ax.set_xticklabels(finial_file.index, rotation=45)
+
+    if i == 0:
+        ax.legend(["COI CE", "COI PE"], title=str(Strike_Prices[i]))
+    elif i == 1:
+        ax.legend(["COI CE", "COI PE"], title=str(Strike_Prices[i]))
+    elif i == 2:
+        ax.legend(["COI CE", "COI PE"], title=str(Strike_Prices[i]))
+
+    run=run+1
+
+
+
+    for ce_bar, pe_bar, conclusion_ce, conclusion_pe in zip(ce_bars, pe_bars, finial_file["Conclusion CE"], finial_file["Conclusion PE"]):
+        ax.text(ce_bar.get_x() + ce_bar.get_width() / 2, ce_bar.get_height(), conclusion_ce, ha='center', va='bottom', fontsize=8)
+        ax.text(pe_bar.get_x() + pe_bar.get_width() / 2, pe_bar.get_height(), conclusion_pe, ha='center', va='bottom', fontsize=8)
+
+        ce_value = ce_bar.get_height() / 100000
+        pe_value = pe_bar.get_height() / 100000
+
+        ax.annotate(f"CE: {ce_value:.2f}\nPE: {pe_value:.2f}",
+                    xy=(ce_bar.get_x(), ce_bar.get_height()),  # Adjust the xy coordinates for the left side
+                    xytext=(-5, 0),  # Offset for the text
+                    textcoords="offset points",
+                    ha='right', va='center', fontsize=8) 
+
+
+
+fig2, axs2 = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
+axs2.set_xlabel('Time')
+axs2.set_ylabel('Cumulative Bullishness by sellers (in Lakhs)')
+axs2.set_title('Bulleshness Contracts by sellers in Lakhs')
+axs2.grid(True)
+
+for i in range(len(Strike_Prices)):
+    df=pd.read_csv(path+name+str(Strike_Prices[i])+".csv")
+    df['Cumulative Bullishness'] /= 100000
+    axs2.plot(df['Time'], df['Cumulative Bullishness'], marker='o', label=str(Strike_Prices[i]))
+
+axs2.legend()
+plt.xticks(rotation=90)
+plt.tight_layout()
+
+plt.show()

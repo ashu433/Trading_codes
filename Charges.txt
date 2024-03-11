@@ -1,0 +1,7 @@
+Brokerage160
+STT7.68
+Stamp duty0
+Exchange turnover charge12.21
+SEBI turnover charge0.02
+GST30.98
+Total210.9

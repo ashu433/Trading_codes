@@ -1,0 +1,1 @@
+"C:/Program Files/Python310/python.exe" "d:/ashu/Finance/algo_trading/OI_Data_collection_bat_file.py"

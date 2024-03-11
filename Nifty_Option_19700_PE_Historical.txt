@@ -1,0 +1,1 @@
+[{'date': datetime.datetime(2023, 8, 1, 10, 3, tzinfo=tzoffset(None, 19800)), 'open': 37.2, 'high': 38, 'low': 37.05, 'close': 37.35, 'volume': 199900, 'oi': 10157550}, {'date': datetime.datetime(2023, 8, 1, 10, 4, tzinfo=tzoffset(None, 19800)), 'open': 37.3, 'high': 37.9, 'low': 37.15, 'close': 37.55, 'volume': 119300, 'oi': 10157550}]

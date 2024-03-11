@@ -1,0 +1,102 @@
+###################### BUY LIMIT, MODIFY ORDER and Cancel ORDER ##################
+
+# order = kite.place_order(variety=kite.VARIETY_REGULAR,
+#                          exchange=kite.EXCHANGE_NFO,
+#                          tradingsymbol="NIFTY2381018500PE",
+#                          transaction_type=kite.TRANSACTION_TYPE_BUY,
+#                          quantity=50,
+#                          product=kite.PRODUCT_MIS,
+#                          order_type=kite.ORDER_TYPE_SL,
+#                          price=3,
+#                          validity=kite.VALIDITY_DAY,
+#                          disclosed_quantity=None,
+#                          trigger_price=2.95,
+#                          squareoff=None,
+#                          stoploss=None,
+#                          trailing_stoploss=None,
+#                          tag="TradeViaPython")
+
+# kite.modify_order(variety=kite.VARIETY_REGULAR,
+#                   order_id='230804600927658',
+#                   parent_order_id=None,
+#                   quantity=50,
+#                   price=3.10,
+#                   order_type=kite.ORDER_TYPE_SL,
+#                   trigger_price=3.05,
+#                   validity=kite.VALIDITY_DAY,
+#                   disclosed_quantity=None)
+
+
+# kite.cancel_order(variety=kite.VARIETY_REGULAR,
+#                   order_id="230804600927658",
+#                   parent_order_id=None)
+
+
+
+###################### SELL LIMIT MODIFY ORDER AND CANCEL ORDER ##################
+
+# order = kite.place_order(variety=kite.VARIETY_REGULAR,
+#                          exchange=kite.EXCHANGE_NFO,
+#                          tradingsymbol="NIFTY2381020000CE",
+#                          transaction_type=kite.TRANSACTION_TYPE_SELL,
+#                          quantity=50,
+#                          product=kite.PRODUCT_MIS,
+#                          order_type=kite.ORDER_TYPE_SL,
+#                          price=2.5,
+#                          validity=kite.VALIDITY_DAY,
+#                          disclosed_quantity=None,
+#                          trigger_price=2.55,
+#                          squareoff=None,
+#                          stoploss=None,
+#                          trailing_stoploss=None,
+#                          tag="TradeViaPython")
+
+# kite.modify_order(variety=kite.VARIETY_REGULAR,
+#                   order_id='230804601037927',
+#                   parent_order_id=None,
+#                   quantity=50,
+#                   price=2.75,
+#                   order_type=kite.ORDER_TYPE_SL,
+#                   trigger_price=2.8,
+#                   validity=kite.VALIDITY_DAY,
+#                   disclosed_quantity=None)
+
+# kite.cancel_order(variety=kite.VARIETY_REGULAR,
+#                   order_id="230804601037927",
+#                   parent_order_id=None)
+
+####################### MARKET BUY #####################################
+
+# order = kite.place_order(variety=kite.VARIETY_REGULAR,
+#                          exchange=kite.EXCHANGE_NFO,
+#                          tradingsymbol="NIFTY2381020000CE",
+#                          transaction_type=kite.TRANSACTION_TYPE_BUY,
+#                          quantity=50,
+#                          product=kite.PRODUCT_MIS,
+#                          order_type=kite.ORDER_TYPE_MARKET,
+#                          price=None,
+#                          validity=kite.VALIDITY_DAY,
+#                          disclosed_quantity=None,
+#                          trigger_price=None,
+#                          squareoff=None,
+#                          stoploss=None,
+#                          trailing_stoploss=None,
+#                          tag="TradeViaPython")
+
+####################### MARKET SELL #####################################
+
+# order = kite.place_order(variety=kite.VARIETY_REGULAR,
+#                          exchange=kite.EXCHANGE_NFO,
+#                          tradingsymbol="NIFTY2381020000CE",
+#                          transaction_type=kite.TRANSACTION_TYPE_SELL,
+#                          quantity=50,
+#                          product=kite.PRODUCT_MIS,
+#                          order_type=kite.ORDER_TYPE_MARKET,
+#                          price=None,
+#                          validity=kite.VALIDITY_DAY,
+#                          disclosed_quantity=None,
+#                          trigger_price=None,
+#                          squareoff=None,
+#                          stoploss=None,
+#                          trailing_stoploss=None,
+#                          tag="TradeViaPython")

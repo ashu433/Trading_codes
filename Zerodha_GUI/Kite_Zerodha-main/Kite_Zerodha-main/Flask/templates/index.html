@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Matplotlib Plots on Webpage</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function updatePlots() {
+            {% for index in range(8) %}
+            $('#plot{{ index }}').attr('src', '/plot/{{ index }}.png?t=' + new Date().getTime());
+            {% endfor %}
+            setTimeout(updatePlots, 1000);
+        }
+        $(document).ready(function() {
+            updatePlots();
+        });
+    </script>
+</head>
+<body>
+    <h1>Matplotlib Plots on Webpage</h1>
+    <div style="display: flex; flex-direction: column;">
+        {% for index in range(8) %}
+        <img id="plot{{ index }}" src="" alt="Matplotlib Plot {{ index }}">
+        {% endfor %}
+    </div>
+</body>
+</html>

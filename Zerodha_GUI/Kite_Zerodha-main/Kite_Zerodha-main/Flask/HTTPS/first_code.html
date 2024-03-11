@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Option Chain Analysis</title>
+    <style>
+        #Type_of_OI{
+            font-style: italic;
+            background-color: yellow;
+            height: 25px;
+            width: 300px;
+            border: 4px;
+            border-color: rgb(35, 87, 197);
+            border-style: solid;
+            border-radius: 11px;
+        }
+    </style>
+</head>
+<body>
+    <h1> What is Option chain</h1>
+    <p class="format_para">The the Option chain tells about the number of the open contracts in the market it is very useful in determining the direction of the market.<span>You can earn money in both ways by <strong>Buying and selling.</strong></span>
+    You can go to the site <a href="https://www.nseindia.com/option-chain" target="_blank">Option chain NSE</a>. Best of luck Happy trading.</p>
+    <br>
+    <h2> Type of Option contracts</h2>
+    <p id="Type_of_OI" class="format_para">There are two types of the option contracts</p>
+    <ul type="circle">
+        <li>Call Option</li>
+        <li>Put Option</li>
+    </ul>
+    <div><p> In both call and Put you can go for</p></div>
+    <ol type="1">
+        <li> Call Buy</li>
+        <li>Call Sell</li>
+        <li>Put Buy</li>
+        <li>Put Sell</li>
+    </ol>
+    <h2> Summary of the contracts</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Contracts Type</th>
+                <th>Transaction Type</th>
+                <th>Risk in the transaction</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>Call</td>
+                <td>Buy</td>
+                <td>Very Risky</td>
+            </tr>
+            <tr>
+                <td>Call</td>
+                <td>Sell</td>
+                <td>Less Risky</td>
+            </tr>
+            <tr>
+                <td>Put</td>
+                <td>Buy</td>
+                <td>Very Risky</td>
+            </tr>
+            <tr>
+                <td>Put</td>
+                <td>Sell</td>
+                <td>Less Risky</td>
+            </tr>
+            
+        </tbody>
+    </table>
+
+    <h2>Form Submission for your preferance</h2>
+    <p>Please enter the form depending upon your personality and kind of trades you want to take</p>
+    <br>
+    <form action="backend.py">
+        <label for="name"> Name</label>
+        <div>
+            <input type="text" name="myname" id="name">
+        </div>
+        <br>
+        <label for="Option"> Option type you want to trade</label>
+        <div>
+            <input type="text" name="option_type" id="Option">
+        </div>
+        <br>
+        <label for="date"> Enter todays date</label>
+        <div>
+            <input type="date" name="date_entry" id="date">
+        </div>
+        <br>
+        <label for="size_trade"> Size you wish to trade</label>
+        <div>
+            <input type="number" name="size" id="size_trade">
+        </div>
+        <br>
+        <p>You want to do what buying or selling</p>
+        
+        <div>
+            <input type="radio" name="Buying"> Buy <input type="radio" name="selling"> Selling
+        </div>
+
+        <div> 
+            <br>
+            Which segement you want to buy or sell
+            <br>
+            <select name="Segment" id="Segment">
+                <option value="Call"> Call</option>
+                <option value="Put"> Put</option>
+        </select>
+        </div>
+        <br>
+        <div>
+            <input type="submit" value="Submit Now">
+            <input type="reset" value="Reset all">
+        </div>
+        
+    </form>
+
+</body>
+</html>
