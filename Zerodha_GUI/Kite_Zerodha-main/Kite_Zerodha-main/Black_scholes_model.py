@@ -40,43 +40,52 @@ def implied_vol(r, S, K, T, option_price, Right):
             opt_price=round((K*np.exp(-1*r*T)*n_d2)-(S*n_d1),2)
         
         return option_price-opt_price
-    
-    return scipy.optimize.brentq(blackScholes_2,0.05,0.95,maxiter=1000)
+    try:
+        return scipy.optimize.brentq(blackScholes_2,0.05,0.99,maxiter=10000)
+    except ValueError:
+        print("Solution not found.")
+        return None
 
+def option_greeks(right,Sp,S,T,rate,predicted_implied_volatility):
+    Delta=delta(right,Sp,S,T,rate,predicted_implied_volatility)
+    Gamma=gamma(right,Sp,S,T,rate,predicted_implied_volatility)
+    Vega=vega(right,Sp,S,T,rate,predicted_implied_volatility)
+    Theta=theta(right,Sp,S,T,rate,predicted_implied_volatility)
+    Rho=rho(right,Sp,S,T,rate,predicted_implied_volatility)
 
-rate=0.068
-Sp=22493.55
-T=7/365
-S=23200
-Vol=0.1761
-option_price=2.15
-right='c'
-
-start_time = time.time()
-
-predicted_implied_volatility=(implied_vol(rate,Sp,S,T,option_price,right))
-print("The Predicted Implied Volatility is ",predicted_implied_volatility)
-implied_volatility_accuracy=((predicted_implied_volatility-Vol)/Vol)*100
-print(f"The Accuracy of the predicted Implied Volatility is: {implied_volatility_accuracy}")
-
-# print("the Option Price from equation 2: ",predicted_option_price)
-
-# print(f'The predicetd option price from the library bs equation is {bs("c",Sp,S,T,rate,Vol)}')
-print(f'Delta of the strike is {delta(right,Sp,S,T,rate,predicted_implied_volatility)}')
-print(f'Gamma of the strike is {gamma(right,Sp,S,T,rate,predicted_implied_volatility)}')
-print(f'Vega of the strike is {vega(right,Sp,S,T,rate,predicted_implied_volatility)}')
-print(f'Theta of the strike is {theta(right,Sp,S,T,rate,predicted_implied_volatility)}')
-print(f'rho of the strike is {rho(right,Sp,S,T,rate,predicted_implied_volatility)}')
-
-# option_price_accuracy=((predicted_option_price-option_price)/option_price)*100
-
-
-# print(f"The Accuracy of the predicted option price is: {option_price_accuracy}")
+    return Delta,Gamma, Vega, Theta, Rho
 
 
 
-end_time = time.time()
+# rate=0.068
+# Sp=22493.55
+# T=7/365
+# S=23200
+# Vol=0.1761
+# option_price=2.15
+# right='c'
 
-elapsed_time = end_time - start_time
 
-print(f"Time taken: {elapsed_time} seconds")
+
+# predicted_implied_volatility=(implied_vol(rate,Sp,S,T,option_price,right))
+# print("The Predicted Implied Volatility is ",predicted_implied_volatility)
+# implied_volatility_accuracy=((predicted_implied_volatility-Vol)/Vol)*100
+# print(f"The Accuracy of the predicted Implied Volatility is: {implied_volatility_accuracy}")
+
+# # print("the Option Price from equation 2: ",predicted_option_price)
+
+# # print(f'The predicetd option price from the library bs equation is {bs("c",Sp,S,T,rate,Vol)}')
+# print(f'Delta of the strike is {delta(right,Sp,S,T,rate,predicted_implied_volatility)}')
+# print(f'Gamma of the strike is {gamma(right,Sp,S,T,rate,predicted_implied_volatility)}')
+# print(f'Vega of the strike is {vega(right,Sp,S,T,rate,predicted_implied_volatility)}')
+# print(f'Theta of the strike is {theta(right,Sp,S,T,rate,predicted_implied_volatility)}')
+# print(f'rho of the strike is {rho(right,Sp,S,T,rate,predicted_implied_volatility)}')
+
+# # option_price_accuracy=((predicted_option_price-option_price)/option_price)*100
+
+
+# # print(f"The Accuracy of the predicted option price is: {option_price_accuracy}")
+
+
+if __name__=='__main__':
+    pass

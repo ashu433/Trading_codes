@@ -130,34 +130,53 @@ def sensex(quote_CE,quote_PE,strikes_sensex,xox):
   
 
 def MIDCPNIFTY_SENSEX(symbol):
-
     if symbol=="MIDCPNIFTY":
-        start=8900
-        end=12400
+        x=kite.ltp("NSE:NIFTY MID SELECT")
+        price=x['NSE:NIFTY MID SELECT']['last_price']
+        closest_number = round(price/ 25) * 25
+        upper_list=[]
+        lower_list=[]
 
-        itteration=(end-start)/25
+        for i in range(41):
+            xx=closest_number+i*25
+            upper_list.append(xx)
 
-        strike_price_list=[]
+        for j in range(1,41):
+            yy=closest_number-j*25
+            lower_list.append(yy)
 
-        for i in range(int(itteration)):
-            strike=start+25*i
-            strike_price_list.append(strike)
+        set_upper = set(upper_list)
+        set_lower = set(lower_list)
+
+        non_common_elements = list(set_upper.symmetric_difference(set_lower))
+        strike_price_list=sorted(non_common_elements)
+
 
         return strike_price_list
-
+    
     elif symbol=="SENSEX":
-        start=67400
-        end=76300
+        x=kite.ltp("BSE:SENSEX")
+        price=x['BSE:SENSEX']['last_price']
+        closest_number = round(price/ 100) * 100
+        upper_list=[]
+        lower_list=[]
 
-        itteration=(end-start)/100
+        for i in range(41):
+            xx=closest_number+i*100
+            upper_list.append(xx)
 
-        strike_price_list=[]
+        for j in range(1,41):
+            yy=closest_number-j*100
+            lower_list.append(yy)
 
-        for i in range(int(itteration)):
-            strike=start+100*i
-            strike_price_list.append(strike)
+        set_upper = set(upper_list)
+        set_lower = set(lower_list)
+
+        non_common_elements = list(set_upper.symmetric_difference(set_lower))
+        strike_price_list=sorted(non_common_elements)
 
         return strike_price_list
+
 
 
 def Options_index():
@@ -233,7 +252,7 @@ def Options_index():
 
                     import datetime
 
-                    from_datetime = datetime.datetime.now() - datetime.timedelta(days=1)     # From last & days
+                    from_datetime = datetime.datetime.now() - datetime.timedelta(days=3)     # From last & days
                     to_datetime = datetime.datetime.now()
                     interval = "minute"
                     content_CE=kite.historical_data(ATM_Token_CE, from_datetime, to_datetime, interval, continuous=False, oi=True)
@@ -622,7 +641,7 @@ enctoken = content_enctoken
 kite = KiteApp(enctoken=enctoken)
 
 
-# Options_index() 
+Options_index() 
 # stock_Options()
-Future_index()
-Futures_stock()
+# Future_index()
+# Futures_stock() 
