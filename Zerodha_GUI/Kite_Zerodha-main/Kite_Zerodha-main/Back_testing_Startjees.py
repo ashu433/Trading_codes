@@ -51,7 +51,8 @@ Startjee_1_dict_Call={}
 Startjee_1_dict_Put={}
 
 ################### Variables of the startjee ##############
-Desired_time="09:20"
+Desired_time_CE="09:20"
+Desired_time_PE="09:20"
 Checking_time="09:30"
 Startjee_1=0
 Startjee_2=0
@@ -60,7 +61,7 @@ Threshold_price=1
 ################### Variables of the startjee ##############
 
 def merging(df_CE,df_PE,Right_1,Right_2):
-    if Right_1=="Call" and Right_2=="PUT":
+    if Right_1=="Call" and Right_2=="Put":
         df_combined = pd.merge(df_CE, df_PE, on=['Date', 'Time'], how='outer')
         df_combined['Date'] = pd.to_datetime(df_combined['Date'])
         df_combined['Time'] = pd.to_datetime(df_combined['Time'], format='%H:%M').dt.strftime('%H:%M')
@@ -290,7 +291,11 @@ def volatility_strike_pred(Len_pe,Date,Time,path_expiry_date_recurring,Startjee_
             df_CE,df_PE_1=merging(df_CE,df_PE_1,"Call","Put")
             df_PE_2,df_PE_1=merging(df_PE_2,df_PE_1,"Put","Put")
 
-            index_row = df_CE.index[(df_CE['Time'] == Triggered_time)&(df_CE['Date'] == Date)].tolist()
+            if (len(df_CE.loc[4,'Time']))>5:
+                index_row = df_CE.index[(df_CE['Time'] == Triggered_time)&(df_CE['Date'] == Date)].tolist()
+            else:
+                pass
+
             index_row=index_row[0]
 
             CP_CE=df_CE.loc[index_row,"close CE"]
@@ -358,7 +363,10 @@ def volatility_strike_pred(Len_pe,Date,Time,path_expiry_date_recurring,Startjee_
             df_PE_2,df_PE_1=merging(df_PE_2,df_PE_1,"Put","Put")
             df_PE_3,df_PE_1=merging(df_PE_3,df_PE_1,"Put","Put")
 
-            index_row = df_CE_3.index[(df_CE_3['Time'] == Triggered_time)&(df_CE_3['Date'] == Date)].tolist()
+            if (len(df_CE_3.loc[4,'Time']))>5:
+                index_row = df_CE_3.index[(df_CE_3['Time'] == Triggered_time)&(df_CE_3['Date'] == Date)].tolist()
+            else:
+                pass
             index_row=index_row[0]
 
             CP_CE_3=df_CE_3.loc[index_row,"close CE"]
@@ -416,7 +424,10 @@ def volatility_strike_pred(Len_pe,Date,Time,path_expiry_date_recurring,Startjee_
             df_PE_3,df_PE_1=merging(df_PE_3,df_PE_1,"Put","Put")
             df_PE_4,df_PE_3=merging(df_PE_4,df_PE_3,"Put","Put")
 
-            index_row = df_PE_1.index[(df_PE_1['Time'] == Triggered_time)&(df_PE_1['Date'] == Date)].tolist()
+            if (len(df_PE_1.loc[4,'Time']))>5:
+                index_row = df_PE_1.index[(df_PE_1['Time'] == Triggered_time)&(df_PE_1['Date'] == Date)].tolist()
+            else:
+                pass
 
             index_row=index_row[0]
             CP_PE_4=df_PE_4.loc[index_row,"close PE"]
@@ -446,8 +457,6 @@ def volatility_strike_pred(Len_pe,Date,Time,path_expiry_date_recurring,Startjee_
             return index_row,df_PE_1,df_PE_2,df_PE_3,df_PE_4
 
 
-def reversal_status_func(reversal_status,Strike_pe_remove,Premium_to_remove,SL_to_Remove):
-    pass
 
 
 
@@ -606,10 +615,6 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[1])
 
                                 writing_Active_status(Active_status_read)
-                                Strike_pe_remove=Active_put_Strike[1]
-                                Premium_to_remove=Active_Initial_Sold_premium_put[1]
-                                SL_to_Remove=Active_SL_Put[1]
-                                reversal_status_func(reversal_status,Strike_pe_remove,Premium_to_remove,SL_to_Remove)
 
                                 call_premium_collected=ce_initial_Price-df_CE.loc[(index_row+i+1),"close CE"]
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
@@ -634,7 +639,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             Strike_ce_remove_copy=Call_Strikes_remove[0]
                             Strike_pe_remove_copy=Put_strikes_remove[1]
 
-                            if Strike_pe_remove_copy not in deleted_strike_pe and Strike_ce_remove_copy not in deleted_strike_ce:  
+                            if Strike_pe_remove_copy not in deleted_strike_pe or Strike_ce_remove_copy not in deleted_strike_ce:  
                                 reversal_status=21110 #" the format is len,rev,CE_2,PE_2,PE_1"
 
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_remove_copy)
@@ -646,10 +651,6 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 writing_Active_status(Active_status_read)
 
 
-                                Strike_remove=Active_call_Strike[0]
-                                Premium_to_remove=Active_Initial_Sold_premium_call[0]
-                                SL_to_Remove=Active_SL_Call[0]
-                                out=reversal_status_func(reversal_status,Strike_remove,Premium_to_remove,SL_to_Remove)
 
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
                                 Net_P_L=put_premium_collected_1
@@ -670,7 +671,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             Strike_pe_1_remove_copy=Put_strikes_remove[0]
                             Strike_pe_2_remove_copy=Put_strikes_remove[1]
 
-                            if Strike_pe_1_remove_copy not in deleted_strike and Strike_pe_2_remove_copy not in deleted_strike:  
+                            if Strike_pe_1_remove_copy not in deleted_strike or Strike_pe_2_remove_copy not in deleted_strike:  
                                 reversal_status=21011 #" the format is len,rev,CE_2,PE_2,PE_1"
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_1_remove_copy)
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_2_remove_copy)
@@ -680,11 +681,6 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[1])
 
                                 writing_Active_status(Active_status_read)
-
-                                Strike_remove=Active_call_Strike[0]
-                                Premium_to_remove=Active_Initial_Sold_premium_call[0]
-                                SL_to_Remove=Active_SL_Call[0]
-                                reversal_status_func(reversal_status,Strike_remove,Premium_to_remove,SL_to_Remove)
 
                                 call_premium_collected=ce_initial_Price-df_CE.loc[(index_row+i+1),"close CE"]
                                 Net_P_L=call_premium_collected
@@ -711,7 +707,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
                             ## Read the list from the text file  ########
                             # deleted_strike=data
-                            if Strike_pe_1_remove_copy not in deleted_strike_pe and Strike_pe_2_remove_copy not in deleted_strike_pe and Strike_ce_1_remove_copy not in deleted_strike_ce:  
+                            if Strike_pe_1_remove_copy not in deleted_strike_pe or Strike_pe_2_remove_copy not in deleted_strike_pe or Strike_ce_1_remove_copy not in deleted_strike_ce:  
                                 reversal_status=21111 #" the format is len,rev,CE_2,PE_2,PE_1"
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_1_remove_copy)
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_2_remove_copy)
@@ -725,10 +721,6 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
                                 writing_Active_status(Active_status_read)
 
-                                Strike_remove=Active_call_Strike[0]
-                                Premium_to_remove=Active_Initial_Sold_premium_call[0]
-                                SL_to_Remove=Active_SL_Call[0]
-                                reversal_status_func(reversal_status,Strike_remove,Premium_to_remove,SL_to_Remove)
                                 break
 
                             else:
@@ -791,10 +783,6 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
                                 writing_Active_status(Active_status_read)
 
-                                Strike_pe_remove=Active_put_Strike[2]
-                                Premium_to_remove=Active_Initial_Sold_premium_put[2]
-                                SL_to_Remove=Active_SL_Put[2]
-                                out=reversal_status_func(reversal_status,Strike_pe_remove,Premium_to_remove,SL_to_Remove)
 
                                 call_premium_collected=ce_initial_Price-df_CE_3.loc[(index_row+i+1),"close CE"]
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
@@ -822,7 +810,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             Strike_pe_remove_copy=Put_strikes_remove[2]
                             Strike_ce_remove_copy=Put_strikes_remove[0]
 
-                            if Strike_pe_remove_copy not in deleted_strike_pe and Strike_ce_remove_copy not in deleted_strike_ce:  
+                            if Strike_pe_remove_copy not in deleted_strike_pe or Strike_ce_remove_copy not in deleted_strike_ce:  
                                 reversal_status=311100 #" the format is len,rev,CE_2,PE_2,PE_1"
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_remove_copy)
                                 Active_status_read["Deactive Call Strike"].append(Strike_ce_remove_copy)
@@ -833,10 +821,6 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
                                 writing_Active_status(Active_status_read)
 
-                                Strike_pe_remove=Active_call_Strike[0]
-                                Premium_to_remove=Active_Initial_Sold_premium_call[0]
-                                SL_to_Remove=Active_SL_Call[0]
-                                out=reversal_status_func(reversal_status,Strike_pe_remove,Premium_to_remove,SL_to_Remove)
 
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
                                 put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
@@ -859,7 +843,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             Strike_pe_2_remove_copy=Put_strikes_remove[2]
                             Strike_pe_3_remove_copy=Put_strikes_remove[3]
 
-                            if Strike_pe_2_remove_copy not in deleted_strike_pe and Strike_pe_3_remove_copy not in deleted_strike_pe:  
+                            if Strike_pe_2_remove_copy not in deleted_strike_pe or Strike_pe_3_remove_copy not in deleted_strike_pe:  
                                 reversal_status=310110 #" the format is len,rev,CE_2,PE_2,PE_1"
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_2_remove_copy)
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_3_remove_copy)
@@ -870,10 +854,6 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
                                 writing_Active_status(Active_status_read)
 
-                                Strike_pe_remove=Active_call_Strike[0]
-                                Premium_to_remove=Active_Initial_Sold_premium_call[0]
-                                SL_to_Remove=Active_SL_Call[0]
-                                reversal_status_func(reversal_status,Strike_pe_remove,Premium_to_remove,SL_to_Remove)
 
                                 call_premium_collected=ce_initial_Price-df_CE_3.loc[(index_row+i+1),"close CE"]
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
@@ -900,7 +880,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             Strike_ce_1_remove_copy=Call_Strikes_remove[0]
 
 
-                            if Strike_pe_3_remove_copy not in deleted_strike_pe and Strike_pe_2_remove_copy not in deleted_strike_pe and Strike_ce_1_remove_copy not in deleted_strike_ce:  
+                            if Strike_pe_3_remove_copy not in deleted_strike_pe or Strike_pe_2_remove_copy not in deleted_strike_pe or Strike_ce_1_remove_copy not in deleted_strike_ce:  
                                 reversal_status=311110 #" the format is len,rev,CE_2,PE_2,PE_1"
 
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_2_remove_copy)
@@ -914,11 +894,6 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[0])
 
                                 writing_Active_status(Active_status_read)
-
-                                Strike_pe_remove=Active_call_Strike[0]
-                                Premium_to_remove=Active_Initial_Sold_premium_call[0]
-                                SL_to_Remove=Active_SL_Call[0]
-                                reversal_status_func(reversal_status,Strike_pe_remove,Premium_to_remove,SL_to_Remove)
 
 
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
@@ -940,7 +915,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             Strike_pe_2_remove_copy=Put_strikes_remove[1]
                             Strike_pe_3_remove_copy=Put_strikes_remove[2]
 
-                            if Strike_pe_1_remove_copy not in deleted_strike_pe and Strike_pe_2_remove_copy not in deleted_strike_pe and Strike_pe_3_remove_copy not in deleted_strike_pe:  
+                            if Strike_pe_1_remove_copy not in deleted_strike_pe or Strike_pe_2_remove_copy not in deleted_strike_pe or Strike_pe_3_remove_copy not in deleted_strike_pe:  
                                 reversal_status=310111 #" the format is len,rev,CE_2,PE_2,PE_1"
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_1_remove_copy)
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_2_remove_copy)
@@ -956,11 +931,6 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[0])
 
                                 writing_Active_status(Active_status_read)
-
-                                Strike_pe_remove=Active_call_Strike[0]
-                                Premium_to_remove=Active_Initial_Sold_premium_call[0]
-                                SL_to_Remove=Active_SL_Call[0]
-                                reversal_status_func(reversal_status,Strike_pe_remove,Premium_to_remove,SL_to_Remove)
 
                                 call_premium_collected=ce_initial_Price-df_CE_3.loc[(index_row+i+1),"close CE"]
                                 Net_P_L=call_premium_collected
@@ -987,7 +957,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
                             ## Read the list from the text file  ########
                             # deleted_strike=data
-                            if Strike_pe_remove_copy not in deleted_strike:  
+                            if Strike_pe_1_remove_copy not in deleted_strike_pe or Strike_pe_2_remove_copy not in deleted_strike_pe or Strike_pe_3_remove_copy not in deleted_strike_pe or Strike_ce_remove_copy not in deleted_strike_ce: 
                                 reversal_status=311111 #" the format is len,rev,CE_2,PE_2,PE_1"
 
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_1_remove_copy)
@@ -1005,10 +975,6 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
                                 writing_Active_status(Active_status_read)
 
-                                Strike_pe_remove=Active_call_Strike[0]
-                                Premium_to_remove=Active_Initial_Sold_premium_call[0]
-                                SL_to_Remove=Active_SL_Call[0]
-                                reversal_status_func(reversal_status,Strike_pe_remove,Premium_to_remove,SL_to_Remove)
                                 break
                         else:
                             pass
@@ -1060,10 +1026,6 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
                                 writing_Active_status(Active_status_read)
 
-                                Strike_pe_remove=Active_call_Strike[0]
-                                Premium_to_remove=Active_Initial_Sold_premium_call[0]
-                                SL_to_Remove=Active_SL_Call[0]
-                                reversal_status_func(reversal_status,Strike_pe_remove,Premium_to_remove,SL_to_Remove)
 
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
                                 put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
@@ -1089,7 +1051,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             Strike_pe_4_remove_copy=Put_strikes_remove[3]
 
 
-                            if Strike_pe_4_remove_copy not in deleted_strike_pe and Strike_pe_3_remove_copy not in deleted_strike_pe:  
+                            if Strike_pe_4_remove_copy not in deleted_strike_pe or Strike_pe_3_remove_copy not in deleted_strike_pe:  
                                 reversal_status=411100 #" the format is len,rev,CE_2,PE_2,PE_1"
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_4_remove_copy)
                                 Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_put[3])
@@ -1100,10 +1062,6 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
                                 writing_Active_status(Active_status_read)
 
-                                Strike_pe_remove=Active_call_Strike[0]
-                                Premium_to_remove=Active_Initial_Sold_premium_call[0]
-                                SL_to_Remove=Active_SL_Call[0]
-                                reversal_status_func(reversal_status,Strike_pe_remove,Premium_to_remove,SL_to_Remove)
 
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
                                 put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
@@ -1127,7 +1085,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             Strike_pe_3_remove_copy=Put_strikes_remove[2]
                             Strike_pe_4_remove_copy=Put_strikes_remove[3]
 
-                            if Strike_pe_4_remove_copy not in deleted_strike_pe and Strike_pe_3_remove_copy not in deleted_strike_pe and Strike_pe_2_remove_copy not in deleted_strike_pe:  
+                            if Strike_pe_4_remove_copy not in deleted_strike_pe or Strike_pe_3_remove_copy not in deleted_strike_pe or Strike_pe_2_remove_copy not in deleted_strike_pe:  
                                 reversal_status=411110 #" the format is len,rev,CE_2,PE_2,PE_1"
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_4_remove_copy)
                                 Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_put[3])
@@ -1143,10 +1101,6 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
                                 writing_Active_status(Active_status_read)
 
-                                Strike_pe_remove=Active_call_Strike[0]
-                                Premium_to_remove=Active_Initial_Sold_premium_call[0]
-                                SL_to_Remove=Active_SL_Call[0]
-                                reversal_status_func(reversal_status,Strike_pe_remove,Premium_to_remove,SL_to_Remove)
 
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
                                 Net_P_L=put_premium_collected_1
@@ -1169,7 +1123,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             Strike_pe_4_remove_copy=Put_strikes_remove[3]
 
 
-                            if Strike_pe_4_remove_copy not in deleted_strike_pe and Strike_pe_3_remove_copy not in deleted_strike_pe and Strike_pe_2_remove_copy not in deleted_strike_pe and Strike_pe_1_remove_copy not in deleted_strike_pe:  
+                            if Strike_pe_4_remove_copy not in deleted_strike_pe or Strike_pe_3_remove_copy not in deleted_strike_pe or Strike_pe_2_remove_copy not in deleted_strike_pe or Strike_pe_1_remove_copy not in deleted_strike_pe:  
                                 reversal_status=411111 #" the format is len,rev,CE_2,PE_2,PE_1"
 
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_4_remove_copy)
@@ -1189,11 +1143,6 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[0])
 
                                 writing_Active_status(Active_status_read)
-
-                                Strike_pe_remove=Active_call_Strike[0]
-                                Premium_to_remove=Active_Initial_Sold_premium_call[0]
-                                SL_to_Remove=Active_SL_Call[0]
-                                reversal_status_func(reversal_status,Strike_pe_remove,Premium_to_remove,SL_to_Remove)
 
                                 break
 
@@ -1222,17 +1171,6 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
 def morning_code(path_expiry_date_recurring,date):
 
-    # Active_status_read=read_Active_status()
-    # Active_status_read["Deactive Put Strike"]=list(set(Active_status_read["Deactive Put Strike"]))
-    # Active_status_read["Deactive Put Strike Premium Initial"]=list(set(Active_status_read["Deactive Put Strike Premium Initial"]))
-    # Active_status_read["Deactive Put Strike SL"]=list(set(Active_status_read["Deactive Put Strike SL"]))
-
-    # Active_status_read["Deactive Call Strike"]=list(set(Active_status_read["Deactive Call Strike"]))
-    # Active_status_read["Deactive Call Strike Premium Initial"]=list(set(Active_status_read["Deactive Call Strike Premium Initial"]))
-    # Active_status_read["Deactive Call Strike SL"]=list(set(Active_status_read["Deactive Call Strike SL"]))
-
-    # Active_strikes_list_Put = [strike for strike in Active_put_Strike if strike not in Active_status_read["Deactive Put Strike"]]
-    # Active_strikes_list_Call = [strike for strike in Active_call_Strike if strike not in Active_status_read["Deactive Call Strike"]]
 
     if Market_trend=="Neutral":
         CE_stk= Active_call_Strike[0]
@@ -1244,8 +1182,11 @@ def morning_code(path_expiry_date_recurring,date):
         df_ce=pd.read_csv(path_expiry_date_recurring+file_ce_1)
         df_pe=pd.read_csv(path_expiry_date_recurring+file_pe_1)
 
-        df_ce['Time'] = df_ce['Time'].apply(lambda x: x[:5])
-        df_pe['Time'] = df_pe['Time'].apply(lambda x: x[:5])
+        if (len(df_ce.loc[4,'Time']))>5:
+            df_ce['Time'] = df_ce['Time'].apply(lambda x: x[:5])
+            df_pe['Time'] = df_pe['Time'].apply(lambda x: x[:5])
+        else:
+            pass
 
         df_ce,df_pe=merging(df_ce,df_pe,"Call","Put")
         row_index_call = df_ce.index[(df_ce['Time'] == Checking_time)&(df_ce['Date'] == date)].tolist()
@@ -1271,9 +1212,13 @@ def morning_code(path_expiry_date_recurring,date):
             df_pe_2=pd.read_csv(path_expiry_date_recurring+file_pe_2)
             df_ce=pd.read_csv(path_expiry_date_recurring+file_ce_1)
 
-            df_ce['Time'] = df_ce['Time'].apply(lambda x: x[:5])
-            df_pe_1['Time'] = df_pe_1['Time'].apply(lambda x: x[:5])
-            df_pe_2['Time'] = df_pe_2['Time'].apply(lambda x: x[:5])
+
+            if len(df_ce.loc[4,'Time'])>5:
+                df_ce['Time'] = df_ce['Time'].apply(lambda x: x[:5])
+                df_pe_1['Time'] = df_pe_1['Time'].apply(lambda x: x[:5])
+                df_pe_2['Time'] = df_pe_2['Time'].apply(lambda x: x[:5])
+            else:
+                pass
 
             df_ce,df_pe_1=merging(df_ce,df_pe_1,"Call","Put")
             df_pe_1,df_pe_2=merging(df_pe_1,df_pe_2,"Put","Put")
@@ -1299,10 +1244,13 @@ def morning_code(path_expiry_date_recurring,date):
             df_pe_3=pd.read_csv(path_expiry_date_recurring+file_pe_3)
             df_ce=pd.read_csv(path_expiry_date_recurring+file_ce_1)
 
-            df_ce['Time'] = df_ce['Time'].apply(lambda x: x[:5])
-            df_pe_1['Time'] = df_pe_1['Time'].apply(lambda x: x[:5])
-            df_pe_2['Time'] = df_pe_2['Time'].apply(lambda x: x[:5])
-            df_pe_3['Time'] = df_pe_3['Time'].apply(lambda x: x[:5])
+            if len(df_ce.loc[4,'Time'])>5:
+                df_ce['Time'] = df_ce['Time'].apply(lambda x: x[:5])
+                df_pe_1['Time'] = df_pe_1['Time'].apply(lambda x: x[:5])
+                df_pe_2['Time'] = df_pe_2['Time'].apply(lambda x: x[:5])
+                df_pe_3['Time'] = df_pe_3['Time'].apply(lambda x: x[:5])
+            else:
+                pass
 
             df_ce,df_pe_1=merging(df_ce,df_pe_1,"Call","Put")
             df_pe_1,df_pe_2=merging(df_pe_1,df_pe_2,"Put","Put")
@@ -1329,10 +1277,13 @@ def morning_code(path_expiry_date_recurring,date):
             df_pe_3=pd.read_csv(path_expiry_date_recurring+file_pe_3)
             df_pe_4=pd.read_csv(path_expiry_date_recurring+file_pe_4)
 
-            df_pe_1['Time'] = df_pe_1['Time'].apply(lambda x: x[:5])
-            df_pe_2['Time'] = df_pe_2['Time'].apply(lambda x: x[:5])
-            df_pe_3['Time'] = df_pe_3['Time'].apply(lambda x: x[:5])
-            df_pe_4['Time'] = df_pe_4['Time'].apply(lambda x: x[:5])
+            if len(df_pe_1.loc[4,'Time'])>5:
+                df_pe_1['Time'] = df_pe_1['Time'].apply(lambda x: x[:5])
+                df_pe_2['Time'] = df_pe_2['Time'].apply(lambda x: x[:5])
+                df_pe_3['Time'] = df_pe_3['Time'].apply(lambda x: x[:5])
+                df_pe_4['Time'] = df_pe_4['Time'].apply(lambda x: x[:5])
+            else:
+                pass
 
             df_pe_1,df_pe_2=merging(df_pe_1,df_pe_2,"Put","Put")
             df_pe_3,df_pe_2=merging(df_pe_3,df_pe_2,"Put","Put")
@@ -1363,7 +1314,7 @@ def read_Active_status():
 
     return Active_status_read
 
-start_time = datetime.strptime("9:15", "%H:%M")
+start_time = datetime.strptime("9:14", "%H:%M")
 end_time = datetime.strptime("15:30", "%H:%M")
 
 # Define the interval (3 minutes)
@@ -1397,6 +1348,9 @@ for k in range(1):
         Market_trend="Neutral"
         Day=0
         reversal_status=None
+
+        with open(Path_backtest_Report+"active_status.txt", "w") as file:
+            file.truncate()
         
         for j in range(num_days):
             if Day==0:
@@ -1413,15 +1367,20 @@ for k in range(1):
                 file_put=f"NIFTY{str(Put_Strike)}_PE.csv"
                 df_call_init=pd.read_csv(path_expiry_date+file_call)
                 df_put_init=pd.read_csv(path_expiry_date+file_put)
-                df_call_init['Time'] = df_call_init['Time'].apply(lambda x: x[:5])
-                df_put_init['Time'] = df_put_init['Time'].apply(lambda x: x[:5])
+                if (len(df_call_init.loc[4,'Time']))>5:
+                    df_call_init['Time'] = df_call_init['Time'].apply(lambda x: x[:5])
+                    df_put_init['Time'] = df_put_init['Time'].apply(lambda x: x[:5])
+                else:
+                    pass
                 df_call_init,df_put_init=merging(df_call_init,df_put_init,"Call","Put")
 
                 date_str = formatted_Date_of_Init[k]
                 date_obj = datetime.strptime(date_str, "%d-%b-%Y")
                 Desired_Date = date_obj.strftime("%Y-%m-%d")
-                row_index_call = df_call_init.index[(df_call_init['Time'] == Desired_time)&(df_call_init['Date'] == Desired_Date)].tolist()
-                row_index_put = df_put_init.index[(df_put_init['Time'] == Desired_time)&(df_put_init['Date'] == Desired_Date)].tolist()
+                row_index_call = df_call_init.index[(df_call_init['Time'] == Desired_time_CE)&(df_call_init['Date'] == Desired_Date)].tolist()
+                row_index_put = df_put_init.index[(df_put_init['Time'] == Desired_time_PE)&(df_put_init['Date'] == Desired_Date)].tolist()
+                row_index_call=row_index_call[0]
+                row_index_put=row_index_put[0]
                 CE_price=df_call_init.loc[row_index_call,"close CE"]
                 PE_price=df_put_init.loc[row_index_put,"close PE"]
                 SL_CE=2*CE_price
@@ -1462,8 +1421,7 @@ for k in range(1):
                 
                 Day=Day+1
             else:
-  
-                morning_code()
+
                 routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,Active_SL_Call,Active_SL_Put,Day,Initial_day,Expiry_date)
                 # table_recording_code()
                 Day=Day+1

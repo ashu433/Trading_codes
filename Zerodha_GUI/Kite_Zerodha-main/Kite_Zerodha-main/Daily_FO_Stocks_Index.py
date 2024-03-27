@@ -252,7 +252,7 @@ def Options_index():
 
                     import datetime
 
-                    from_datetime = datetime.datetime.now() - datetime.timedelta(days=3)     # From last & days
+                    from_datetime = datetime.datetime.now() - datetime.timedelta(days=1)     # From last & days
                     to_datetime = datetime.datetime.now()
                     interval = "minute"
                     content_CE=kite.historical_data(ATM_Token_CE, from_datetime, to_datetime, interval, continuous=False, oi=True)
@@ -642,6 +642,6 @@ kite = KiteApp(enctoken=enctoken)
 
 
 Options_index() 
-# stock_Options()
-# Future_index()
-# Futures_stock() 
+stock_Options()
+Future_index()
+Futures_stock() 

@@ -1,7 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import datetime,timedelta
 
-# Define the start and end times
-start_time = datetime.strptime("9:15", "%H:%M")
+start_time = datetime.strptime("9:14", "%H:%M")
 end_time = datetime.strptime("15:30", "%H:%M")
 
 # Define the interval (3 minutes)
@@ -16,4 +15,4 @@ while current_time <= end_time:
     time_list.append(current_time.strftime("%H:%M"))
     current_time += interval
 
-print(type(time_list[0]))
+print(time_list)
