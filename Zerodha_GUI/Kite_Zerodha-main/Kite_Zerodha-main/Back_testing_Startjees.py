@@ -246,7 +246,7 @@ def Execution_check_Code(Triggered_time,Date,index_row,Closing_price,DF,right):
 
 
 
-def volatility_strike_pred(Len_pe,Date,Time,path_expiry_date_recurring,Startjee_1_dict_Call,Startjee_1_dict_Put,CE_Strike_1=None,CE_Strike_2=None,CE_Strike_3=None,CE_Strike_4=None,PE_Strike_1=None,PE_Strike_2=None,PE_Strike_3=None,PE_Strike_4=None):
+def volatility_strike_pred(Len_pe,Len_ce,Date,Time,path_expiry_date_recurring,Startjee_1_dict_Call,Startjee_1_dict_Put,CE_Strike_1=None,CE_Strike_2=None,CE_Strike_3=None,CE_Strike_4=None,PE_Strike_1=None,PE_Strike_2=None,PE_Strike_3=None,PE_Strike_4=None):
     global run_len
 
     input_time_str = Time
@@ -291,17 +291,21 @@ def volatility_strike_pred(Len_pe,Date,Time,path_expiry_date_recurring,Startjee_
             df_CE,df_PE_1=merging(df_CE,df_PE_1,"Call","Put")
             df_PE_2,df_PE_1=merging(df_PE_2,df_PE_1,"Put","Put")
 
+
             if (len(df_CE.loc[4,'Time']))>5:
-                index_row = df_CE.index[(df_CE['Time'] == Triggered_time)&(df_CE['Date'] == Date)].tolist()
+                df_CE['Time'] = df_CE['Time'].apply(lambda x: x[:5])
+                df_PE_2['Time'] = df_PE_2['Time'].apply(lambda x: x[:5])  
             else:
                 pass
 
+            index_row = df_CE.index[(df_CE['Time'] == Triggered_time)&(df_CE['Date'] == Date)].tolist()
             index_row=index_row[0]
 
             CP_CE=df_CE.loc[index_row,"close CE"]
             CP_CE,index_row=Execution_check_Code(Triggered_time,Date,index_row,CP_CE,df_CE,"CE")
 
             CP_PE_2=df_PE_2.loc[index_row,"close PE"]
+            
 
 
             SL_CE=2*CP_CE
@@ -455,6 +459,209 @@ def volatility_strike_pred(Len_pe,Date,Time,path_expiry_date_recurring,Startjee_
             run_len=rows-index_row
 
             return index_row,df_PE_1,df_PE_2,df_PE_3,df_PE_4
+    
+    elif Market_trend=="Trending Down":
+
+        if Len_ce==1:
+
+            PE_Strike_2=PE_Strike_1+offset
+            Startjee_1_dict_Put.pop(PE_Strike_1)
+
+            Active_put_Strike=[]
+            Active_put_Strike.append(PE_Strike_2)
+            Active_call_Strike.append(CE_Strike_2)
+
+            file_ce_1=f"NIFTY{str(CE_Strike_1)}_CE.csv"
+            file_ce_2=f"NIFTY{str(CE_Strike_2)}_CE.csv"
+            file_pe_2=f"NIFTY{str(PE_Strike_2)}_PE.csv"        
+
+            df_CE_1=pd.read_csv(path_expiry_date_recurring+file_ce_1)
+            df_CE_2=pd.read_csv(path_expiry_date_recurring+file_ce_2)
+            df_PE_2=pd.read_csv(path_expiry_date_recurring+file_pe_2)
+
+            df_CE_1,df_CE_2=merging(df_CE_1,df_CE_2,"Call","Call")
+            df_CE_2,df_PE_2=merging(df_CE_2,df_PE_2,"Call","Put")
+
+            if (len(df_CE_2.loc[4,'Time']))>5:
+                df_CE_2['Time'] = df_CE_2['Time'].apply(lambda x: x[:5])
+                df_CE_1['Time'] = df_CE_1['Time'].apply(lambda x: x[:5])
+                df_PE_2['Time'] = df_PE_2['Time'].apply(lambda x: x[:5])
+            else:
+                pass
+
+            index_row = df_CE_1.index[(df_CE_1['Time'] == Triggered_time)&(df_CE_1['Date'] == Date)].tolist()
+            index_row=index_row[0]
+
+            CP_PE=df_PE_2.loc[index_row,"close PE"]
+            CP_PE,index_row=Execution_check_Code(Triggered_time,Date,index_row,CP_PE,df_PE_2,"PE")
+
+            CP_CE_2=df_CE_2.loc[index_row,"close CE"]
+
+            SL_PE=2*CP_PE
+            SL_CE_2=2*CP_CE_2
+
+            Active_status_read=read_Active_status()
+            Active_status_read["Deactive Put Strike"].append(PE_Strike_1)
+            Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_put[0])
+            Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[0])
+
+            Active_status_read["Active_put_Strike"].remove(PE_Strike_1)
+            Active_status_read["Active_Initial_Sold_premium_put"].remove(Active_Initial_Sold_premium_put[0])
+            Active_status_read["Active_SL_Put"].remove(Active_SL_Put[0])
+
+            Active_status_read["Active_call_Strike"].append(PE_Strike_2)
+            Active_status_read["Active_Initial_Sold_premium_call"].append(CP_PE)
+            Active_status_read["Active_SL_Call"].append(SL_PE)
+
+            Active_status_read["Active_call_Strike"].append(CE_Strike_2)
+            Active_status_read["Active_Initial_Sold_premium_call"].append(CP_CE_2)
+            Active_status_read["Active_SL_Call"].append(SL_CE_2)
+
+            writing_Active_status(Active_status_read)
+
+            Active_Initial_Sold_premium_put=[]
+            Active_SL_Put=[]
+            Active_Initial_Sold_premium_put.append(CP_PE)
+            Active_SL_Put.append(SL_PE)
+            Active_Initial_Sold_premium_call.append(CP_CE_2)
+            Active_SL_Call.append(SL_CE_2)
+
+
+            
+            rows=df_CE_2.shape[0]
+            run_len=rows-index_row
+
+            return index_row,df_CE_1,df_CE_2,df_PE_2
+        
+        elif Len_ce==2:
+
+            PE_Strike_3=PE_Strike_2+offset
+            Startjee_1_dict_Put.pop(PE_Strike_2)
+
+            Active_put_Strike=[]
+            Active_put_Strike.append(PE_Strike_3)
+            Active_call_Strike.append(CE_Strike_3)
+
+            file_ce_3=f"NIFTY{str(CE_Strike_3)}_CE.csv"
+            file_ce_2=f"NIFTY{str(CE_Strike_2)}_CE.csv"
+            file_ce_1=f"NIFTY{str(CE_Strike_1)}_CE.csv"
+            file_pe_3=f"NIFTY{str(PE_Strike_3)}_PE.csv"
+
+            df_CE_3=pd.read_csv(path_expiry_date_recurring+file_ce_3)
+            df_CE_2=pd.read_csv(path_expiry_date_recurring+file_ce_2)
+            df_CE_1=pd.read_csv(path_expiry_date_recurring+file_ce_1)
+            df_PE_3=pd.read_csv(path_expiry_date_recurring+file_pe_3)
+
+            df_CE_3,df_CE_2=merging(df_CE_3,df_CE_2,"Call","Call")
+            df_CE_2,df_CE_1=merging(df_CE_2,df_CE_1,"Call","Call")
+            df_PE_3,df_CE_2=merging(df_PE_3,df_PE_1,"Put","Call")
+
+            if (len(df_CE_3.loc[4,'Time']))>5:
+                df_CE_3['Time'] = df_CE_3['Time'].apply(lambda x: x[:5])
+                df_CE_2['Time'] = df_CE_2['Time'].apply(lambda x: x[:5])
+                df_CE_1['Time'] = df_CE_1['Time'].apply(lambda x: x[:5])
+                df_PE_3['Time'] = df_PE_3['Time'].apply(lambda x: x[:5])  
+            else:
+                pass
+
+            index_row = df_CE_3.index[(df_CE_3['Time'] == Triggered_time)&(df_CE_3['Date'] == Date)].tolist()
+            index_row=index_row[0]
+
+            CP_CE_3=df_CE_3.loc[index_row,"close CE"]
+            CP_PE_3=df_PE_3.loc[index_row,"close PE"]
+            SL_CE_3=2*CP_CE_3
+            SL_PE_3=2*CP_PE_3
+
+            Active_status_read=read_Active_status()
+            Active_status_read["Deactive Put Strike"].append(PE_Strike_2)
+            Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_put[0])
+            Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[0])
+
+            Active_status_read["Active_put_Strike"].remove(PE_Strike_2)
+            Active_status_read["Active_Initial_Sold_premium_put"].remove(Active_Initial_Sold_premium_put[0])
+            Active_status_read["Active_SL_Put"].remove(Active_SL_Put[0])
+
+            Active_status_read["Active_put_Strike"].append(PE_Strike_3)
+            Active_status_read["Active_Initial_Sold_premium_put"].append(CP_PE_3)
+            Active_status_read["Active_SL_Put"].append(SL_PE_3)
+
+            Active_status_read["Active_call_Strike"].append(CE_Strike_3)
+            Active_status_read["Active_Initial_Sold_premium_call"].append(CP_CE_3)
+            Active_status_read["Active_SL_Call"].append(SL_CE_3)
+
+            writing_Active_status(Active_status_read)
+
+            Active_Initial_Sold_premium_put=[]
+            Active_SL_Put=[]
+            Active_Initial_Sold_premium_put.append(CP_PE_3)
+            Active_SL_Put.append(SL_PE_3)
+            Active_Initial_Sold_premium_call.append(CP_CE_3)
+            Active_SL_Call.append(SL_CE_3)
+            
+            rows=df_CE_3.shape[0]
+            run_len=rows-index_row
+
+            return index_row,df_CE_3,df_CE_2,df_CE_1,df_PE_3   
+        
+        elif Len_ce==3:
+
+            Active_put_Strike=[]
+            Active_call_Strike.append(CE_Strike_4)
+            Startjee_1_dict_Put.pop(PE_Strike_3)
+
+            file_ce_4=f"NIFTY{str(CE_Strike_4)}_CE.csv"
+            file_ce_3=f"NIFTY{str(CE_Strike_3)}_CE.csv"
+            file_ce_2=f"NIFTY{str(CE_Strike_2)}_CE.csv"
+            file_ce_1=f"NIFTY{str(CE_Strike_1)}_CE.csv"
+
+            df_CE_1=pd.read_csv(path_expiry_date_recurring+file_ce_1)
+            df_CE_2=pd.read_csv(path_expiry_date_recurring+file_ce_2)
+            df_CE_3=pd.read_csv(path_expiry_date_recurring+file_ce_3)
+            df_CE_4=pd.read_csv(path_expiry_date_recurring+file_ce_4)
+
+            df_CE_2,df_CE_1=merging(df_CE_2,df_CE_1,"Call","Call")
+            df_CE_3,df_CE_1=merging(df_CE_3,df_CE_1,"Call","Call")
+            df_CE_4,df_CE_3=merging(df_CE_4,df_CE_3,"Call","Call")
+
+            if (len(df_CE_3.loc[4,'Time']))>5:
+                df_CE_3['Time'] = df_CE_3['Time'].apply(lambda x: x[:5])
+                df_CE_2['Time'] = df_CE_2['Time'].apply(lambda x: x[:5])
+                df_CE_1['Time'] = df_CE_1['Time'].apply(lambda x: x[:5])
+                df_CE_4['Time'] = df_CE_4['Time'].apply(lambda x: x[:5])  
+            else:
+                pass
+
+            index_row = df_CE_1.index[(df_CE_1['Time'] == Triggered_time)&(df_CE_1['Date'] == Date)].tolist()
+            index_row=index_row[0]
+            CP_CE_4=df_CE_4.loc[index_row,"close PE"]
+            SL_CE_4=2*CP_CE_4
+
+            Active_status_read=read_Active_status()
+            Active_status_read["Deactive Put Strike"].append(PE_Strike_3)
+            Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_put[0])
+            Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[0])
+
+            Active_status_read["Active_put_Strike"].remove(PE_Strike_3)
+            Active_status_read["Active_Initial_Sold_premium_put"].remove(Active_Initial_Sold_premium_put[0])
+            Active_status_read["Active_SL_Put"].remove(Active_SL_Put[0])
+
+            Active_status_read["Active_call_Strike"].append(CE_Strike_4)
+            Active_status_read["Active_Initial_Sold_premium_call"].append(CP_CE_4)
+            Active_status_read["Active_SL_Call"].append(SL_CE_4)
+
+            writing_Active_status(Active_status_read)
+
+            Active_Initial_Sold_premium_put=[]
+            Active_SL_Put=[]
+            Active_Initial_Sold_premium_call.append(CP_CE_4)
+            Active_SL_Call.append(SL_CE_4)
+            run_len=rows-index_row
+
+            return index_row,df_CE_1,df_CE_2,df_CE_3,df_CE_4
+
+            
+
+
 
 
 
@@ -504,7 +711,17 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                         pass
                 
                 elif Market_trend=="Trending Down":
-                    pass
+
+                    len_ce_1=len(Active_call_Strike)
+
+                    if len_ce_1==2:
+                        index_row,df_CE_1,df_CE_2,df_PE_2=morning_code(path_expiry_date_recurring,output_date)
+                    elif len_ce_1==3:
+                        index_row,df_CE_1,df_CE_2,df_CE_3,df_PE_3=morning_code(path_expiry_date_recurring,output_date)
+                    elif len_ce_1==4:
+                        index_row,df_CE_1,df_CE_2,df_CE_3,df_CE_4=morning_code(path_expiry_date_recurring,output_date)
+                    else:
+                        pass
 
 
             if Market_trend=="Neutral":
@@ -524,11 +741,15 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                     CE_Current_pr=df_call_init.loc[(i+index_row+1),"high CE"]
                     PE_Current_pr_1=df_put_init.loc[(i+index_row+1),"high PE"]
 
+                    CE_Current_pr_close=df_call_init.loc[(i+index_row+1),"close CE"]
+                    PE_Current_pr_1_close=df_put_init.loc[(i+index_row+1),"close PE"]
+
                     Startjee_1_dict_Call[Call_Strike]=[CE_Current_pr,ce_initial_Price,CE_SL]
                     Startjee_1_dict_Put[Put_Strike]=[PE_Current_pr_1,pe_initial_Price,PE_SL]
 
-                    CE_instantinious_pr=[CE_Current_pr]
-                    PE_instantinious_pr=[PE_Current_pr_1]
+                    CE_instantinious_pr=[CE_Current_pr_close]
+                    PE_instantinious_pr=[PE_Current_pr_1_close]
+
 
                     if df_call_init.loc[(running_index+i+1),"high CE"]<CE_SL and df_put_init.loc[(running_index+i+1),"high PE"]<PE_SL:
                         call_premium_collected=ce_initial_Price-df_call_init.loc[(running_index+i+1),"close CE"]
@@ -551,7 +772,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                         CE_Strike_2=CE_Strike-50
                         Market_trend="Trending Down"
                         Time=df_call_init.loc[(running_index+i+1),"Time"]
-                        index_row,df_CE_1,df_CE_2,df_PE=volatility_strike_pred(Len_ce,Time,path_expiry_date_recurring,CE_Strike,CE_Strike_2,0,0,PE_Strike_1,0,0,0)
+                        index_row,df_CE_1,df_CE_2,df_PE_2=volatility_strike_pred(Len_ce,Time,path_expiry_date_recurring,CE_Strike,CE_Strike_2,0,0,PE_Strike_1,0,0,0)
                     else:
                         pass
 
@@ -567,16 +788,20 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                         PE_Current_pr_1=df_PE_1.loc[(i+index_row+1),"high PE"]
                         PE_Current_pr_2=df_PE_2.loc[(i+index_row+1),"high PE"]
 
-                        CE_instantinious_pr=[CE_Current_pr]
-                        PE_instantinious_pr=[PE_Current_pr_1,PE_Current_pr_2]
+                        CE_Current_pr_close=df_CE.loc[(i+index_row+1),"close CE"]
+                        PE_Current_pr_1_close=df_PE_1.loc[(i+index_row+1),"close PE"]
+                        PE_Current_pr_2_close=df_PE_2.loc[(i+index_row+1),"close PE"]
+
+                        CE_instantinious_pr=[CE_Current_pr_close]
+                        PE_instantinious_pr=[PE_Current_pr_1_close,PE_Current_pr_2_close]
 
                         ce_initial_Price=Active_Initial_Sold_premium_call[0]
                         pe_initial_Price_1=Active_Initial_Sold_premium_put[0]
                         pe_initial_Price_2=Active_Initial_Sold_premium_put[1]
 
-                        Startjee_1_dict_Call[Active_call_Strike[0]]=[CE_Current_pr,ce_initial_Price,CE_SL]
-                        Startjee_1_dict_Put[Active_put_Strike[0]]=[PE_Current_pr_1,pe_initial_Price_1,PE_1_SL]
-                        Startjee_1_dict_Put[Active_put_Strike[1]]=[PE_Current_pr_2,pe_initial_Price_2,PE_2_SL]
+                        Startjee_1_dict_Call[Active_call_Strike[0]]=[CE_Current_pr_close,ce_initial_Price,CE_SL]
+                        Startjee_1_dict_Put[Active_put_Strike[0]]=[PE_Current_pr_1_close,pe_initial_Price_1,PE_1_SL]
+                        Startjee_1_dict_Put[Active_put_Strike[1]]=[PE_Current_pr_2_close,pe_initial_Price_2,PE_2_SL]
 
 
                         if CE_Current_pr<CE_SL and PE_Current_pr_1<PE_1_SL and PE_Current_pr_2<PE_2_SL:
@@ -675,8 +900,8 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 reversal_status=21011 #" the format is len,rev,CE_2,PE_2,PE_1"
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_1_remove_copy)
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_2_remove_copy)
-                                Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_call[0])
-                                Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_call[1])
+                                Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_put[0])
+                                Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_put[1])
                                 Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[0])
                                 Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[1])
 
@@ -711,8 +936,8 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 reversal_status=21111 #" the format is len,rev,CE_2,PE_2,PE_1"
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_1_remove_copy)
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_2_remove_copy)
-                                Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_call[0])
-                                Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_call[1])
+                                Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_put[0])
+                                Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_put[1])
                                 Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[0])
                                 Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[1])
                                 Active_status_read["Deactive Call Strike"].append(Strike_ce_remove_copy)
@@ -739,15 +964,23 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                         PE_Current_pr_2=df_PE_2.loc[(i+index_row+1),"high PE"]
                         PE_Current_pr_3=df_PE_3.loc[(i+index_row+1),"high PE"]
 
+                        CE_Current_pr_close=df_CE.loc[(i+index_row+1),"close CE"]
+                        PE_Current_pr_1_close=df_PE_1.loc[(i+index_row+1),"close PE"]
+                        PE_Current_pr_2_close=df_PE_2.loc[(i+index_row+1),"close PE"]
+                        PE_Current_pr_3_close=df_PE_3.loc[(i+index_row+1),"close PE"]
+
                         ce_initial_Price=Active_Initial_Sold_premium_call[0]
                         pe_initial_Price_1=Active_Initial_Sold_premium_put[0]
                         pe_initial_Price_2=Active_Initial_Sold_premium_put[1]
                         pe_initial_Price_3=Active_Initial_Sold_premium_put[2]
 
-                        Startjee_1_dict_Call[Active_call_Strike[0]]=[CE_Current_pr,ce_initial_Price,CE_SL]
-                        Startjee_1_dict_Put[Active_put_Strike[0]]=[PE_Current_pr_1,pe_initial_Price_1,PE_1_SL]
-                        Startjee_1_dict_Put[Active_put_Strike[1]]=[PE_Current_pr_2,pe_initial_Price_2,PE_2_SL]
-                        Startjee_1_dict_Put[Active_put_Strike[2]]=[PE_Current_pr_3,pe_initial_Price_3,PE_3_SL]
+                        Startjee_1_dict_Call[Active_call_Strike[0]]=[CE_Current_pr_close,ce_initial_Price,CE_SL]
+                        Startjee_1_dict_Put[Active_put_Strike[0]]=[PE_Current_pr_1_close,pe_initial_Price_1,PE_1_SL]
+                        Startjee_1_dict_Put[Active_put_Strike[1]]=[PE_Current_pr_2_close,pe_initial_Price_2,PE_2_SL]
+                        Startjee_1_dict_Put[Active_put_Strike[2]]=[PE_Current_pr_3_close,pe_initial_Price_3,PE_3_SL]
+
+                        CE_instantinious_pr=[CE_Current_pr_close]
+                        PE_instantinious_pr=[PE_Current_pr_1_close,PE_Current_pr_2_close,PE_Current_pr_3_close]
 
                         if CE_Current_pr<CE_SL and PE_Current_pr_1<PE_1_SL and PE_Current_pr_2<PE_2_SL and PE_Current_pr_3<PE_3_SL:
                             call_premium_collected=ce_initial_Price-df_CE_3.loc[(index_row+i+1),"close CE"]
@@ -775,7 +1008,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             Put_strikes_remove=Active_status_read["Active_put_Strike"]
                             Strike_pe_remove_copy=Put_strikes_remove[2]
 
-                            if Strike_pe_remove_copy not in deleted_strike:  
+                            if Strike_pe_remove_copy not in deleted_strike_pe:  
                                 reversal_status=310100 #" the format is len,rev,CE_2,PE_2,PE_1"
                                 Active_status_read["Deactive Put Strike"].append(Strike_pe_remove_copy)
                                 Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_put[2])
@@ -808,7 +1041,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             Call_Strikes_remove=Active_status_read["Active_call_Strike"]
 
                             Strike_pe_remove_copy=Put_strikes_remove[2]
-                            Strike_ce_remove_copy=Put_strikes_remove[0]
+                            Strike_ce_remove_copy=Call_strikes_remove[0]
 
                             if Strike_pe_remove_copy not in deleted_strike_pe or Strike_ce_remove_copy not in deleted_strike_ce:  
                                 reversal_status=311100 #" the format is len,rev,CE_2,PE_2,PE_1"
@@ -840,8 +1073,8 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             Put_strikes_remove=Active_status_read["Active_put_Strike"]
         
 
-                            Strike_pe_2_remove_copy=Put_strikes_remove[2]
-                            Strike_pe_3_remove_copy=Put_strikes_remove[3]
+                            Strike_pe_2_remove_copy=Put_strikes_remove[1]
+                            Strike_pe_3_remove_copy=Put_strikes_remove[2]
 
                             if Strike_pe_2_remove_copy not in deleted_strike_pe or Strike_pe_3_remove_copy not in deleted_strike_pe:  
                                 reversal_status=310110 #" the format is len,rev,CE_2,PE_2,PE_1"
@@ -926,9 +1159,6 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[0])
                                 Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[1])
                                 Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[2])
-                                Active_status_read["Deactive Call Strike"].append(Strike_ce_1_remove_copy)
-                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[0])
-                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[0])
 
                                 writing_Active_status(Active_status_read)
 
@@ -941,6 +1171,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 Net_P_L=call_premium_collected
                                 time=df_CE_3.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+
                         elif CE_Current_pr>=CE_SL and PE_Current_pr_1>=PE_1_SL and PE_Current_pr_2>=PE_2_SL and PE_Current_pr_3>=PE_3_SL:
                             Active_status_read=read_Active_status()
                             deleted_strike_pe=Active_status_read["Deactive Put Strike"]
@@ -990,16 +1221,25 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                         PE_Current_pr_3=df_PE_3.loc[(i+index_row+1),"high PE"]
                         PE_Current_pr_4=df_PE_4.loc[(i+index_row+1),"high PE"]
 
+                        
+                        PE_Current_pr_1_close=df_PE_1.loc[(i+index_row+1),"close PE"]
+                        PE_Current_pr_2_close=df_PE_2.loc[(i+index_row+1),"close PE"]
+                        PE_Current_pr_3_close=df_PE_3.loc[(i+index_row+1),"close PE"]
+                        PE_Current_pr_4_close=df_PE_4.loc[(i+index_row+1),"close PE"]
+
                         pe_initial_Price_1=Active_Initial_Sold_premium_put[0]
                         pe_initial_Price_2=Active_Initial_Sold_premium_put[1]
                         pe_initial_Price_3=Active_Initial_Sold_premium_put[2]
                         pe_initial_Price_4=Active_Initial_Sold_premium_put[3]
 
+                        CE_instantinious_pr=[]
+                        PE_instantinious_pr=[PE_Current_pr_1_close,PE_Current_pr_2_close,PE_Current_pr_3_close,PE_Current_pr_4_close]
+
                         
-                        Startjee_1_dict_Put[Active_put_Strike[0]]=[PE_Current_pr_1,pe_initial_Price_1,PE_1_SL]
-                        Startjee_1_dict_Put[Active_put_Strike[1]]=[PE_Current_pr_2,pe_initial_Price_2,PE_2_SL]
-                        Startjee_1_dict_Put[Active_put_Strike[2]]=[PE_Current_pr_3,pe_initial_Price_3,PE_3_SL]
-                        Startjee_1_dict_Put[Active_put_Strike[3]]=[PE_Current_pr_4,pe_initial_Price_4,PE_4_SL]
+                        Startjee_1_dict_Put[Active_put_Strike[0]]=[PE_Current_pr_1_close,pe_initial_Price_1,PE_1_SL]
+                        Startjee_1_dict_Put[Active_put_Strike[1]]=[PE_Current_pr_2_close,pe_initial_Price_2,PE_2_SL]
+                        Startjee_1_dict_Put[Active_put_Strike[2]]=[PE_Current_pr_3_close,pe_initial_Price_3,PE_3_SL]
+                        Startjee_1_dict_Put[Active_put_Strike[3]]=[PE_Current_pr_4_close,pe_initial_Price_4,PE_4_SL]
 
                         if PE_Current_pr_1<PE_1_SL and PE_Current_pr_2<PE_2_SL and PE_Current_pr_3<PE_3_SL and PE_Current_pr_4<PE_4_SL:
                             put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
@@ -1156,13 +1396,615 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
 
 
-
-
-
-
-
                 elif Market_trend=="Trending Down":
-                    pass
+                    Len_ce=len(Active_call_Strike)
+                    Len_pe=len(Active_put_Strike)
+
+                    if Len_ce==2:
+                        CE_1_SL=Active_SL_Call[0]
+                        CE_2_SL=Active_SL_Call[1]
+                        PE_2_SL=Active_SL_Put[0]
+
+                        CE_Current_pr_1=df_CE_1.loc[(i+index_row+1),"high CE"]
+                        CE_Current_pr_2=df_CE_2.loc[(i+index_row+1),"high CE"]
+                        PE_Current_pr_2=df_PE_2.loc[(i+index_row+1),"high PE"]
+
+                        CE_Current_pr_1_close=df_CE_1.loc[(i+index_row+1),"close CE"]
+                        CE_Current_pr_2_close=df_CE_2.loc[(i+index_row+1),"close CE"]
+                        PE_Current_pr_2_close=df_PE_2.loc[(i+index_row+1),"close PE"]
+
+                        CE_instantinious_pr=[CE_Current_pr_1_close,CE_Current_pr_2_close]
+                        PE_instantinious_pr=[PE_Current_pr_2_close]
+
+                        ce_initial_Price_1=Active_Initial_Sold_premium_call[0]
+                        ce_initial_Price_2=Active_Initial_Sold_premium_call[1]
+                        pe_initial_Price_2=Active_Initial_Sold_premium_put[0]
+
+                        Startjee_1_dict_Call[Active_call_Strike[0]]=[CE_Current_pr_1_close,ce_initial_Price_1,CE_1_SL]
+                        Startjee_1_dict_Call[Active_call_Strike[1]]=[CE_Current_pr_2_close,ce_initial_Price_2,CE_2_SL]
+                        Startjee_1_dict_Put[Active_put_Strike[1]]=[PE_Current_pr_2_close,pe_initial_Price_2,PE_2_SL]
+
+                        if CE_Current_pr_1<CE_1_SL and CE_Current_pr_2<CE_2_SL and PE_Current_pr_2<PE_2_SL:
+                            call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                            call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
+                            put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
+                            Net_P_L=call_premium_collected_1+call_premium_collected_2+put_premium_collected_2
+                            
+                            time=df_CE_1.loc[(index_row+i+1),"Time"]
+                            SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+                        
+                        elif CE_Current_pr_1<CE_1_SL and CE_Current_pr_2<CE_2_SL and PE_Current_pr_1>=PE_1_SL:
+                            CE_Strike_1=Active_call_Strike[0]
+                            CE_Strike_2=Active_call_Strike[1]
+                            CE_Strike_3=Active_call_Strike[1]-50
+                            PE_strike_1=Active_put_Strike[0]
+
+                            Time=df_CE_1.loc[(index_row+i+1),"Time"]
+                            index_row,df_CE_3,df_CE_2,df_CE_1,df_PE_3=volatility_strike_pred(Len_ce,Time,path_expiry_date_recurring,0,CE_Strike_2,0,0,PE_strike_1,PE_strike_2,PE_strike_3,0)
+
+######### REVESAL SEQUENCE ######
+
+                        elif CE_Current_pr_1<CE_1_SL and CE_Current_pr_2>=CE_2_SL and PE_Current_pr_2<PE_2_SL:
+                            Active_status_read=read_Active_status()
+                            deleted_strike=Active_status_read["Deactive Call Strike"]
+                            Call_strikes_remove=Active_status_read["Active_call_Strike"]
+                            Strike_ce_remove_copy=Call_strikes_remove[1]
+
+
+                            if Strike_ce_remove_copy not in deleted_strike:  
+                                reversal_status=21010 #" the format is len,rev,CE_2,PE_2,PE_1"
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[1])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[1])
+
+                                writing_Active_status(Active_status_read)
+
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
+                                Net_P_L=call_premium_collected_1+put_premium_collected_2
+                                time=df_CE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+                            else:
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
+                                Net_P_L=call_premium_collected_1+put_premium_collected_2
+                                time=df_CE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+                       
+                        elif CE_Current_pr_1<CE_1_SL and CE_Current_pr_2>=CE_2_SL and PE_Current_pr_2>=PE_2_SL:
+                            Active_status_read=read_Active_status()
+                            deleted_strike_pe=Active_status_read["Deactive Put Strike"]
+                            deleted_strike_ce=Active_status_read["Deactive Call Strike"]
+
+                            Put_strikes_remove=Active_status_read["Active_put_Strike"]
+                            Call_Strikes_remove=Active_status_read["Active_call_Strike"]
+
+                            Strike_ce_remove_copy=Call_Strikes_remove[1]
+                            Strike_pe_remove_copy=Put_strikes_remove[0]
+
+                            if Strike_pe_remove_copy not in deleted_strike_pe or Strike_ce_remove_copy not in deleted_strike_ce:  
+                                reversal_status=21110 #" the format is len,rev,CE_2,PE_2,PE_1"
+
+                                Active_status_read["Deactive Put Strike"].append(Strike_pe_remove_copy)
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_remove_copy)
+                                Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_put[0])
+                                Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[0])
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[1])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[1])
+                                writing_Active_status(Active_status_read)
+
+
+
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=call_premium_collected_1
+                                time=df_CE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+                            else:
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=call_premium_collected_1
+                                time=df_CE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+
+                        elif CE_Current_pr_1>=CE_1_SL and CE_Current_pr_2>=CE_2_SL and PE_Current_pr_2<PE_2_SL:
+                            Active_status_read=read_Active_status()
+                            deleted_strike_ce=Active_status_read["Deactive Call Strike"]
+                            Call_strikes_remove=Active_status_read["Active_call_Strike"]
+
+                            Strike_ce_1_remove_copy=Call_strikes_remove[0]
+                            Strike_ce_2_remove_copy=Call_strikes_remove[1]
+
+                            if Strike_ce_1_remove_copy not in deleted_strike or Strike_ce_2_remove_copy not in deleted_strike:  
+                                reversal_status=21011 #" the format is len,rev,CE_2,PE_2,PE_1"
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_1_remove_copy)
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_2_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[0])
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[1])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[0])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[1])
+
+                                writing_Active_status(Active_status_read)
+
+                                put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=put_premium_collected_2
+                                time=df_PE_2.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+                            else:
+                                put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=put_premium_collected_2
+                                time=df_PE_2.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+
+                        elif CE_Current_pr_1>=CE_1_SL and CE_Current_pr_2>=CE_2_SL and PE_Current_pr_2>=PE_2_SL:
+                            ## read the text file and get the strike to remove from that file and get the deleted strikes list
+                            Active_status_read=read_Active_status()
+                            deleted_strike_pe=Active_status_read["Deactive Put Strike"]
+                            deleted_strike_ce=Active_status_read["Deactive Call Strike"]
+
+                            Put_strikes_remove=Active_status_read["Active_put_Strike"]
+                            Call_Strikes_remove=Active_status_read["Active_call_Strike"]
+
+                            Strike_ce_1_remove_copy=Call_strikes_remove[0]
+                            Strike_ce_2_remove_copy=Call_strikes_remove[1]
+                            Strike_pe_1_remove_copy=Put_strikes_remove[0]
+
+                            ## Read the list from the text file  ########
+                            # deleted_strike=data
+                            if Strike_pe_1_remove_copy not in deleted_strike_pe or Strike_pe_2_remove_copy not in deleted_strike_pe or Strike_ce_1_remove_copy not in deleted_strike_ce:  
+                                reversal_status=21111 #" the format is len,rev,CE_2,PE_2,PE_1"
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_1_remove_copy)
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_2_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[0])
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[1])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[0])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[1])
+                                Active_status_read["Deactive Put Strike"].append(Strike_pe_remove_copy)
+                                Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_put[0])
+                                Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[0])
+
+                                writing_Active_status(Active_status_read)
+
+                                break
+                        else:
+                            pass
+                    
+                    elif Len_ce==3:
+
+                        CE_1_SL=Active_SL_Call[0]
+                        CE_2_SL=Active_SL_Call[1]
+                        CE_3_SL=Active_SL_Call[2]
+                        PE_3_SL=Active_SL_Put[0]
+
+                        CE_Current_pr_1=df_CE_1.loc[(i+index_row+1),"high CE"]
+                        CE_Current_pr_2=df_CE_2.loc[(i+index_row+1),"high CE"]
+                        CE_Current_pr_3=df_CE_3.loc[(i+index_row+1),"high CE"]
+                        PE_Current_pr_3=df_PE_3.loc[(i+index_row+1),"high PE"]
+
+                        CE_Current_pr_1_close=df_CE_1.loc[(i+index_row+1),"close CE"]
+                        CE_Current_pr_2_close=df_CE_2.loc[(i+index_row+1),"close CE"]
+                        CE_Current_pr_3_close=df_CE_3.loc[(i+index_row+1),"close CE"]
+                        PE_Current_pr_3_close=df_PE_3.loc[(i+index_row+1),"close PE"]
+
+                        ce_initial_Price_1=Active_Initial_Sold_premium_call[0]
+                        ce_initial_Price_2=Active_Initial_Sold_premium_call[1]
+                        ce_initial_Price_3=Active_Initial_Sold_premium_call[2]
+                        pe_initial_Price_3=Active_Initial_Sold_premium_put[0]
+
+                        Startjee_1_dict_Call[Active_call_Strike[0]]=[CE_Current_pr_1_close,ce_initial_Price_1,CE_1_SL]
+                        Startjee_1_dict_Call[Active_call_Strike[1]]=[CE_Current_pr_2_close,ce_initial_Price_2,CE_2_SL]
+                        Startjee_1_dict_Call[Active_call_Strike[2]]=[CE_Current_pr_3_close,ce_initial_Price_3,CE_3_SL]
+                        Startjee_1_dict_Put[Active_call_Strike[0]]=[PE_Current_pr_3_close,pe_initial_Price_3,PE_3_SL]
+
+                        CE_instantinious_pr=[CE_Current_pr_1_close,CE_Current_pr_2_close,CE_Current_pr_3_close]
+                        PE_instantinious_pr=[PE_Current_pr_3_close]
+
+                        if CE_Current_pr_1<CE_1_SL and CE_Current_pr_2<CE_2_SL and CE_Current_pr_3<CE_3_SL and PE_Current_pr_3<PE_3_SL: 
+                            call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                            call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
+                            call_premium_collected_3=ce_initial_Price_3-df_CE_3.loc[(index_row+i+1),"close CE"]
+                            put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close PE"]
+                            Net_P_L=call_premium_collected_1+call_premium_collected_2+call_premium_collected_3+put_premium_collected_3
+                            time=df_PE_3.loc[(index_row+i+1),"Time"]
+                            SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+
+                        elif CE_Current_pr_1<CE_1_SL and CE_Current_pr_2<CE_2_SL and CE_Current_pr_3<CE_3_SL and PE_Current_pr_3>=PE_3_SL: 
+                            
+                            
+                            CE_Strike_3=Active_call_Strike[2]
+                            CE_Strike_2=Active_call_Strike[1]
+                            CE_Strike_1=Active_call_Strike[0]
+                            CE_Strike_4=CE_Strike_3-50
+                            
+
+                            Time=df_CE_3.loc[(index_row+i+1),"Time"]
+                            Date=df_CE_3.loc[(index_row+i+1),"Date"]
+                            index_row,df_CE_1,df_CE_2,df_CE_3,df_CE_4=volatility_strike_pred(Len_pe,Date,Time,path_expiry_date_recurring,0,0,CE_Strike_3,0,PE_strike_1,PE_strike_2,PE_strike_3,PE_Strike_4)
+
+######### REVESAL SEQUENCE ######
+
+
+                        elif CE_Current_pr_1<CE_1_SL and CE_Current_pr_2<CE_2_SL and CE_Current_pr_3>=CE_3_SL and PE_Current_pr_3<PE_3_SL: 
+                            Active_status_read=read_Active_status()
+                            deleted_strike_ce=Active_status_read["Deactive Call Strike"]
+                            Call_strikes_remove=Active_status_read["Active_call_Strike"]
+                            Strike_ce_remove_copy=Call_strikes_remove[2]
+
+                            if Strike_ce_remove_copy not in deleted_strike_ce:  
+                                reversal_status=310100 #" the format is len,rev,CE_2,PE_2,PE_1"
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[2])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[2])
+
+                                writing_Active_status(Active_status_read)
+
+
+                                put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close PE"]
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=call_premium_collected+put_premium_collected_1+put_premium_collected_2
+                                time=df_PE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+                            else:
+                                put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close PE"]
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=call_premium_collected+put_premium_collected_1+put_premium_collected_2
+                                time=df_PE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+ 
+                        elif CE_Current_pr_1<CE_1_SL and CE_Current_pr_2<CE_2_SL and CE_Current_pr_3>=CE_3_SL and PE_Current_pr_3>=PE_3_SL: 
+                            Active_status_read=read_Active_status()
+                            deleted_strike_pe=Active_status_read["Deactive Put Strike"]
+                            deleted_strike_ce=Active_status_read["Deactive Call Strike"]
+
+                            Put_strikes_remove=Active_status_read["Active_put_Strike"]
+                            Call_Strikes_remove=Active_status_read["Active_call_Strike"]
+
+                            Strike_ce_remove_copy=Call_strikes_remove[2]
+                            Strike_pe_remove_copy=Put_strikes_remove[0]
+
+                            if Strike_pe_remove_copy not in deleted_strike_pe or Strike_ce_remove_copy not in deleted_strike_ce:  
+                                reversal_status=311100 #" the format is len,rev,CE_2,PE_2,PE_1"
+                                Active_status_read["Deactive Put Strike"].append(Strike_pe_remove_copy)
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[2])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[2])
+                                Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_put[0])
+                                Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[0])
+
+                                writing_Active_status(Active_status_read)
+
+
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=call_premium_collected_1+call_premium_collected_2
+                                time=df_PE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+                            else:
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=call_premium_collected_1+call_premium_collected_2
+                                time=df_PE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+
+                        elif CE_Current_pr_1<CE_1_SL and CE_Current_pr_2>=CE_2_SL and CE_Current_pr_3>=CE_3_SL and PE_Current_pr_3<PE_3_SL: 
+                            Active_status_read=read_Active_status()
+                            deleted_strike_ce=Active_status_read["Deactive Call Strike"]
+                            Call_strikes_remove=Active_status_read["Active_call_Strike"]
+        
+
+                            Strike_ce_2_remove_copy=Call_strikes_remove[1]
+                            Strike_ce_3_remove_copy=Call_strikes_remove[2]
+
+                            if Strike_ce_2_remove_copy not in deleted_strike_ce or Strike_ce_3_remove_copy not in deleted_strike_ce:  
+                                reversal_status=310110 #" the format is len,rev,CE_2,PE_2,PE_1"
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_2_remove_copy)
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_3_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[1])
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[2])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[1])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[2])
+
+                                writing_Active_status(Active_status_read)
+
+
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close PE"]
+                                Net_P_L=call_premium_collected_1+put_premium_collected_3
+                                time=df_CE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+                            else:
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close PE"]
+                                Net_P_L=call_premium_collected_1+put_premium_collected_3
+                                time=df_CE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+ 
+                        elif CE_Current_pr_1<CE_1_SL and CE_Current_pr_2>=CE_2_SL and CE_Current_pr_3>=CE_3_SL and PE_Current_pr_3>=PE_3_SL:
+                            Active_status_read=read_Active_status()
+                            deleted_strike_pe=Active_status_read["Deactive Put Strike"]
+                            deleted_strike_ce=Active_status_read["Deactive Call Strike"]
+
+                            Put_strikes_remove=Active_status_read["Active_put_Strike"]
+                            Call_Strikes_remove=Active_status_read["Active_call_Strike"]
+
+                            Strike_pe_3_remove_copy=Put_strikes_remove[0]
+                            Strike_ce_3_remove_copy=Call_Strikes_remove[2]
+                            Strike_ce_2_remove_copy=Call_Strikes_remove[1]
+
+
+                            if Strike_ce_3_remove_copy not in deleted_strike_ce or Strike_ce_2_remove_copy not in deleted_strike_ce or Strike_pe_3_remove_copy not in deleted_strike_pe:  
+                                reversal_status=311110 #" the format is len,rev,CE_2,PE_2,PE_1"
+
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_2_remove_copy)
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_3_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[1])
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[2])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[1])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[2])
+                                Active_status_read["Deactive Put Strike"].append(Strike_pe_3_remove_copy)
+                                Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_put[0])
+                                Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[0])
+
+                                writing_Active_status(Active_status_read)
+
+
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=call_premium_collected_1
+                                time=df_CE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+                            else:
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=call_premium_collected_1
+                                time=df_CE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+                        
+                        elif CE_Current_pr_1>=CE_1_SL and CE_Current_pr_2>=CE_2_SL and CE_Current_pr_3>=CE_3_SL and PE_Current_pr_3<PE_3_SL:
+                            Active_status_read=read_Active_status()
+                            deleted_strike_ce=Active_status_read["Deactive Call Strike"]
+
+                            Call_strikes_remove=Active_status_read["Active_call_Strike"]
+
+                            Strike_ce_1_remove_copy=Call_strikes_remove[0]
+                            Strike_ce_2_remove_copy=Call_strikes_remove[1]
+                            Strike_ce_3_remove_copy=Call_strikes_remove[2]
+
+                            if Strike_ce_1_remove_copy not in deleted_strike_ce or Strike_ce_2_remove_copy not in deleted_strike_ce or Strike_ce_3_remove_copy not in deleted_strike_ce:  
+                                reversal_status=310111 #" the format is len,rev,CE_2,PE_2,PE_1"
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_1_remove_copy)
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_2_remove_copy)
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_3_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[0])
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[1])
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[2])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[0])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[1])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[2])
+
+                                writing_Active_status(Active_status_read)
+
+                                put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=put_premium_collected_3
+                                time=df_PE_3.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+                            else:
+                                put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=put_premium_collected_3
+                                time=df_PE_3.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+
+                        elif CE_Current_pr_1>=CE_1_SL and CE_Current_pr_2>=CE_2_SL and CE_Current_pr_3>=CE_3_SL and PE_Current_pr_3>=PE_3_SL:
+                            Active_status_read=read_Active_status()
+                            deleted_strike_pe=Active_status_read["Deactive Put Strike"]
+                            deleted_strike_ce=Active_status_read["Deactive Call Strike"]
+
+                            Put_strikes_remove=Active_status_read["Active_put_Strike"]
+                            Call_Strikes_remove=Active_status_read["Active_call_Strike"]
+
+                            Strike_ce_1_remove_copy=Call_strikes_remove[0]
+                            Strike_ce_2_remove_copy=Call_strikes_remove[1]
+                            Strike_ce_3_remove_copy=Call_strikes_remove[2]
+                            Strike_pe_3_remove_copy=Put_strikes_remove[0]
+
+
+                            ## Read the list from the text file  ########
+                            # deleted_strike=data
+                            if Strike_ce_1_remove_copy not in deleted_strike_ce or Strike_ce_2_remove_copy not in deleted_strike_ce or Strike_ce_3_remove_copy not in deleted_strike_ce or Strike_pe_remove_copy not in deleted_strike_pe: 
+                                reversal_status=311111 #" the format is len,rev,CE_2,PE_2,PE_1"
+
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_1_remove_copy)
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_2_remove_copy)
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_3_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[0])
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[1])
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[2])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[0])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[1])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[2])
+                                Active_status_read["Deactive Put Strike"].append(Strike_pe_1_remove_copy)
+                                Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_put[0])
+                                Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[0])
+
+                                writing_Active_status(Active_status_read)
+
+                                break
+                        else:
+                            pass
+
+                    elif Len_ce==4:
+
+                        CE_1_SL=Active_SL_Call[0]
+                        CE_2_SL=Active_SL_Call[1]
+                        CE_3_SL=Active_SL_Call[2]
+                        CE_4_SL=Active_SL_Call[3]
+
+                        CE_Current_pr_1=df_CE_1.loc[(i+index_row+1),"high CE"]
+                        CE_Current_pr_2=df_CE_2.loc[(i+index_row+1),"high CE"]
+                        CE_Current_pr_3=df_CE_3.loc[(i+index_row+1),"high CE"]
+                        CE_Current_pr_4=df_CE_4.loc[(i+index_row+1),"high CE"]
+
+                        
+                        CE_Current_pr_1_close=df_CE_1.loc[(i+index_row+1),"close CE"]
+                        CE_Current_pr_2_close=df_CE_2.loc[(i+index_row+1),"close CE"]
+                        CE_Current_pr_3_close=df_CE_3.loc[(i+index_row+1),"close CE"]
+                        CE_Current_pr_4_close=df_CE_4.loc[(i+index_row+1),"close CE"]
+
+                        ce_initial_Price_1=Active_Initial_Sold_premium_call[0]
+                        ce_initial_Price_2=Active_Initial_Sold_premium_call[1]
+                        ce_initial_Price_3=Active_Initial_Sold_premium_call[2]
+                        ce_initial_Price_4=Active_Initial_Sold_premium_call[3]
+
+                        CE_instantinious_pr=[CE_Current_pr_1_close,CE_Current_pr_2_close,CE_Current_pr_3_close,CE_Current_pr_4_close]
+                        PE_instantinious_pr=[]
+
+                        
+                        Startjee_1_dict_Put[Active_put_Strike[0]]=[PE_Current_pr_1_close,pe_initial_Price_1,PE_1_SL]
+                        Startjee_1_dict_Put[Active_put_Strike[1]]=[PE_Current_pr_2_close,pe_initial_Price_2,PE_2_SL]
+                        Startjee_1_dict_Put[Active_put_Strike[2]]=[PE_Current_pr_3_close,pe_initial_Price_3,PE_3_SL]
+                        Startjee_1_dict_Put[Active_put_Strike[3]]=[PE_Current_pr_4_close,pe_initial_Price_4,PE_4_SL]
+
+                        if CE_Current_pr_1<CE_1_SL and CE_Current_pr_2<CE_2_SL and CE_Current_pr_3<CE_3_SL and CE_Current_pr_4<CE_4_SL:
+                            call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                            call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
+                            call_premium_collected_3=ce_initial_Price_3-df_CE_3.loc[(index_row+i+1),"close CE"]
+                            call_premium_collected_4=ce_initial_Price_4-df_CE_4.loc[(index_row+i+1),"close CE"]
+                            Net_P_L=call_premium_collected_1+call_premium_collected_2+call_premium_collected_3+call_premium_collected_4
+                            time=df_CE_1.loc[(index_row+i+1),"Time"]
+                            SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+
+                        elif CE_Current_pr_1<CE_1_SL and CE_Current_pr_2<CE_2_SL and CE_Current_pr_3<CE_3_SL and CE_Current_pr_4>=CE_4_SL:
+                            Active_status_read=read_Active_status()
+                            deleted_strike_ce=Active_status_read["Deactive Call Strike"]
+                            Call_strikes_remove=Active_status_read["Active_call_Strike"]
+
+                            Strike_ce_4_remove_copy=Call_strikes_remove[3]
+
+                            if Strike_ce_4_remove_copy not in deleted_strike_ce:  
+                                reversal_status=411000 #" the format is len,rev,CE_2,PE_2,PE_1"
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_4_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[3])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[3])
+
+                                writing_Active_status(Active_status_read)
+
+
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
+                                call_premium_collected_3=ce_initial_Price_3-df_CE_3.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=call_premium_collected_1+call_premium_collected_2+call_premium_collected_3
+                                time=df_CE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+                            else:
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
+                                call_premium_collected_3=ce_initial_Price_3-df_CE_3.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=call_premium_collected_1+call_premium_collected_2+call_premium_collected_3
+                                time=df_CE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+ 
+                        elif CE_Current_pr_1<CE_1_SL and CE_Current_pr_2<CE_2_SL and CE_Current_pr_3>=CE_3_SL and CE_Current_pr_4>=CE_4_SL:
+                            Active_status_read=read_Active_status()
+                            deleted_strike_ce=Active_status_read["Deactive Call Strike"]
+                            Call_strikes_remove=Active_status_read["Active_call_Strike"]
+
+                            Strike_ce_3_remove_copy=Call_strikes_remove[2]
+                            Strike_ce_4_remove_copy=Call_strikes_remove[3]
+
+
+                            if Strike_ce_4_remove_copy not in deleted_strike_ce or Strike_ce_3_remove_copy not in deleted_strike_ce:  
+                                reversal_status=411100 #" the format is len,rev,CE_2,PE_2,PE_1"
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_4_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[3])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[3])
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_3_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[2])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[2])
+
+                                writing_Active_status(Active_status_read)
+
+
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=call_premium_collected_1+call_premium_collected_2
+                                time=df_PE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+                            else:
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=call_premium_collected_1+call_premium_collected_2
+                                time=df_CE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+
+                        elif CE_Current_pr_1<CE_1_SL and CE_Current_pr_2>=CE_2_SL and CE_Current_pr_3>=CE_3_SL and CE_Current_pr_4>=CE_4_SL:
+                            Active_status_read=read_Active_status()
+                            deleted_strike_ce=Active_status_read["Deactive Call Strike"]
+                            Call_strikes_remove=Active_status_read["Active_call_Strike"]
+
+                            Strike_ce_2_remove_copy=Call_strikes_remove[1]
+                            Strike_ce_3_remove_copy=Call_strikes_remove[2]
+                            Strike_ce_4_remove_copy=Call_strikes_remove[3]
+
+
+                            if Strike_ce_4_remove_copy not in deleted_strike_ce or Strike_ce_3_remove_copy not in deleted_strike_ce or Strike_ce_2_remove_copy not in deleted_strike_ce:  
+                                reversal_status=411100 #" the format is len,rev,CE_2,PE_2,PE_1"
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_4_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[3])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[3])
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_3_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[2])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[2])
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_2_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[1])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[1])
+
+                                writing_Active_status(Active_status_read)
+
+
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=call_premium_collected_1
+                                time=df_CE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+                            else:
+                                call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                                Net_P_L=call_premium_collected_1
+                                time=df_CE_1.loc[(index_row+i+1),"Time"]
+                                SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+
+                        elif CE_Current_pr_1>=CE_1_SL and CE_Current_pr_2>=CE_2_SL and CE_Current_pr_3>=CE_3_SL and CE_Current_pr_4>=CE_4_SL:
+                            Active_status_read=read_Active_status()
+                            deleted_strike_ce=Active_status_read["Deactive Call Strike"]
+                            Call_strikes_remove=Active_status_read["Active_call_Strike"]
+
+                            Strike_ce_1_remove_copy=Call_strikes_remove[0]
+                            Strike_ce_2_remove_copy=Call_strikes_remove[1]
+                            Strike_ce_3_remove_copy=Call_strikes_remove[2]
+                            Strike_ce_4_remove_copy=Call_strikes_remove[3]
+
+
+                            if Strike_ce_4_remove_copy not in deleted_strike_ce or Strike_ce_3_remove_copy not in deleted_strike_ce or Strike_ce_2_remove_copy not in deleted_strike_ce or Strike_ce_1_remove_copy not in deleted_strike_ce:  
+                                reversal_status=411100 #" the format is len,rev,CE_2,PE_2,PE_1"
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_4_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[3])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[3])
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_3_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[2])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[2])
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_2_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[1])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[1])
+                                Active_status_read["Deactive Call Strike"].append(Strike_ce_1_remove_copy)
+                                Active_status_read["Deactive Call Strike Premium Initial"].append(Active_Initial_Sold_premium_call[0])
+                                Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[0])
+
+                                writing_Active_status(Active_status_read)
+
+                                break
+                        else:
+                            pass
+                    
+                    else:
+                        pass
+
+
                 else:
                     pass
             
@@ -1293,6 +2135,107 @@ def morning_code(path_expiry_date_recurring,date):
 
             index_row=row_index_call[0]
             return index_row,df_pe_1,df_pe_2,df_pe_3,df_pe_4
+        
+
+    elif Market_trend=="Trending Down":
+
+        len_pe=len(Active_put_Strike)
+        len_ce=len(Active_call_Strike)
+
+        if len_ce==2:
+            CE_stk_1=Active_call_Strike[0]
+            CE_stk_2=Active_call_Strike[1]
+            PE_stk_2=Active_put_Strike[0]
+
+            file_ce_1=f"NIFTY{str(CE_stk_1)}_CE.csv"
+            file_ce_2=f"NIFTY{str(CE_stk_2)}_CE.csv"
+            file_pe_2=f"NIFTY{str(PE_stk_1)}_PE.csv"
+
+            df_ce_1=pd.read_csv(path_expiry_date_recurring+file_ce_1)
+            df_ce_2=pd.read_csv(path_expiry_date_recurring+file_ce_2)
+            df_pe_2=pd.read_csv(path_expiry_date_recurring+file_pe_2)
+
+
+            if len(df_ce_1.loc[4,'Time'])>5:
+                df_ce_1['Time'] = df_ce_1['Time'].apply(lambda x: x[:5])
+                df_ce_2['Time'] = df_ce_2['Time'].apply(lambda x: x[:5])
+                df_pe_2['Time'] = df_pe_2['Time'].apply(lambda x: x[:5])
+            else:
+                pass
+
+            df_ce_1,df_pe_2=merging(df_ce_1,df_pe_2,"Call","Put")
+            df_ce_1,df_ce_2=merging(df_ce_1,df_ce_2,"Call","Call")
+
+            row_index_call = df_ce_1.index[(df_ce_1['Time'] == Checking_time)&(df_ce_1['Date'] == date)].tolist()
+
+            index_row=row_index_call[0]
+            return index_row,df_ce_1,df_ce_2,df_pe_2
+        
+        elif len_ce==3:
+            CE_stk_1=Active_call_Strike[0]
+            CE_stk_2=Active_call_Strike[1]
+            CE_stk_3=Active_call_Strike[2]
+            PE_stk_3=Active_put_Strike[0]
+
+            file_ce_1=f"NIFTY{str(CE_stk_1)}_CE.csv"
+            file_ce_2=f"NIFTY{str(CE_stk_2)}_CE.csv"
+            file_ce_3=f"NIFTY{str(CE_stk_3)}_CE.csv"
+            file_pe_3=f"NIFTY{str(PE_stk_3)}_PE.csv"
+
+            df_ce_1=pd.read_csv(path_expiry_date_recurring+file_ce_1)
+            df_ce_2=pd.read_csv(path_expiry_date_recurring+file_ce_2)
+            df_ce_3=pd.read_csv(path_expiry_date_recurring+file_ce_3)
+            df_pe_2=pd.read_csv(path_expiry_date_recurring+file_pe_3)
+
+            if len(df_ce_1.loc[4,'Time'])>5:
+                df_ce_1['Time'] = df_ce_1['Time'].apply(lambda x: x[:5])
+                df_ce_2['Time'] = df_ce_2['Time'].apply(lambda x: x[:5])
+                df_ce_3['Time'] = df_ce_3['Time'].apply(lambda x: x[:5])
+                df_pe_3['Time'] = df_pe_3['Time'].apply(lambda x: x[:5])
+            else:
+                pass
+
+            df_ce_1,df_pe_3=merging(df_ce_1,df_pe_3,"Call","Put")
+            df_ce_1,df_ce_2=merging(df_ce_1,df_ce_2,"Call","Call")
+            df_ce_1,df_ce_3=merging(df_ce_1,df_ce_3,"Call","Call")
+
+            row_index_call = df_ce_1.index[(df_ce_1['Time'] == Checking_time)&(df_ce_1['Date'] == date)].tolist()
+
+            index_row=row_index_call[0]
+            return index_row,df_ce_1,df_ce_2,df_ce_3,df_pe_3
+        
+        elif len_ce==4:
+            CE_stk_1=Active_call_Strike[0]
+            CE_stk_2=Active_call_Strike[1]
+            CE_stk_3=Active_call_Strike[2]
+            CE_stk_4=Active_call_Strike[3]
+
+            file_ce_1=f"NIFTY{str(CE_stk_1)}_CE.csv"
+            file_ce_2=f"NIFTY{str(CE_stk_2)}_CE.csv"
+            file_ce_3=f"NIFTY{str(CE_stk_3)}_CE.csv"
+            file_ce_4=f"NIFTY{str(CE_stk_4)}_CE.csv"
+
+            df_ce_1=pd.read_csv(path_expiry_date_recurring+file_ce_1)
+            df_ce_2=pd.read_csv(path_expiry_date_recurring+file_ce_2)
+            df_ce_3=pd.read_csv(path_expiry_date_recurring+file_ce_3)
+            df_ce_4=pd.read_csv(path_expiry_date_recurring+file_ce_4)
+
+            if len(df_ce_1.loc[4,'Time'])>5:
+                df_ce_1['Time'] = df_ce_1['Time'].apply(lambda x: x[:5])
+                df_ce_2['Time'] = df_ce_2['Time'].apply(lambda x: x[:5])
+                df_ce_3['Time'] = df_ce_3['Time'].apply(lambda x: x[:5])
+                df_ce_4['Time'] = df_ce_4['Time'].apply(lambda x: x[:5])
+            else:
+                pass
+
+            df_ce_1,df_ce_4=merging(df_ce_1,df_ce_4,"Call","Call")
+            df_ce_1,df_ce_2=merging(df_ce_1,df_ce_2,"Call","Call")
+            df_ce_1,df_ce_3=merging(df_ce_1,df_ce_3,"Call","Call")
+
+            row_index_call = df_ce_1.index[(df_ce_1['Time'] == Checking_time)&(df_ce_1['Date'] == date)].tolist()
+
+            index_row=row_index_call[0]
+            return index_row,df_ce_1,df_ce_2,df_ce_3,df_ce_4
 
 
 
