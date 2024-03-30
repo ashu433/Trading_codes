@@ -1,18 +1,12 @@
-from datetime import datetime,timedelta
+from datetime import datetime
 
-start_time = datetime.strptime("9:14", "%H:%M")
-end_time = datetime.strptime("15:30", "%H:%M")
+# Example date string
+date_string = "03-Jan-2024"
 
-# Define the interval (3 minutes)
-interval = timedelta(minutes=5)
+# Convert the date string to a datetime object
+date_object = datetime.strptime(date_string, "%d-%b-%Y")
 
-# Initialize an empty list to store the generated times
-time_list = []
+# Get the day of the week
+day_of_week = date_object.strftime('%A')
 
-# Generate the times
-current_time = start_time
-while current_time <= end_time:
-    time_list.append(current_time.strftime("%H:%M"))
-    current_time += interval
-
-print(time_list)
+print("Day of the week:", day_of_week)

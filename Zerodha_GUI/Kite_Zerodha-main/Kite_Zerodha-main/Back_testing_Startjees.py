@@ -25,25 +25,41 @@ formatted_Date_of_Expiry = [date.strftime('%d-%b-%Y') for date in Date_of_Expiry
 ##### Table data Initilization #################
 date_init=[]
 date_exp=[]
-strike_call=[]
-strike_put=[]
-sl_hit_call_date=[]
-sl_hit_put_date=[]
-sl_hit_call_time=[]
-sl_hit_put_time=[]
-sl_hit_call_week=[]
-sl_hit_put_week=[]
-Net_premium_collected_call=[]
-Net_premium_collected_put=[]
-Net_P_L=[]
+market_sentiment=[]
+
+Call_stk_1=[]
+Call_stk_2=[]
+Call_stk_3=[]
+Call_stk_4=[]
+
+Put_stk_1=[]
+Put_stk_2=[]
+Put_stk_3=[]
+Put_stk_4=[]
+
+sl_hit_date=[]
+sl_hit_time=[]
+sl_hit_week=[]
+
+Entry_date=[]
+Entry_time_call=[]
+Entry_time_put=[]
+Entry_week=[]
+
+Net_premium_collected=[]
+Margin=[]
+ROI=[]
 Net_Credit_Spread_Call=[]
 Net_Credit_Spread_Put=[]
+Net_Credit_Spread=[]
 Day=0
 previous_day=[]
 Market_trend="Neutral"
 run_len=0
 Active_status={}
 reversal_status=None
+reverse=[]
+profit_loss=[]
 
 
 
@@ -54,10 +70,14 @@ Startjee_1_dict_Put={}
 Desired_time_CE="09:20"
 Desired_time_PE="09:20"
 Checking_time="09:30"
+MARGIN_DEPLOYED=92000
 Startjee_1=0
 Startjee_2=0
 Startjee_3=0
 Threshold_price=1
+Net_P_L=0
+Len_ce=0
+Len_pe=0
 ################### Variables of the startjee ##############
 
 def merging(df_CE,df_PE,Right_1,Right_2):
@@ -237,16 +257,20 @@ def Execution_check_Code(Triggered_time,Date,index_row,Closing_price,DF,right):
             elif right=="PE":
                 Closing_price=DF.loc[index_row,"close PE"]
 
-    return Closing_price,index_row
+    return Closing_price,index_row,time_new
+
+
+def date_to_week(date):
+    date_object = datetime.strptime(date, "%d-%b-%Y")
+    day_of_week = date_object.strftime('%A')
+    return day_of_week
 
 
 
 
 
 
-
-
-def volatility_strike_pred(Len_pe,Len_ce,Date,Time,path_expiry_date_recurring,Startjee_1_dict_Call,Startjee_1_dict_Put,CE_Strike_1=None,CE_Strike_2=None,CE_Strike_3=None,CE_Strike_4=None,PE_Strike_1=None,PE_Strike_2=None,PE_Strike_3=None,PE_Strike_4=None):
+def volatility_strike_pred(Date,Time,path_expiry_date_recurring,Startjee_1_dict_Call,Startjee_1_dict_Put,CE_Strike_1=None,CE_Strike_2=None,CE_Strike_3=None,CE_Strike_4=None,PE_Strike_1=None,PE_Strike_2=None,PE_Strike_3=None,PE_Strike_4=None,Len_pe=None,Len_ce=None):
     global run_len
 
     input_time_str = Time
@@ -276,9 +300,16 @@ def volatility_strike_pred(Len_pe,Len_ce,Date,Time,path_expiry_date_recurring,St
             CE_Strike_2=CE_Strike_1+offset
             Startjee_1_dict_Call.pop(CE_Strike_1)
 
+            Call_stk_1.append(-CE_Strike_1)
+
+
+            week=date_to_week(Date)
+
+
             Active_call_Strike=[]
             Active_call_Strike.append(CE_Strike_2)
             Active_put_Strike.append(PE_Strike_2)
+
 
             file_ce=f"NIFTY{str(CE_Strike_2)}_CE.csv"
             file_pe_2=f"NIFTY{str(PE_Strike_2)}_PE.csv"
@@ -294,7 +325,8 @@ def volatility_strike_pred(Len_pe,Len_ce,Date,Time,path_expiry_date_recurring,St
 
             if (len(df_CE.loc[4,'Time']))>5:
                 df_CE['Time'] = df_CE['Time'].apply(lambda x: x[:5])
-                df_PE_2['Time'] = df_PE_2['Time'].apply(lambda x: x[:5])  
+                df_PE_1['Time'] = df_PE_1['Time'].apply(lambda x: x[:5])
+                df_PE_2['Time'] = df_PE_2['Time'].apply(lambda x: x[:5])
             else:
                 pass
 
@@ -302,11 +334,19 @@ def volatility_strike_pred(Len_pe,Len_ce,Date,Time,path_expiry_date_recurring,St
             index_row=index_row[0]
 
             CP_CE=df_CE.loc[index_row,"close CE"]
-            CP_CE,index_row=Execution_check_Code(Triggered_time,Date,index_row,CP_CE,df_CE,"CE")
+            CP_CE,index_row_CE,time_obs_CE=Execution_check_Code(Triggered_time,Date,index_row,CP_CE,df_CE,"CE")
 
-            CP_PE_2=df_PE_2.loc[index_row,"close PE"]
+            running_log_update("Entry","Call_stk_2",CE_Strike_2,"Call",time_obs_CE,Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,0)
             
 
+
+            CP_PE_2=df_PE_2.loc[index_row,"close PE"]
+            CP_PE_2,index_row_PE,time_obs_PE=Execution_check_Code(Triggered_time,Date,index_row,CP_PE_2,df_PE_2,"PE")
+
+            running_log_update("Entry","Put_stk_2",PE_Strike_2,"Put",time_obs_PE,Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,0)
+         
+            
+            index_row=min(index_row_CE,index_row_PE)
 
             SL_CE=2*CP_CE
             SL_PE_2=2*CP_PE_2
@@ -349,9 +389,12 @@ def volatility_strike_pred(Len_pe,Len_ce,Date,Time,path_expiry_date_recurring,St
             CE_Strike_3=CE_Strike_2+offset
             Startjee_1_dict_Call.pop(CE_Strike_2)
 
+            week=date_to_week(Date)
+
             Active_call_Strike=[]
             Active_call_Strike.append(CE_Strike_3)
             Active_put_Strike.append(PE_Strike_3)
+
 
             file_ce_3=f"NIFTY{str(CE_Strike_3)}_CE.csv"
             file_pe_3=f"NIFTY{str(PE_Strike_3)}_PE.csv"
@@ -368,13 +411,28 @@ def volatility_strike_pred(Len_pe,Len_ce,Date,Time,path_expiry_date_recurring,St
             df_PE_3,df_PE_1=merging(df_PE_3,df_PE_1,"Put","Put")
 
             if (len(df_CE_3.loc[4,'Time']))>5:
-                index_row = df_CE_3.index[(df_CE_3['Time'] == Triggered_time)&(df_CE_3['Date'] == Date)].tolist()
+                df_CE_3['Time'] = df_CE_3['Time'].apply(lambda x: x[:5])
+                df_PE_1['Time'] = df_PE_1['Time'].apply(lambda x: x[:5])
+                df_PE_2['Time'] = df_PE_2['Time'].apply(lambda x: x[:5]) 
+                df_PE_3['Time'] = df_PE_3['Time'].apply(lambda x: x[:5]) 
             else:
                 pass
+
+            index_row = df_CE_3.index[(df_CE_3['Time'] == Triggered_time)&(df_CE_3['Date'] == Date)].tolist()
             index_row=index_row[0]
 
             CP_CE_3=df_CE_3.loc[index_row,"close CE"]
+            CP_CE_3,index_row_CE,time_obs_CE=Execution_check_Code(Triggered_time,Date,index_row,CP_CE_3,df_CE_3,"CE")
+
+            running_log_update("Entry","Call_stk_3",CE_Strike_3,"Call",time_obs_CE,Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,0)
+
             CP_PE_3=df_PE_3.loc[index_row,"close PE"]
+            CP_PE_3,index_row_PE,time_obs_PE=Execution_check_Code(Triggered_time,Date,index_row,CP_PE_3,df_PE_3,"PE")
+
+            running_log_update("Entry","Put_stk_3",PE_Strike_3,"Put",time_obs_PE,Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,0)
+
+            index_row=min(index_row_CE,index_row_PE)
+
             SL_CE_3=2*CP_CE_3
             SL_PE_3=2*CP_PE_3
 
@@ -414,6 +472,9 @@ def volatility_strike_pred(Len_pe,Len_ce,Date,Time,path_expiry_date_recurring,St
             Active_put_Strike.append(PE_Strike_4)
             Startjee_1_dict_Call.pop(CE_Strike_3)
 
+            week=date_to_week(Date)
+
+
             file_pe_4=f"NIFTY{str(PE_Strike_4)}_PE.csv"
             file_pe_3=f"NIFTY{str(PE_Strike_3)}_PE.csv"
             file_pe_2=f"NIFTY{str(PE_Strike_2)}_PE.csv"
@@ -429,12 +490,19 @@ def volatility_strike_pred(Len_pe,Len_ce,Date,Time,path_expiry_date_recurring,St
             df_PE_4,df_PE_3=merging(df_PE_4,df_PE_3,"Put","Put")
 
             if (len(df_PE_1.loc[4,'Time']))>5:
-                index_row = df_PE_1.index[(df_PE_1['Time'] == Triggered_time)&(df_PE_1['Date'] == Date)].tolist()
+                df_PE_1['Time'] = df_PE_1['Time'].apply(lambda x: x[:5])
+                df_PE_2['Time'] = df_PE_2['Time'].apply(lambda x: x[:5]) 
+                df_PE_3['Time'] = df_PE_3['Time'].apply(lambda x: x[:5]) 
+                df_PE_4['Time'] = df_PE_4['Time'].apply(lambda x: x[:5])
             else:
                 pass
-
+            index_row = df_PE_1.index[(df_PE_1['Time'] == Triggered_time)&(df_PE_1['Date'] == Date)].tolist()
             index_row=index_row[0]
             CP_PE_4=df_PE_4.loc[index_row,"close PE"]
+            CP_PE_4,index_row,time_obs_PE=Execution_check_Code(Triggered_time,Date,index_row,CP_PE_4,df_PE_4,"PE")
+
+            running_log_update("Entry","Put_stk_4",PE_Strike_4,"Put",time_obs_PE,Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],1,0,"Call_stk_3")
+
             SL_PE_4=2*CP_PE_4
 
             Active_status_read=read_Active_status()
@@ -467,9 +535,12 @@ def volatility_strike_pred(Len_pe,Len_ce,Date,Time,path_expiry_date_recurring,St
             PE_Strike_2=PE_Strike_1+offset
             Startjee_1_dict_Put.pop(PE_Strike_1)
 
+            week=date_to_week(Date)
+
             Active_put_Strike=[]
             Active_put_Strike.append(PE_Strike_2)
             Active_call_Strike.append(CE_Strike_2)
+
 
             file_ce_1=f"NIFTY{str(CE_Strike_1)}_CE.csv"
             file_ce_2=f"NIFTY{str(CE_Strike_2)}_CE.csv"
@@ -493,9 +564,17 @@ def volatility_strike_pred(Len_pe,Len_ce,Date,Time,path_expiry_date_recurring,St
             index_row=index_row[0]
 
             CP_PE=df_PE_2.loc[index_row,"close PE"]
-            CP_PE,index_row=Execution_check_Code(Triggered_time,Date,index_row,CP_PE,df_PE_2,"PE")
+            CP_PE,index_row_PE,time_obs_PE=Execution_check_Code(Triggered_time,Date,index_row,CP_PE,df_PE_2,"PE")
+
+            running_log_update("Entry","Put_stk_2",PE_Strike_2,"Put",time_obs_PE,Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,0)
+            
 
             CP_CE_2=df_CE_2.loc[index_row,"close CE"]
+            CP_CE_2,index_row_CE,time_obs_CE=Execution_check_Code(Triggered_time,Date,index_row,CP_CE_2,df_CE_2,"CE")
+
+            running_log_update("Entry","Call_stk_2",CE_Strike_2,"Call",time_obs_CE,Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,0)
+
+            index_row=min(index_row_CE,index_row_PE)
 
             SL_PE=2*CP_PE
             SL_CE_2=2*CP_CE_2
@@ -538,9 +617,12 @@ def volatility_strike_pred(Len_pe,Len_ce,Date,Time,path_expiry_date_recurring,St
             PE_Strike_3=PE_Strike_2+offset
             Startjee_1_dict_Put.pop(PE_Strike_2)
 
+            week=date_to_week(Date)
+
             Active_put_Strike=[]
             Active_put_Strike.append(PE_Strike_3)
             Active_call_Strike.append(CE_Strike_3)
+
 
             file_ce_3=f"NIFTY{str(CE_Strike_3)}_CE.csv"
             file_ce_2=f"NIFTY{str(CE_Strike_2)}_CE.csv"
@@ -568,7 +650,18 @@ def volatility_strike_pred(Len_pe,Len_ce,Date,Time,path_expiry_date_recurring,St
             index_row=index_row[0]
 
             CP_CE_3=df_CE_3.loc[index_row,"close CE"]
+            CP_CE_3,index_row_CE,time_obs_CE=Execution_check_Code(Triggered_time,Date,index_row,CP_CE_3,df_CE_3,"CE")
+
+            running_log_update("Entry","Call_stk_3",CE_Strike_3,"Call",time_obs_CE,Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,0)
+            
+
             CP_PE_3=df_PE_3.loc[index_row,"close PE"]
+            CP_PE_3,index_row_PE,time_obs_PE=Execution_check_Code(Triggered_time,Date,index_row,CP_PE_3,df_PE_3,"PE")
+
+            running_log_update("Entry","Put_stk_3",PE_Strike_3,"Put",time_obs_PE,Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,0)
+
+            index_row=min(index_row_CE,index_row_PE)
+            
             SL_CE_3=2*CP_CE_3
             SL_PE_3=2*CP_PE_3
 
@@ -609,6 +702,9 @@ def volatility_strike_pred(Len_pe,Len_ce,Date,Time,path_expiry_date_recurring,St
             Active_call_Strike.append(CE_Strike_4)
             Startjee_1_dict_Put.pop(PE_Strike_3)
 
+            week=date_to_week(Date)
+
+
             file_ce_4=f"NIFTY{str(CE_Strike_4)}_CE.csv"
             file_ce_3=f"NIFTY{str(CE_Strike_3)}_CE.csv"
             file_ce_2=f"NIFTY{str(CE_Strike_2)}_CE.csv"
@@ -634,6 +730,10 @@ def volatility_strike_pred(Len_pe,Len_ce,Date,Time,path_expiry_date_recurring,St
             index_row = df_CE_1.index[(df_CE_1['Time'] == Triggered_time)&(df_CE_1['Date'] == Date)].tolist()
             index_row=index_row[0]
             CP_CE_4=df_CE_4.loc[index_row,"close PE"]
+            CP_CE_4,index_row,time_obs_CE=Execution_check_Code(Triggered_time,Date,index_row,CP_CE_4,df_CE_4,"CE")
+
+            running_log_update("Entry","Call_stk_4",CE_Strike_4,"Call",time_obs_CE,Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,1,"PE_Strike_3")
+
             SL_CE_4=2*CP_CE_4
 
             Active_status_read=read_Active_status()
@@ -659,12 +759,197 @@ def volatility_strike_pred(Len_pe,Len_ce,Date,Time,path_expiry_date_recurring,St
 
             return index_row,df_CE_1,df_CE_2,df_CE_3,df_CE_4
 
-            
+
+
+def update_lists_call(list_name, value):
+    all_lists = [Call_stk_1, Call_stk_2, Call_stk_3, Call_stk_4, Put_stk_1, Put_stk_2, Put_stk_3, Put_stk_4]
+
+    if list_name == "Call_stk_1":
+        Call_stk_1.append(value)
+        for lst in [Call_stk_2, Call_stk_3, Call_stk_4, Put_stk_1, Put_stk_2, Put_stk_3, Put_stk_4]:
+            lst.append(None)
+    elif list_name == "Call_stk_2":
+        Call_stk_2.append(value)
+        for lst in [Call_stk_1, Call_stk_3, Call_stk_4, Put_stk_1, Put_stk_2, Put_stk_3, Put_stk_4]:
+            lst.append(None)
+    elif list_name == "Call_stk_3":
+        Call_stk_3.append(value)
+        for lst in [Call_stk_1, Call_stk_2, Call_stk_4, Put_stk_1, Put_stk_2, Put_stk_3, Put_stk_4]:
+            lst.append(None)
+    elif list_name == "Call_stk_4":
+        Call_stk_4.append(value)
+        for lst in [Call_stk_1, Call_stk_2, Call_stk_3, Put_stk_1, Put_stk_2, Put_stk_3, Put_stk_4]:
+            lst.append(None)
+    else:
+        pass
+
+
+def update_lists_put(list_name, value):
+        
+    if list_name == "Put_stk_1":
+        Put_stk_1.append(value)
+        for lst in [Call_stk_1, Call_stk_2, Call_stk_3, Call_stk_4, Put_stk_2, Put_stk_3, Put_stk_4]:
+            lst.append(None)
+    elif list_name == "Put_stk_2":
+        Put_stk_2.append(value)
+        for lst in [Call_stk_1, Call_stk_2, Call_stk_3, Call_stk_4, Put_stk_1, Put_stk_3, Put_stk_4]:
+            lst.append(None)
+    elif list_name == "Put_stk_3":
+        Put_stk_3.append(value)
+        for lst in [Call_stk_1, Call_stk_2, Call_stk_3, Call_stk_4, Put_stk_1, Put_stk_2, Put_stk_4]:
+            lst.append(None)
+    elif list_name == "Put_stk_4":
+        Put_stk_4.append(value)
+        for lst in [Call_stk_1, Call_stk_2, Call_stk_3, Call_stk_4, Put_stk_1, Put_stk_2, Put_stk_3]:
+            lst.append(None)
+    else:
+        pass
+
+
+def running_log_update(entry_exit,list_name,Strike_entry,right,time,date,week,initiation_date,expiry_date,last_pe,last_ce,alternate_strike=None):
+
+    if entry_exit=="Entry" and right=="Call" and last_ce==0 and last_pe==0:
+        update_lists_call(list_name,Strike_entry)
+        Entry_time_call.append(time)
+        Entry_date.append(date)
+        Entry_week.append(week)
+
+        sl_hit_date.append(None)
+        sl_hit_time.append(None)
+        sl_hit_week.append(None)
+
+        date_init.append(initiation_date)
+        date_exp.append(expiry_date)
+        market_sentiment.append(None)
+        Net_Credit_Spread_Call.append(None)
+        Net_Credit_Spread_Put.append(None)
+        Net_Credit_Spread.append(None)
+        ROI.append(None)
+        reverse.append(None)
+        Margin.append(None)
+        profit_loss.append(None)
+
+    elif entry_exit=="Entry" and right=="Put" and last_ce==0 and last_pe==0:
+        update_lists_put(list_name,Strike_entry)
+        Entry_time_put.append(time)
+
+    elif entry_exit=="Entry" and right=="Call" and last_ce==1 and last_pe==0:
+        update_lists_call(list_name,Strike_entry)
+        update_lists_put(alternate_strike,None)
+        Entry_time_call.append(time)
+        Entry_time_put.append(None)
+        Entry_date.append(date)
+        Entry_week.append(week)
+
+        sl_hit_date.append(None)
+        sl_hit_time.append(None)
+        sl_hit_week.append(None)
+
+        date_init.append(initiation_date)
+        date_exp.append(expiry_date)
+        market_sentiment.append(None)
+        Net_Credit_Spread_Call.append(None)
+        Net_Credit_Spread_Put.append(None)
+        Net_Credit_Spread.append(None)
+        ROI.append(None)
+        reverse.append(None)
+        Margin.append(None)
+        profit_loss.append(None)
+
+    elif entry_exit=="Entry" and right=="Put" and last_ce==0 and last_pe==1:
+        update_lists_put(list_name,Strike_entry)
+        update_lists_call(alternate_strike,None)
+        Entry_time_put.append(time)
+        Entry_time_call.append(None)
+        Entry_date.append(date)
+        Entry_week.append(week)
+
+        sl_hit_date.append(None)
+        sl_hit_time.append(None)
+        sl_hit_week.append(None)
+
+        date_init.append(initiation_date)
+        date_exp.append(expiry_date)
+        market_sentiment.append(None)
+        Net_Credit_Spread_Call.append(None)
+        Net_Credit_Spread_Put.append(None)
+        Net_Credit_Spread.append(None)
+        ROI.append(None)
+        reverse.append(None)
+        Margin.append(None)
+        profit_loss.append(None)
+
+    elif entry_exit=="SL_Hit" and right=="Call":
+        update_lists_call(list_name,-Strike_entry)
+        sl_hit_date.append(date)
+        sl_hit_time.append(time)
+        sl_hit_week.append(date)
+
+        Entry_time_put.append(None)
+        Entry_time_call.append(None)
+        Entry_date.append(None)
+        Entry_week.append(None)
+
+        date_init.append(initiation_date)
+        date_exp.append(expiry_date)
+        market_sentiment.append(None)
+        Net_Credit_Spread_Call.append(None)
+        Net_Credit_Spread_Put.append(None)
+        Net_Credit_Spread.append(None)
+        ROI.append(None)
+        reverse.append(None)
+        Margin.append(None)
+        profit_loss.append(None)
+
+    elif entry_exit=="SL_Hit" and right=="Put":
+        update_lists_put(list_name,-Strike_entry)
+        sl_hit_date.append(date)
+        sl_hit_time.append(time)
+        sl_hit_week.append(date)
+
+        Entry_time_put.append(None)
+        Entry_time_call.append(None)
+        Entry_date.append(None)
+        Entry_week.append(None)
+
+        date_init.append(initiation_date)
+        date_exp.append(expiry_date)
+        market_sentiment.append(None)
+        Net_Credit_Spread_Call.append(None)
+        Net_Credit_Spread_Put.append(None)
+        Net_Credit_Spread.append(None)
+        ROI.append(None)
+        reverse.append(None)
+        Margin.append(None)
+        profit_loss.append(None)
 
 
 
+def final_log(initiation_date,expiry_date,market_sentiment_value,profit_loss_value,margin_used,net_credit_spread_call,net_credit_spread_put,reverse_happen,alternate_strike_call,alternate_strike_put):
+    date_init.append(initiation_date)
+    date_exp.append(expiry_date)
+    market_sentiment.append(market_sentiment_value)
+    Net_Credit_Spread_Call.append(net_credit_spread_call)
+    Net_Credit_Spread_Put.append(net_credit_spread_put)
+    overall_credit_spread=net_credit_spread_call+net_credit_spread_put
+    Net_Credit_Spread.append(overall_credit_spread)
+    reverse.append(reverse_happen)
+    Margin.append(margin_used)
+    roi=(profit_loss_value/margin_used)*100
+    ROI.append(roi)
+    profit_loss.append(profit_loss_value)
 
+    week=date_to_week(expiry_date)
 
+    update_lists_call(alternate_strike_call,None)
+    update_lists_put(alternate_strike_put,None)
+    Entry_time_call.append("15:30")
+    Entry_date.append(expiry_date)
+    Entry_week.append(week)
+
+    sl_hit_date.append(expiry_date)
+    sl_hit_time.append("15:30")
+    sl_hit_week.append(None)
 
 
 
@@ -754,7 +1039,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                     if df_call_init.loc[(running_index+i+1),"high CE"]<CE_SL and df_put_init.loc[(running_index+i+1),"high PE"]<PE_SL:
                         call_premium_collected=ce_initial_Price-df_call_init.loc[(running_index+i+1),"close CE"]
                         put_premium_collected=pe_initial_Price-df_put_init.loc[(running_index+i+1),"close PE"]
-                        Net_P_L=call_premium_collected+put_premium_collected
+                        Net_P_L=Net_P_L+call_premium_collected+put_premium_collected
                         time=df_call_init.loc[(running_index+i+1),"Time"]
 
                         SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
@@ -763,16 +1048,35 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                         current_strike_CE=CE_Strike
                         PE_Strike_2=PE_Strike+50
                         Market_trend="Trending Up"
+
+                        call_premium_collected=ce_initial_Price-CE_SL
+                        put_premium_collected=pe_initial_Price-df_put_init.loc[(running_index+i+1),"close PE"]
+                        Net_P_L=Net_P_L+call_premium_collected+put_premium_collected
+
                         Time=df_call_init.loc[(running_index+i+1),"Time"]
                         Date=df_call_init.loc[(running_index+i+1),"Date"]
-                        index_row,df_CE,df_PE_1,df_PE_2=volatility_strike_pred(Len_pe,Date,Time,path_expiry_date_recurring,Startjee_1_dict_Call,Startjee_1_dict_Put,current_strike_CE,0,0,0,PE_Strike,PE_Strike_2,0,0)
+                        week=date_to_week(Date)
+
+                        running_log_update("SL_Hit","Call_stk_1",CE_Strike,"Call",Time,Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,0)
+
+                        index_row,df_CE,df_PE_1,df_PE_2=volatility_strike_pred(Date,Time,path_expiry_date_recurring,Startjee_1_dict_Call,Startjee_1_dict_Put,current_strike_CE,0,0,0,PE_Strike,PE_Strike_2,0,0,Len_pe,1)
 
                     elif df_call_init.loc[(running_index+i+1),"high CE"]<CE_SL and df_put_init.loc[(running_index+i+1),"high PE"]>=PE_SL:
                         PE_Strike_1=PE_Strike
                         CE_Strike_2=CE_Strike-50
                         Market_trend="Trending Down"
+
+                        call_premium_collected=ce_initial_Price-df_call_init.loc[(running_index+i+1),"close CE"]
+                        put_premium_collected=pe_initial_Price-PE_SL
+                        Net_P_L=Net_P_L+call_premium_collected+put_premium_collected
+
                         Time=df_call_init.loc[(running_index+i+1),"Time"]
-                        index_row,df_CE_1,df_CE_2,df_PE_2=volatility_strike_pred(Len_ce,Time,path_expiry_date_recurring,CE_Strike,CE_Strike_2,0,0,PE_Strike_1,0,0,0)
+                        Date=df_call_init.loc[(running_index+i+1),"Date"]
+                        week=date_to_week(Date)
+
+                        running_log_update("SL_Hit","Put_stk_1",PE_Strike,"Put",Time,Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,0)
+
+                        index_row,df_CE_1,df_CE_2,df_PE_2=volatility_strike_pred(Date,Time,path_expiry_date_recurring,Startjee_1_dict_Call,Startjee_1_dict_Put,CE_Strike,CE_Strike_2,0,0,PE_Strike_1,0,0,0,1,Len_ce)
                     else:
                         pass
 
@@ -808,7 +1112,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             call_premium_collected=ce_initial_Price-df_CE.loc[(index_row+i+1),"close CE"]
                             put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
                             put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
-                            Net_P_L=call_premium_collected+put_premium_collected_1+put_premium_collected_2
+                            Net_P_L=Net_P_L+call_premium_collected+put_premium_collected_1+put_premium_collected_2
                             
                             time=df_CE.loc[(index_row+i+1),"Time"]
                             SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
@@ -819,8 +1123,19 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             PE_strike_2=Active_put_Strike[1]
                             PE_strike_1=Active_put_Strike[0]
 
+                            call_premium_collected=ce_initial_Price-CE_SL
+                            put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
+                            put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
+                            Net_P_L=Net_P_L+call_premium_collected+put_premium_collected_1+put_premium_collected_2
+
                             Time=df_CE.loc[(index_row+i+1),"Time"]
-                            index_row,df_CE_3,df_PE_1,df_PE_2,df_PE_3=volatility_strike_pred(Len_pe,Time,path_expiry_date_recurring,0,CE_Strike_2,0,0,PE_strike_1,PE_strike_2,PE_strike_3,0)
+                            Date=df_CE.loc[(index_row+i+1),"Date"]
+
+                            week=date_to_week(Date)
+
+                            running_log_update("SL_Hit","Call_stk_2",CE_Strike_2,"Call",Time,Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,0)
+
+                            index_row,df_CE_3,df_PE_1,df_PE_2,df_PE_3=volatility_strike_pred(Date,Time,path_expiry_date_recurring,Startjee_1_dict_Call,Startjee_1_dict_Put,0,CE_Strike_2,0,0,PE_strike_1,PE_Strike_2,PE_strike_3,0,Len_pe,1)
 
 ######### REVESAL SEQUENCE ######
 
@@ -839,17 +1154,18 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 Active_status_read["Deactive Put Strike Premium Initial"].append(Active_Initial_Sold_premium_put[1])
                                 Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[1])
 
+
                                 writing_Active_status(Active_status_read)
 
                                 call_premium_collected=ce_initial_Price-df_CE.loc[(index_row+i+1),"close CE"]
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=call_premium_collected+put_premium_collected_1
+                                Net_P_L=Net_P_L+call_premium_collected+put_premium_collected_1
                                 time=df_CE.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 call_premium_collected=ce_initial_Price-df_CE.loc[(index_row+i+1),"close CE"]
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=call_premium_collected+put_premium_collected_1
+                                Net_P_L=Net_P_L+call_premium_collected+put_premium_collected_1
                                 time=df_CE.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -877,13 +1193,14 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
 
 
+
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=put_premium_collected_1
+                                Net_P_L=Net_P_L+put_premium_collected_1
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=put_premium_collected_1
+                                Net_P_L=Net_P_L+put_premium_collected_1
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -905,15 +1222,16 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[0])
                                 Active_status_read["Deactive Put Strike SL"].append(Active_SL_Put[1])
 
+
                                 writing_Active_status(Active_status_read)
 
                                 call_premium_collected=ce_initial_Price-df_CE.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected
+                                Net_P_L=Net_P_L+call_premium_collected
                                 time=df_CE.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 call_premium_collected=ce_initial_Price-df_CE.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected
+                                Net_P_L=Net_P_L+call_premium_collected
                                 time=df_CE.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -945,6 +1263,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 Active_status_read["Deactive Call Strike SL"].append(Active_SL_Call[0])
 
                                 writing_Active_status(Active_status_read)
+
 
                                 break
 
@@ -987,20 +1306,31 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
                             put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
                             put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close PE"]
-                            Net_P_L=call_premium_collected+put_premium_collected_1+put_premium_collected_2+put_premium_collected_3
+                            Net_P_L=Net_P_L+call_premium_collected+put_premium_collected_1+put_premium_collected_2+put_premium_collected_3
                             time=df_PE_1.loc[(index_row+i+1),"Time"]
                             SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
                         elif CE_Current_pr>=CE_SL and PE_Current_pr_1<PE_1_SL and PE_Current_pr_2<PE_2_SL and PE_Current_pr_3<PE_3_SL:
                             CE_Strike_3=Active_call_Strike[0]
                             PE_Strike_4=Active_put_Strike[2]+50
-                            PE_strike_3=Active_put_Strike[2]
-                            PE_strike_2=Active_put_Strike[1]
-                            PE_strike_1=Active_put_Strike[0]
+                            PE_Strike_3=Active_put_Strike[2]
+                            PE_Strike_2=Active_put_Strike[1]
+                            PE_Strike_1=Active_put_Strike[0]
+
+                            call_premium_collected=ce_initial_Price-CE_SL
+                            put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
+                            put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
+                            put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close PE"]
+                            Net_P_L=Net_P_L+call_premium_collected+put_premium_collected_1+put_premium_collected_2+put_premium_collected_3
 
                             Time=df_CE_3.loc[(index_row+i+1),"Time"]
                             Date=df_CE_3.loc[(index_row+i+1),"Date"]
-                            index_row,df_PE_1,df_PE_2,df_PE_3,df_PE_4=volatility_strike_pred(Len_pe,Date,Time,path_expiry_date_recurring,0,0,CE_Strike_3,0,PE_strike_1,PE_strike_2,PE_strike_3,PE_Strike_4)
+
+                            week=date_to_week(Date)
+
+                            running_log_update("SL_Hit","Call_stk_3",CE_Strike_3,"Call",Time,Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,0)
+
+                            index_row,df_PE_1,df_PE_2,df_PE_3,df_PE_4=volatility_strike_pred(Date,Time,path_expiry_date_recurring,Startjee_1_dict_Call,Startjee_1_dict_Put,0,0,CE_Strike_3,0,PE_Strike_1,PE_Strike_2,PE_Strike_3,PE_Strike_4,Len_pe,1)
 
                         elif CE_Current_pr<CE_SL and PE_Current_pr_1<PE_1_SL and PE_Current_pr_2<PE_2_SL and PE_Current_pr_3>=PE_3_SL:
                             Active_status_read=read_Active_status()
@@ -1017,17 +1347,18 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 writing_Active_status(Active_status_read)
 
 
+
                                 call_premium_collected=ce_initial_Price-df_CE_3.loc[(index_row+i+1),"close CE"]
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
                                 put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=call_premium_collected+put_premium_collected_1+put_premium_collected_2
+                                Net_P_L=Net_P_L+call_premium_collected+put_premium_collected_1+put_premium_collected_2
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 call_premium_collected=ce_initial_Price-df_CE_3.loc[(index_row+i+1),"close CE"]
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
                                 put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=call_premium_collected+put_premium_collected_1+put_premium_collected_2
+                                Net_P_L=Net_P_L+call_premium_collected+put_premium_collected_1+put_premium_collected_2
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -1055,15 +1386,16 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 writing_Active_status(Active_status_read)
 
 
+
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
                                 put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=call_premium_collected+put_premium_collected_1+put_premium_collected_2
+                                Net_P_L=Net_P_L+call_premium_collected+put_premium_collected_1+put_premium_collected_2
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
                                 put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=call_premium_collected+put_premium_collected_1+put_premium_collected_2
+                                Net_P_L=Net_P_L+call_premium_collected+put_premium_collected_1+put_premium_collected_2
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -1088,15 +1420,16 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 writing_Active_status(Active_status_read)
 
 
+
                                 call_premium_collected=ce_initial_Price-df_CE_3.loc[(index_row+i+1),"close CE"]
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=call_premium_collected+put_premium_collected_1
+                                Net_P_L=Net_P_L+call_premium_collected+put_premium_collected_1
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 call_premium_collected=ce_initial_Price-df_CE_3.loc[(index_row+i+1),"close CE"]
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=call_premium_collected+put_premium_collected_1
+                                Net_P_L=Net_P_L+call_premium_collected+put_premium_collected_1
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -1129,13 +1462,14 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 writing_Active_status(Active_status_read)
 
 
+
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=put_premium_collected_1
+                                Net_P_L=Net_P_L+put_premium_collected_1
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=put_premium_collected_1
+                                Net_P_L=Net_P_L+put_premium_collected_1
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                         elif CE_Current_pr<CE_SL and PE_Current_pr_1>=PE_1_SL and PE_Current_pr_2>=PE_2_SL and PE_Current_pr_3>=PE_3_SL:
@@ -1163,12 +1497,12 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 writing_Active_status(Active_status_read)
 
                                 call_premium_collected=ce_initial_Price-df_CE_3.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected
+                                Net_P_L=Net_P_L+call_premium_collected
                                 time=df_CE_3.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 call_premium_collected=ce_initial_Price-df_CE_3.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected
+                                Net_P_L=Net_P_L+call_premium_collected
                                 time=df_CE_3.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -1246,7 +1580,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
                             put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close PE"]
                             put_premium_collected_4=pe_initial_Price_4-df_PE_4.loc[(index_row+i+1),"close PE"]
-                            Net_P_L=put_premium_collected_1+put_premium_collected_2+put_premium_collected_3+put_premium_collected_4
+                            Net_P_L=Net_P_L+put_premium_collected_1+put_premium_collected_2+put_premium_collected_3+put_premium_collected_4
                             time=df_PE_1.loc[(index_row+i+1),"Time"]
                             SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -1270,14 +1604,14 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
                                 put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
                                 put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=put_premium_collected_1+put_premium_collected_2+put_premium_collected_3
+                                Net_P_L=Net_P_L+put_premium_collected_1+put_premium_collected_2+put_premium_collected_3
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
                                 put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
                                 put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=put_premium_collected_1+put_premium_collected_2+put_premium_collected_3
+                                Net_P_L=Net_P_L+put_premium_collected_1+put_premium_collected_2+put_premium_collected_3
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -1305,13 +1639,13 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
                                 put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=put_premium_collected_1+put_premium_collected_2
+                                Net_P_L=Net_P_L+put_premium_collected_1+put_premium_collected_2
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
                                 put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=put_premium_collected_1+put_premium_collected_2
+                                Net_P_L=Net_P_L+put_premium_collected_1+put_premium_collected_2
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -1343,12 +1677,12 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
 
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=put_premium_collected_1
+                                Net_P_L=Net_P_L+put_premium_collected_1
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 put_premium_collected_1=pe_initial_Price_1-df_PE_1.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=put_premium_collected_1
+                                Net_P_L=Net_P_L+put_premium_collected_1
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -1428,19 +1762,31 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
                             call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
                             put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
-                            Net_P_L=call_premium_collected_1+call_premium_collected_2+put_premium_collected_2
+                            Net_P_L=Net_P_L+call_premium_collected_1+call_premium_collected_2+put_premium_collected_2
                             
                             time=df_CE_1.loc[(index_row+i+1),"Time"]
+                            Date=df_CE_1.loc[(running_index+i+1),"Date"]
                             SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                         
-                        elif CE_Current_pr_1<CE_1_SL and CE_Current_pr_2<CE_2_SL and PE_Current_pr_1>=PE_1_SL:
+                        elif CE_Current_pr_1<CE_1_SL and CE_Current_pr_2<CE_2_SL and PE_Current_pr_1>=PE_2_SL:
                             CE_Strike_1=Active_call_Strike[0]
                             CE_Strike_2=Active_call_Strike[1]
                             CE_Strike_3=Active_call_Strike[1]-50
-                            PE_strike_1=Active_put_Strike[0]
+                            PE_strike_2=Active_put_Strike[0]
+
+                            call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                            call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
+                            put_premium_collected_2=pe_initial_Price_2-PE_2_SL
+                            Net_P_L=Net_P_L+call_premium_collected_1+call_premium_collected_2+put_premium_collected_2                            
 
                             Time=df_CE_1.loc[(index_row+i+1),"Time"]
-                            index_row,df_CE_3,df_CE_2,df_CE_1,df_PE_3=volatility_strike_pred(Len_ce,Time,path_expiry_date_recurring,0,CE_Strike_2,0,0,PE_strike_1,PE_strike_2,PE_strike_3,0)
+                            Date=df_CE_1.loc[(index_row+i+1),"Date"]
+
+                            week=date_to_week(Date)
+
+                            running_log_update("SL_Hit","Put_stk_2",PE_strike_2,"Put",Time,Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,0)
+
+                            index_row,df_CE_3,df_CE_2,df_CE_1,df_PE_3=volatility_strike_pred(Date,Time,path_expiry_date_recurring,Startjee_1_dict_Call,Startjee_1_dict_Put,CE_Strike_1,CE_Strike_2,CE_Strike_3,0,0,PE_strike_2,0,0,1,Len_ce)
 
 ######### REVESAL SEQUENCE ######
 
@@ -1461,13 +1807,13 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
                                 put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=call_premium_collected_1+put_premium_collected_2
+                                Net_P_L=Net_P_L+call_premium_collected_1+put_premium_collected_2
                                 time=df_CE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
                                 put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=call_premium_collected_1+put_premium_collected_2
+                                Net_P_L=Net_P_L+call_premium_collected_1+put_premium_collected_2
                                 time=df_CE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                        
@@ -1496,12 +1842,12 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
 
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected_1
+                                Net_P_L=Net_P_L+call_premium_collected_1
                                 time=df_CE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected_1
+                                Net_P_L=Net_P_L+call_premium_collected_1
                                 time=df_CE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -1525,12 +1871,12 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 writing_Active_status(Active_status_read)
 
                                 put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=put_premium_collected_2
+                                Net_P_L=Net_P_L+put_premium_collected_2
                                 time=df_PE_2.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 put_premium_collected_2=pe_initial_Price_2-df_PE_2.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=put_premium_collected_2
+                                Net_P_L=Net_P_L+put_premium_collected_2
                                 time=df_PE_2.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -1602,7 +1948,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
                             call_premium_collected_3=ce_initial_Price_3-df_CE_3.loc[(index_row+i+1),"close CE"]
                             put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close PE"]
-                            Net_P_L=call_premium_collected_1+call_premium_collected_2+call_premium_collected_3+put_premium_collected_3
+                            Net_P_L=Net_P_L+call_premium_collected_1+call_premium_collected_2+call_premium_collected_3+put_premium_collected_3
                             time=df_PE_3.loc[(index_row+i+1),"Time"]
                             SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -1612,12 +1958,23 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             CE_Strike_3=Active_call_Strike[2]
                             CE_Strike_2=Active_call_Strike[1]
                             CE_Strike_1=Active_call_Strike[0]
+                            PE_strike_3=Active_put_Strike[0]
                             CE_Strike_4=CE_Strike_3-50
+
+                            call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
+                            call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
+                            call_premium_collected_3=ce_initial_Price_3-df_CE_3.loc[(index_row+i+1),"close CE"]
+                            put_premium_collected_3=pe_initial_Price_2-PE_3_SL
+                            Net_P_L=Net_P_L+call_premium_collected_1+call_premium_collected_2+call_premium_collected_3+put_premium_collected_3                              
                             
 
                             Time=df_CE_3.loc[(index_row+i+1),"Time"]
                             Date=df_CE_3.loc[(index_row+i+1),"Date"]
-                            index_row,df_CE_1,df_CE_2,df_CE_3,df_CE_4=volatility_strike_pred(Len_pe,Date,Time,path_expiry_date_recurring,0,0,CE_Strike_3,0,PE_strike_1,PE_strike_2,PE_strike_3,PE_Strike_4)
+                            week=date_to_week(Date)
+
+                            running_log_update("SL_Hit","Put_stk_3",PE_strike_3,"Put",Time,Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,0)
+
+                            index_row,df_CE_1,df_CE_2,df_CE_3,df_CE_4=volatility_strike_pred(Date,Time,path_expiry_date_recurring,Startjee_1_dict_Call,Startjee_1_dict_Put,CE_Strike_1,CE_Strike_2,CE_Strike_3,CE_Strike_4,0,0,PE_strike_3,0,1,Len_ce)
 
 ######### REVESAL SEQUENCE ######
 
@@ -1640,14 +1997,14 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close PE"]
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
                                 call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected+put_premium_collected_1+put_premium_collected_2
+                                Net_P_L=Net_P_L+call_premium_collected+put_premium_collected_1+put_premium_collected_2
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close PE"]
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
                                 call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected+put_premium_collected_1+put_premium_collected_2
+                                Net_P_L=Net_P_L+call_premium_collected+put_premium_collected_1+put_premium_collected_2
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
  
@@ -1676,13 +2033,13 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
                                 call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected_1+call_premium_collected_2
+                                Net_P_L=Net_P_L+call_premium_collected_1+call_premium_collected_2
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
                                 call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected_1+call_premium_collected_2
+                                Net_P_L=Net_P_L+call_premium_collected_1+call_premium_collected_2
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -1709,13 +2066,13 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
                                 put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=call_premium_collected_1+put_premium_collected_3
+                                Net_P_L=Net_P_L+call_premium_collected_1+put_premium_collected_3
                                 time=df_CE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
                                 put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close PE"]
-                                Net_P_L=call_premium_collected_1+put_premium_collected_3
+                                Net_P_L=Net_P_L+call_premium_collected_1+put_premium_collected_3
                                 time=df_CE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
  
@@ -1749,12 +2106,12 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
 
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected_1
+                                Net_P_L=Net_P_L+call_premium_collected_1
                                 time=df_CE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected_1
+                                Net_P_L=Net_P_L+call_premium_collected_1
                                 time=df_CE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                         
@@ -1783,12 +2140,12 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 writing_Active_status(Active_status_read)
 
                                 put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=put_premium_collected_3
+                                Net_P_L=Net_P_L+put_premium_collected_3
                                 time=df_PE_3.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 put_premium_collected_3=pe_initial_Price_3-df_PE_3.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=put_premium_collected_3
+                                Net_P_L=Net_P_L+put_premium_collected_3
                                 time=df_PE_3.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -1867,7 +2224,7 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                             call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
                             call_premium_collected_3=ce_initial_Price_3-df_CE_3.loc[(index_row+i+1),"close CE"]
                             call_premium_collected_4=ce_initial_Price_4-df_CE_4.loc[(index_row+i+1),"close CE"]
-                            Net_P_L=call_premium_collected_1+call_premium_collected_2+call_premium_collected_3+call_premium_collected_4
+                            Net_P_L=Net_P_L+call_premium_collected_1+call_premium_collected_2+call_premium_collected_3+call_premium_collected_4
                             time=df_CE_1.loc[(index_row+i+1),"Time"]
                             SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -1890,14 +2247,14 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
                                 call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
                                 call_premium_collected_3=ce_initial_Price_3-df_CE_3.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected_1+call_premium_collected_2+call_premium_collected_3
+                                Net_P_L=Net_P_L+call_premium_collected_1+call_premium_collected_2+call_premium_collected_3
                                 time=df_CE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
                                 call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
                                 call_premium_collected_3=ce_initial_Price_3-df_CE_3.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected_1+call_premium_collected_2+call_premium_collected_3
+                                Net_P_L=Net_P_L+call_premium_collected_1+call_premium_collected_2+call_premium_collected_3
                                 time=df_CE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
  
@@ -1924,13 +2281,13 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
                                 call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected_1+call_premium_collected_2
+                                Net_P_L=Net_P_L+call_premium_collected_1+call_premium_collected_2
                                 time=df_PE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
                                 call_premium_collected_2=ce_initial_Price_2-df_CE_2.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected_1+call_premium_collected_2
+                                Net_P_L=Net_P_L+call_premium_collected_1+call_premium_collected_2
                                 time=df_CE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -1960,12 +2317,12 @@ def routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initi
 
 
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected_1
+                                Net_P_L=Net_P_L+call_premium_collected_1
                                 time=df_CE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                             else:
                                 call_premium_collected_1=ce_initial_Price_1-df_CE_1.loc[(index_row+i+1),"close CE"]
-                                Net_P_L=call_premium_collected_1
+                                Net_P_L=Net_P_L+call_premium_collected_1
                                 time=df_CE_1.loc[(index_row+i+1),"Time"]
                                 SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
 
@@ -2239,8 +2596,26 @@ def morning_code(path_expiry_date_recurring,date):
 
 
 
-def table_recording_code():
-    pass 
+def table_recording_code(Initial_day,Expiry_date,Day):
+    Initial_day = datetime.strptime(Initial_day, "%d-%b-%Y")
+    current_day = Initial_day + timedelta(days=Day)
+    while current_day.weekday() in [5, 6]:
+        current_day += timedelta(days=1)
+
+    output_date = current_day.strftime("%d-%b-%Y")
+    previous_day.append(output_date)
+    l_1=len(previous_day)
+
+    if output_date==previous_day[l_1-2] and l_1>2:
+        pass
+    else:
+        print(output_date)
+
+        if output_date in holidays_date:
+            pass
+        else:
+            if output_date==Expiry_date:
+                pass
 
 def writing_Active_status(Active_status):
     with open(Path_backtest_Report+"active_status.txt", "w") as file:
@@ -2290,7 +2665,10 @@ for k in range(1):
         Active_status={}
         Market_trend="Neutral"
         Day=0
+        Net_P_L=0
         reversal_status=None
+        Len_ce=0
+        Len_pe=0
 
         with open(Path_backtest_Report+"active_status.txt", "w") as file:
             file.truncate()
@@ -2306,6 +2684,9 @@ for k in range(1):
                 Put_Strike=file_startjee.loc[k,"Put Strike"]
                 Call_Strike=int(Call_Strike)
                 Put_Strike=int(Put_Strike)
+                
+
+
                 file_call=f"NIFTY{str(Call_Strike)}_CE.csv"
                 file_put=f"NIFTY{str(Put_Strike)}_PE.csv"
                 df_call_init=pd.read_csv(path_expiry_date+file_call)
@@ -2322,6 +2703,12 @@ for k in range(1):
                 Desired_Date = date_obj.strftime("%Y-%m-%d")
                 row_index_call = df_call_init.index[(df_call_init['Time'] == Desired_time_CE)&(df_call_init['Date'] == Desired_Date)].tolist()
                 row_index_put = df_put_init.index[(df_put_init['Time'] == Desired_time_PE)&(df_put_init['Date'] == Desired_Date)].tolist()
+
+                week=date_to_week(Desired_Date)
+
+                running_log_update("Entry","Call_stk_1",Call_Strike,"Call",Desired_time_CE,Desired_Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,0)
+                running_log_update("Entry","Put_stk_1",Put_Strike,"Put",Desired_time_PE,Desired_Date,week,formatted_Date_of_Init[k],formatted_Date_of_Expiry[k],0,0)
+
                 row_index_call=row_index_call[0]
                 row_index_put=row_index_put[0]
                 CE_price=df_call_init.loc[row_index_call,"close CE"]
@@ -2359,13 +2746,32 @@ for k in range(1):
                 Initial_day=formatted_Date_of_Init[k]
                 Expiry_date=formatted_Date_of_Expiry[k]
 
-                # table_recording_code()
+
                 routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,Active_SL_Call,Active_SL_Put,Day,Initial_day,Expiry_date)
                 
                 Day=Day+1
             else:
 
                 routine_code(running_index,Active_call_Strike,Active_put_Strike,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,Active_SL_Call,Active_SL_Put,Day,Initial_day,Expiry_date)
-                # table_recording_code()
+                margin_deployed=MARGIN_DEPLOYED
+                
+                if reversal_status is not None:
+                    rev=1
+                else:
+                    rev=0
+
+                final_log(Initial_day,Expiry_date,Market_trend,Net_P_L,margin_deployed,Len_ce,Len_pe,rev,"Call_stk_1","Put_stk_1")
                 Day=Day+1
                 
+
+final_data={"Date of Initiation":date_init,"Date of Expiry":date_exp,"Market Sentiment":market_sentiment,
+            "CE Strike 1":Call_stk_1,"CE Strike 2":Call_stk_2,"CE Strike 3":Call_stk_3,"CE Strike 4":Call_stk_4,
+            "PE Strike 1":Put_stk_1,"PE Strike 2":Put_stk_2,"PE Strike 3":Put_stk_3,"PE Strike 4":Put_stk_4,
+            "SL hit Time":sl_hit_time,"SL hit Date":sl_hit_date,"SL hit Week":sl_hit_week,"Entry Time Call":Entry_time_call,
+            "Entry Time Put":Entry_time_put,"Entry Time Date":Entry_date,"Entry Time Week":Entry_week,"Profit and Loss":profit_loss,
+            "Margin Used":Margin,"Profit Loss percent":ROI,"Overall Credit Spread Call":Net_Credit_Spread_Call,"Overall Credit Spread Put":Net_Credit_Spread_Put,
+            "Overall Credit Spread Used":Net_Credit_Spread,"Reversal Status":reverse}
+
+
+final_generated_DF=pd.DataFrame(final_data)
+final_generated_DF.to_csv(Path_backtest_Report+final_generated_DF,index=False)
