@@ -641,7 +641,7 @@ enctoken = content_enctoken
 kite = KiteApp(enctoken=enctoken)
 
 
-Options_index() 
+# Options_index() 
 stock_Options()
 Future_index()
 Futures_stock() 
