@@ -642,6 +642,6 @@ kite = KiteApp(enctoken=enctoken)
 
 
 # Options_index() 
-stock_Options()
+# stock_Options()
 Future_index()
 Futures_stock() 
