@@ -1,0 +1,7 @@
+Date of Initiation,Date of Expiry,Market Sentiment,CE Strike 1,CE Strike 2,CE Strike 3,CE Strike 4,PE Strike 1,PE Strike 2,PE Strike 3,PE Strike 4,SL hit Time,SL hit Date,SL hit Week,Entry Time Call,Entry Time Put,Entry Time Date,Entry Time Week,Profit and Loss,Margin Used,Profit Loss percent,Overall Credit Spread Call,Overall Credit Spread Put,Overall Credit Spread Used,Reversal Status
+16-Jun-2023,22-Jun-2023,,19000.0,,,,18500.0,,,,,,,09:20,09:20,2023-06-16,Friday,,,,,,,
+16-Jun-2023,22-Jun-2023,,-19000.0,,,,,,,,14:18,2023-06-16,Friday,,,,,,,,,,,
+16-Jun-2023,22-Jun-2023,,,19150.0,,,,18550.0,,,,,,14:20,14:20,2023-06-16,Friday,,,,,,,
+16-Jun-2023,22-Jun-2023,,,-19150.0,,,,,,,14:51,2023-06-16,Friday,,,,,,,,,,,
+16-Jun-2023,22-Jun-2023,,,,19300.0,,,,18600.0,,,,,14:50,14:50,2023-06-16,Friday,,,,,,,
+16-Jun-2023,22-Jun-2023,Trending Up,,,,,,,,,,,,,,,,-517.5000000000001,92000.0,-0.5625000000000001,1.0,0.0,1.0,1.0
