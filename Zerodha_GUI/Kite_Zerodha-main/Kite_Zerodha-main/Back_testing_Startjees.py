@@ -10,9 +10,18 @@ path_main="D:/ashu/Finance/algo_trading/Zerodha_GUI/Kite_Zerodha-main/Kite_Zerod
 path_spot_vol="H:/My Drive/Daily_F_O_data/"
 Path_backtest_Report="D:/ashu/Finance/algo_trading/Zerodha_GUI/Kite_Zerodha-main/Kite_Zerodha-main/Back_Test_Files_Report/"
 
-Accepted_Expiry_Dates=["12-Mar-2020","09-Apr-2020","28-May-2020","19-Apr-2020","03-Dec-2020","28-Jan-2021","11-Mar-2021","01-Apr-2021","15-Apr-2021","22-Apr-2021","12-May-2021","22-Jul-2021","18-Aug-2021","03-Nov-2021","27-Jan-2022","03-Mar-2022","13-Apr-2022","05-May-2022","11-Aug-2022","18-Aug-2022","01-Sep-2022","06-Oct-2022","10-Nov-2022","26-Jan-2023","09-Mar-2023","30-Mar-2023","06-Apr-2023","04-May-2023","29-Jun-2023","17-Aug-2023","21-Sep-2023","05-Oct-2023","26-Oct-2023","16-Nov-2023","30-Nov-2023","28-Nov-2023"]
-Rejected_Expiry_Dates=["27-Feb-2020","01-Apr-2020","16-Apr-2020","07-May-2020","08-Oct-2020","31-Dec-2020","08-Apr-2021","16-Apr-2021","21-Oct-2021","11-Nov-2021","25-Nov-2021","24-Mar-2022","21-Apr-2022","27-Oct-2022","13-Apr-2023","20-Apr-2023"]
-holidays_date=[]
+Accepted_Expiry_Dates=["12-Mar-2020","09-Apr-2020","28-May-2020","19-Nov-2020","03-Dec-2020","28-Jan-2021","11-Mar-2021","01-Apr-2021","15-Apr-2021","22-Apr-2021",
+                       "12-May-2021","22-Jul-2021","18-Aug-2021","03-Nov-2021","27-Jan-2022","03-Mar-2022","13-Apr-2022","05-May-2022","11-Aug-2022","18-Aug-2022","01-Sep-2022",
+                       "06-Oct-2022","10-Nov-2022","26-Jan-2023","09-Mar-2023","30-Mar-2023","06-Apr-2023","04-May-2023","29-Jun-2023","17-Aug-2023","21-Sep-2023","05-Oct-2023",
+                       "26-Oct-2023","16-Nov-2023","30-Nov-2023","28-Nov-2023"]
+Rejected_Expiry_Dates=["27-Feb-2020","01-Apr-2020","16-Apr-2020","07-May-2020","08-Oct-2020","31-Dec-2020","08-Apr-2021","16-Apr-2021","21-Oct-2021","11-Nov-2021","25-Nov-2021",
+                       "24-Mar-2022","21-Apr-2022","27-Oct-2022","13-Apr-2023","20-Apr-2023"]
+holidays_date=["10-Mar-2020","06-Apr-2020","25-May-2020","16-Nov-2020","30-Nov-2020","26-Jan-2021","11-Mar-2021","29-Mar-2021","14-Apr-2021",
+               "21-Apr-2021","13-May-2021","21-Jul-2021","19-Aug-2021","10-Sep-2021","15-Sep-2021","04-Nov-2021","05-Nov-2021","19-Nov-2021","26-Jan-2022","01-Mar-2022",
+               "18-Mar-2022","14-Apr-2022","15-Apr-2022","03-May-2022","09-Aug-2022","15-Aug-2022","31-Aug-2022","05-Oct-2022","24-Oct-2022","26-Oct-2022","08-Nov-2022",
+               "26-Jan-2023","07-Mar-2023","30-Mar-2023","04-Apr-2023","07-Apr-2023","14-Apr-2023","01-May-2023","28-Jun-2023","15-Aug-2023","19-Sep-2023","02-Oct-2023",
+               "24-Oct-2023","14-Nov-2023","27-Nov-2023","25-Dec-2023","22-Jan-2024","26-Jan-2024","08-Mar-2024","25-Mar-2024","29-Mar-2024","11-Apr-2024","17-Apr-2024",
+               "01-May-2024","20-May-2024","17-Jun-2024","17-Jul-2024","15-Aug-2024","02-Oct-2024","01-Nov-2024","15-Nov-2024","25-Dec-2024"]
 
 
 file_startjee=pd.read_excel(path_main+"Startjee.xlsx", sheet_name="Past_Backtesting")
@@ -102,9 +111,9 @@ Desired_time_CE="09:19"
 Desired_time_PE="09:19"
 Checking_time="09:30"
 MARGIN_DEPLOYED=92000
-Startjee_1=1
+Startjee_1=0
 Startjee_2=0
-Startjee_3=0
+Startjee_3=1
 Threshold_price=1
 Net_P_L=0
 Len_ce=0
@@ -1244,8 +1253,6 @@ def morning_code(path_expiry_date_recurring,date,Active_call_Strike,Active_put_S
     Morning_row_index=Morning_row_index[0]
     print(f"The reversal status is {rev}")
 
-    
-
 
     key_mapping={}
 
@@ -1333,18 +1340,32 @@ def morning_code(path_expiry_date_recurring,date,Active_call_Strike,Active_put_S
 
 
         elif Market_trend=="Neutral":
+            sliced_file=keys_ii[:6]
+
             if sliced_file=="df_CE_":
+
+                string_1=keys_ii
+                substring_to_remove_CE = "df_CE_"
+                file_num_1=string_1.replace(substring_to_remove_CE,"")
+                file_num_1=int(file_num_1)
+
                 key_mapping[keys_ii]=f"df_CE_{1}"
                 df_going=morning_df[keys_ii][0]
                 right=morning_df[keys_ii][1]
-                got_df=renaming_columns(df_going,right,1)
+                got_df=renaming_columns(df_going,right,1,file_num_1)
                 morning_df[keys_ii][0]=got_df
 
             elif sliced_file=="df_PE_":
+
+                string_1=keys_ii
+                substring_to_remove_PE = "df_PE_"
+                file_num_1=string_1.replace(substring_to_remove_PE,"")
+                file_num_1=int(file_num_1)
+
                 key_mapping[keys_ii]=f"df_PE_{1}"
                 df_going=morning_df[keys_ii][0]
                 right=morning_df[keys_ii][1]
-                got_df=renaming_columns(df_going,right,1)
+                got_df=renaming_columns(df_going,right,1,file_num_1)
                 morning_df[keys_ii][0]=got_df     
         else:
             pass
@@ -1543,7 +1564,11 @@ def routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_S
                         Net_P_L=call_premium_collected+put_premium_collected
                         Net_P_L=Lot_size*Net_P_L
                         time=df_call_init.loc[(index_row+i),"Time"]
-                        SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+
+                        if Startjee_2==1:
+                            pass
+                        else:
+                            SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                         print(f"time: {time}, Initial_price CE: {round(ce_initial_Price,2)}, Current Price CE: {round(CE_Current_pr_close,2)}, Call Premium Collected: {round(call_premium_collected,2)}")
                         print(f"time: {time}, Initial_price PE: {round(pe_initial_Price,2)}, Current Price PE: {round(PE_Current_pr_1_close,2)}, Put Premium Collected: {round(put_premium_collected,2)}")
                         print(f"time: {time},Net Profit and Loss: {round(Net_P_L,2)}")
@@ -1935,7 +1960,10 @@ def routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_S
                         time=df_trending_up_dict[keys_list[j]][0].loc[(i+index_row-count-1),"Time"]
                         Net_P_L=Call_premium_collected+Put_premium_collected+historical_realized_profit_loss["Call"]+historical_realized_profit_loss["Put"]
                         Net_P_L=Lot_size*Net_P_L
-                        SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
+                        if Startjee_2==1:
+                            pass
+                        else:
+                            SL_update(time,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,CE_instantinious_pr,PE_instantinious_pr,Active_call_Strike,Active_put_Strike,Active_SL_Call,Active_SL_Put,reversal_status,Startjee_1_dict_Call,Startjee_1_dict_Put)
                         historical_CE_premium_collected=round(historical_realized_profit_loss['Call'],2)
                         historical_PE_premium_collected=round(historical_realized_profit_loss['Put'],2)
                         print(f"time: {time},Net Profit and Loss: {round(Net_P_L,2)}, Historical realized profit Call: {historical_CE_premium_collected}, Historical realized profit Put: {historical_PE_premium_collected}")
@@ -2312,7 +2340,10 @@ def routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_S
                         Net_P_L = Call_premium_collected + Put_premium_collected + historical_realized_profit_loss[
                             "Call"] + historical_realized_profit_loss["Put"]
                         Net_P_L = Lot_size * Net_P_L
-                        SL_update(time, Active_Initial_Sold_premium_call, Active_Initial_Sold_premium_put,
+                        if Startjee_2==1:
+                            pass
+                        else:
+                            SL_update(time, Active_Initial_Sold_premium_call, Active_Initial_Sold_premium_put,
                                   CE_instantinious_pr, PE_instantinious_pr, Active_call_Strike, Active_put_Strike,
                                   Active_SL_Call, Active_SL_Put, reversal_status, Startjee_1_dict_Call,
                                   Startjee_1_dict_Put)

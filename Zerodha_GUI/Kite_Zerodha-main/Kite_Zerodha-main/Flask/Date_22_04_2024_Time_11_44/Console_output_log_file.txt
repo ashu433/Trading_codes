@@ -1,0 +1,208 @@
+09:15:44: Incoming Active Put Strikes is [21200, 21250] and Incoming Active Call strikes is [22500].
+09:18:58: Incoming Active Put Strikes is [21200, 21250] and Incoming Active Call strikes is [22500].
+09:19:53: Running the morning code 09:19:53 and Market Trend Trending Up.
+09:24:54: Running the morning code 09:24:54 and Market Trend Trending Up.
+09:29:55: Running the morning code 09:29:55 and Market Trend Trending Up.
+09:34:56: Running the morning code 09:34:56 and Market Trend Trending Up.
+09:34:57: Not Modifiying the Morning Stoploss for strike 21200 at time 09:34:56 and Restoring to 30.6.
+09:36:19: Running the morning code 09:36:19 and Market Trend Trending Up.
+09:36:20: Not Modifiying the Morning Stoploss for strike 21200 at time 09:36:19 and Restoring to 30.6.
+09:38:43: Running the morning code 09:38:43 and Market Trend Trending Up.
+09:38:44: Not Modifiying the Morning Stoploss for strike 21200 at time 09:38:43 and Restoring to 30.6.
+09:40:12: Running the morning code 09:40:12 and Market Trend Trending Up.
+09:40:13: Not Modifiying the Morning Stoploss for strike 21200 at time 09:40:12 and Restoring to 30.6.
+09:44:42: Running the morning code 09:44:42 and Market Trend Trending Up.
+09:44:43: Not Modifiying the Morning Stoploss for strike 21200 at time 09:44:42 and Restoring to 30.6.
+09:45:34: Running the morning code 09:45:34 and Market Trend Trending Up.
+09:45:35: Not Modifiying the Morning Stoploss for strike 21200 at time 09:45:34 and Restoring to 30.6.
+09:46:29: Running the morning code 09:46:29 and Market Trend Trending Up.
+09:46:30: Not Modifiying the Morning Stoploss for strike 21200 at time 09:46:29 and Restoring to 30.6.
+10:01:34: Running the morning code 10:01:34 and Market Trend Trending Up.
+10:01:34: Not Modifiying the Morning Stoploss for strike 21200 at time 10:01:34 and Restoring to 30.6.
+10:05:43: Running the morning code 10:05:43 and Market Trend Trending Up.
+10:05:44: Not Modifiying the Morning Stoploss for strike 21200 at time 10:05:43 and Restoring to 30.6.
+10:05:44: Not Modifiying the Morning Stoploss for strike 21250 at time 10:05:43 and Restoring to 32.05.
+10:05:44: Not Modifiying the Morning Stoploss for strike 22500 at time 10:05:43 and Restoring to 36.05.
+10:05:45: Incoming Active Put Strikes is [21200, 21250] and Incoming Active Call strikes is [22500].
+10:05:55: Present SL PE 8.9 and Stored SL PE 8.9.
+10:05:55: No SL Update for the Put Strike 21200.
+10:06:06: Present SL PE 10 and Stored SL PE 10.
+10:06:06: No SL Update for the Put Strike 21250.
+10:06:16: Present SL CE 56.7 and Stored SL CE 56.7.
+10:06:16: No SL update for Call Strike 22500.
+10:06:16: Trailing SL run 0 and current time is 10:06:16.
+10:10:00: Incoming Active Put Strikes is [21200, 21250] and Incoming Active Call strikes is [22500].
+10:10:11: Present SL PE 8.7 and Stored SL PE 8.9.
+10:10:11: Updating the Put strike 21200 SL at price 8.7.
+10:10:21: Present SL PE 9.7 and Stored SL PE 10.
+10:10:21: Updating the Put strike 21250 SL at price 9.7.
+10:10:32: Present SL CE 58.8 and Stored SL CE 56.7.
+10:10:32: No SL update for Call Strike 22500.
+10:10:32: Trailing SL run 1 and current time is 10:10:32.
+10:15:00: Incoming Active Put Strikes is [21200, 21250] and Incoming Active Call strikes is [22500].
+10:15:11: Present SL PE 8 and Stored SL PE 8.7.
+10:15:11: Updating the Put strike 21200 SL at price 8.
+10:15:22: Present SL PE 9.1 and Stored SL PE 9.7.
+10:15:22: Updating the Put strike 21250 SL at price 9.1.
+10:15:32: Present SL CE 63.0 and Stored SL CE 56.7.
+10:15:32: No SL update for Call Strike 22500.
+10:15:32: Trailing SL run 2 and current time is 10:15:32.
+10:20:00: Incoming Active Put Strikes is [21200, 21250] and Incoming Active Call strikes is [22500].
+10:20:11: Present SL PE 7.8 and Stored SL PE 8.
+10:20:11: Updating the Put strike 21200 SL at price 7.8.
+10:20:22: Present SL PE 8.8 and Stored SL PE 9.1.
+10:20:22: Updating the Put strike 21250 SL at price 8.8.
+10:20:33: Present SL CE 66.6 and Stored SL CE 56.7.
+10:20:33: No SL update for Call Strike 22500.
+10:20:33: Trailing SL run 3 and current time is 10:20:33.
+10:25:00: Incoming Active Put Strikes is [21200, 21250] and Incoming Active Call strikes is [22500].
+10:25:10: Present SL PE 8 and Stored SL PE 7.8.
+10:25:10: No SL Update for the Put Strike 21200.
+10:25:21: Present SL PE 8.9 and Stored SL PE 8.8.
+10:25:21: No SL Update for the Put Strike 21250.
+10:25:31: Present SL CE 61.9 and Stored SL CE 56.7.
+10:25:31: No SL update for Call Strike 22500.
+10:25:31: Trailing SL run 4 and current time is 10:25:31.
+10:30:00: Incoming Active Put Strikes is [21200, 21250] and Incoming Active Call strikes is [22500].
+10:30:11: Present SL PE 8.4 and Stored SL PE 7.8.
+10:30:11: No SL Update for the Put Strike 21200.
+10:30:21: Present SL PE 9.5 and Stored SL PE 8.8.
+10:30:21: No SL Update for the Put Strike 21250.
+10:30:32: Present SL CE 59.1 and Stored SL CE 56.7.
+10:30:32: No SL update for Call Strike 22500.
+10:30:32: Trailing SL run 5 and current time is 10:30:32.
+10:35:00: Incoming Active Put Strikes is [21200, 21250] and Incoming Active Call strikes is [22500].
+10:35:10: Present SL PE 8 and Stored SL PE 7.8.
+10:35:10: No SL Update for the Put Strike 21200.
+10:35:21: Present SL PE 9.1 and Stored SL PE 8.8.
+10:35:21: No SL Update for the Put Strike 21250.
+10:35:32: Present SL CE 58.8 and Stored SL CE 56.7.
+10:35:32: No SL update for Call Strike 22500.
+10:35:32: Trailing SL run 6 and current time is 10:35:32.
+10:40:00: Incoming Active Put Strikes is [21200, 21250] and Incoming Active Call strikes is [22500].
+10:40:10: Present SL PE 7.5 and Stored SL PE 7.8.
+10:40:10: Updating the Put strike 21200 SL at price 7.5.
+10:40:21: Present SL PE 8.6 and Stored SL PE 8.8.
+10:40:21: Updating the Put strike 21250 SL at price 8.6.
+10:40:32: Present SL CE 61.5 and Stored SL CE 56.7.
+10:40:32: No SL update for Call Strike 22500.
+10:40:32: Trailing SL run 7 and current time is 10:40:32.
+10:45:00: Incoming Active Put Strikes is [21200, 21250] and Incoming Active Call strikes is [22500].
+10:45:11: Present SL PE 7.1 and Stored SL PE 7.5.
+10:45:11: Updating the Put strike 21200 SL at price 7.1.
+10:45:22: Present SL PE 8.2 and Stored SL PE 8.6.
+10:45:22: Updating the Put strike 21250 SL at price 8.2.
+10:45:33: Present SL CE 65.0 and Stored SL CE 56.7.
+10:45:33: No SL update for Call Strike 22500.
+10:45:33: Trailing SL run 8 and current time is 10:45:33.
+10:50:00: Incoming Active Put Strikes is [21200, 21250] and Incoming Active Call strikes is [22500].
+10:50:10: Present SL PE 7.0 and Stored SL PE 7.1.
+10:50:10: Updating the Put strike 21200 SL at price 7.0.
+10:50:21: Present SL PE 7.9 and Stored SL PE 8.2.
+10:50:21: Updating the Put strike 21250 SL at price 7.9.
+10:50:32: Present SL CE 64.7 and Stored SL CE 56.7.
+10:50:32: No SL update for Call Strike 22500.
+10:50:32: Trailing SL run 9 and current time is 10:50:32.
+10:55:00: Incoming Active Put Strikes is [21200, 21250] and Incoming Active Call strikes is [22500].
+10:55:10: Present SL PE 6.5 and Stored SL PE 7.0.
+10:55:10: Updating the Put strike 21200 SL at price 6.5.
+10:55:21: Present SL PE 7.4 and Stored SL PE 7.9.
+10:55:21: Updating the Put strike 21250 SL at price 7.4.
+10:55:32: Present SL CE 67.0 and Stored SL CE 56.7.
+10:55:32: No SL update for Call Strike 22500.
+10:55:32: Trailing SL run 10 and current time is 10:55:32.
+11:00:00: Incoming Active Put Strikes is [21200, 21250] and Incoming Active Call strikes is [22500].
+11:00:11: Present SL PE 6.5 and Stored SL PE 6.5.
+11:00:11: No SL Update for the Put Strike 21200.
+11:00:21: Present SL PE 7.3 and Stored SL PE 7.4.
+11:00:21: Updating the Put strike 21250 SL at price 7.3.
+11:00:22: SL hit on call Strike 22500 the market continues in the same trend selling Additional Strikes.
+11:00:32: Adding new Strikes.
+11:00:32: The Offset computed is 200.
+11:01:01: Modifiying the Call Strike 22700.
+11:01:13: All the Orders are succesfully complete.
+11:01:14: New Strikes list for Call [22700] and New Strikes list for put [21200, 21250, 21300].
+11:01:14: Trailing SL run 11 and current time is 11:01:14.
+11:05:00: Incoming Active Put Strikes is [21200, 21250, 21300] and Incoming Active Call strikes is [22700].
+11:05:11: Present SL PE 6.3 and Stored SL PE 6.5.
+11:05:11: Updating the Put strike 21200 SL at price 6.3.
+11:05:22: Present SL PE 7.2 and Stored SL PE 7.4.
+11:05:22: Updating the Put strike 21250 SL at price 7.2.
+11:05:33: Present SL PE 7.8 and Stored SL PE 8.1.
+11:05:33: Updating the Put strike 21300 SL at price 7.8.
+11:05:44: Present SL CE 19.3 and Stored SL CE 17.3.
+11:05:44: No SL update for Call Strike 22700.
+11:05:44: Trailing SL run 12 and current time is 11:05:44.
+11:10:00: Incoming Active Put Strikes is [21200, 21250, 21300] and Incoming Active Call strikes is [22700].
+11:10:10: Present SL PE 6.9 and Stored SL PE 6.3.
+11:10:10: No SL Update for the Put Strike 21200.
+11:10:21: Present SL PE 7.8 and Stored SL PE 7.2.
+11:10:21: No SL Update for the Put Strike 21250.
+11:10:31: Present SL PE 8.6 and Stored SL PE 7.8.
+11:10:31: No SL Update for the Put Strike 21300.
+11:10:42: Present SL CE 17.2 and Stored SL CE 17.3.
+11:10:42: Updating the Call strike 22700 SL at price 17.2.
+11:10:42: Trailing SL run 13 and current time is 11:10:42.
+11:15:00: Incoming Active Put Strikes is [21200, 21250, 21300] and Incoming Active Call strikes is [22700].
+11:15:11: Present SL PE 6.9 and Stored SL PE 6.3.
+11:15:11: No SL Update for the Put Strike 21200.
+11:15:21: Present SL PE 7.8 and Stored SL PE 7.2.
+11:15:21: No SL Update for the Put Strike 21250.
+11:15:32: Present SL PE 8.7 and Stored SL PE 7.8.
+11:15:32: No SL Update for the Put Strike 21300.
+11:15:43: Present SL CE 16.4 and Stored SL CE 17.2.
+11:15:43: Updating the Call strike 22700 SL at price 16.4.
+11:15:43: Trailing SL run 14 and current time is 11:15:43.
+11:20:00: Incoming Active Put Strikes is [21200, 21250, 21300] and Incoming Active Call strikes is [22700].
+11:20:10: Present SL PE 7.3 and Stored SL PE 6.3.
+11:20:10: No SL Update for the Put Strike 21200.
+11:20:21: Present SL PE 8.3 and Stored SL PE 7.2.
+11:20:21: No SL Update for the Put Strike 21250.
+11:20:31: Present SL PE 9.1 and Stored SL PE 7.8.
+11:20:31: No SL Update for the Put Strike 21300.
+11:20:42: Present SL CE 16.6 and Stored SL CE 16.4.
+11:20:42: No SL update for Call Strike 22700.
+11:20:42: Trailing SL run 15 and current time is 11:20:42.
+11:25:00: Incoming Active Put Strikes is [21200, 21250, 21300] and Incoming Active Call strikes is [22700].
+11:25:10: Present SL PE 7.2 and Stored SL PE 6.3.
+11:25:10: No SL Update for the Put Strike 21200.
+11:25:21: Present SL PE 8.1 and Stored SL PE 7.2.
+11:25:21: No SL Update for the Put Strike 21250.
+11:25:31: Present SL PE 8.9 and Stored SL PE 7.8.
+11:25:31: No SL Update for the Put Strike 21300.
+11:25:42: Present SL CE 17.4 and Stored SL CE 16.4.
+11:25:42: No SL update for Call Strike 22700.
+11:25:42: Trailing SL run 16 and current time is 11:25:42.
+11:30:00: Incoming Active Put Strikes is [21200, 21250, 21300] and Incoming Active Call strikes is [22700].
+11:30:10: Present SL PE 8.3 and Stored SL PE 6.3.
+11:30:10: No SL Update for the Put Strike 21200.
+11:30:21: Present SL PE 9.2 and Stored SL PE 7.2.
+11:30:21: No SL Update for the Put Strike 21250.
+11:30:31: Present SL PE 10.1 and Stored SL PE 7.8.
+11:30:31: No SL Update for the Put Strike 21300.
+11:30:42: Present SL CE 16.8 and Stored SL CE 16.4.
+11:30:42: No SL update for Call Strike 22700.
+11:30:42: Trailing SL run 17 and current time is 11:30:42.
+11:35:00: Incoming Active Put Strikes is [21200, 21250, 21300] and Incoming Active Call strikes is [22700].
+11:35:10: Present SL PE 8.2 and Stored SL PE 6.3.
+11:35:10: No SL Update for the Put Strike 21200.
+11:35:21: Present SL PE 9.3 and Stored SL PE 7.2.
+11:35:21: No SL Update for the Put Strike 21250.
+11:35:31: Present SL PE 10 and Stored SL PE 7.8.
+11:35:31: No SL Update for the Put Strike 21300.
+11:35:42: Present SL CE 18 and Stored SL CE 16.4.
+11:35:42: No SL update for Call Strike 22700.
+11:35:42: Trailing SL run 18 and current time is 11:35:42.
+11:40:00: Incoming Active Put Strikes is [21200, 21250, 21300] and Incoming Active Call strikes is [22700].
+11:40:10: Present SL PE 8.5 and Stored SL PE 6.3.
+11:40:10: No SL Update for the Put Strike 21200.
+11:40:21: Present SL PE 9.6 and Stored SL PE 7.2.
+11:40:21: No SL Update for the Put Strike 21250.
+11:40:31: Present SL PE 10.3 and Stored SL PE 7.8.
+11:40:31: No SL Update for the Put Strike 21300.
+11:40:42: Present SL CE 18.3 and Stored SL CE 16.4.
+11:40:42: No SL update for Call Strike 22700.
+11:40:42: Trailing SL run 19 and current time is 11:40:42.
+11:45:00: Incoming Active Put Strikes is [21200, 21250, 21300] and Incoming Active Call strikes is [22700].
+11:45:10: Present SL PE 8.6 and Stored SL PE 6.3.
+11:45:10: No SL Update for the Put Strike 21200.

@@ -9,13 +9,17 @@ import json
 
 
 ############################################  MARKET RELATED FUNCTION ################################################################
+def ensure_nested_dict(main_dict, key):
+    if key not in main_dict:
+        main_dict[key] = {}
+
 
 def limit_order_Sell(Quote,Size,price,Strike,Right):
     global enctoken
     kite = KiteApp(enctoken=enctoken)
     global order_info
 
-    Initial_DF=pd.read_csv(Path_backtest_Report+"Running_Status_of_trade.csv")
+    running_log=reading_market_status("Running_log.txt")
 
 
     order = kite.place_order(variety=kite.VARIETY_REGULAR,
@@ -41,30 +45,21 @@ def limit_order_Sell(Quote,Size,price,Strike,Right):
     date, time = Date_time.split()
     Stop_Loss=2*price
 
-    Cleaning_lists()
+    ensure_nested_dict(running_log, Strike)
 
-    Type_list.append("Sell")
-    Initial_price_list.append(price)
-    order_id.append(Order_ID)
-    Date.append(date)
-    Time.append(time)
-    Status_list.append(Status_present)
-    Strike_list.append(Strike)
-    Trailing_SL_list.append(Stop_Loss)
+    running_log[Strike]["Date"]=date
+    running_log[Strike]["Time"]=time
+    running_log[Strike]["Right"]=Right
+    running_log[Strike]["Order ID"]=str(Order_ID)
+    running_log[Strike]["Status"]=Status_present
+    running_log[Strike]["Type"]="Sell"
+    running_log[Strike]["Initial Price"]=price
+    running_log[Strike]["Trailing SL"]=Stop_Loss
 
-    if Right=="Call":
-        Right_list.append("Call")
-    elif Right=="Put":
-        Right_list.append("Put")
+    writing_market_status(running_log,"Running_log.txt")
 
     with open(Path_backtest_Report+'Running_log_file.txt', 'a') as file:
         file.write(f"Date: {date} Time: {time} Strike: {Strike} Initiation Price: {price} type of Order: Limit Order Sell.\n")
-
-    data={"Date":Date,"Time":Time,"Strike":Strike_list,"Right":Right_list,"Order_ID":order_id,"Status":Status_list,"Type":Type_list,"Initial Price":Initial_price_list,"Trailing SL":Trailing_SL_list}
-    new_df=pd.DataFrame(data)
-    Initial_DF=pd.concat([Initial_DF, new_df], axis=0)
-
-    Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
 
 def limit_order_buy(Quote,Size,price):
     global enctoken
@@ -95,8 +90,7 @@ def Market_order_Buy(Quote,Size,Strike,Right,Buy_type):
     kite = KiteApp(enctoken=enctoken)
     global order_info
 
-    Initial_DF=pd.read_csv(Path_backtest_Report+"Running_Status_of_trade.csv")
-
+    running_log=reading_market_status("Running_log.txt")
 
     order = kite.place_order(variety=kite.VARIETY_REGULAR,
                          exchange=kite.EXCHANGE_NFO,
@@ -123,43 +117,22 @@ def Market_order_Buy(Quote,Size,Strike,Right,Buy_type):
     price=x[l1-1]["average_price"]
     Stop_Loss=0
 
-    Cleaning_lists()
+    ensure_nested_dict(running_log, Strike)
 
-    Type_list.append(Buy_type)
-    Initial_price_list.append(price)
-    order_id.append(Order_ID)
-    Date.append(date)
-    Time.append(time)
-    Status_list.append(Status_present)
-    Strike_list.append(Strike)
-    Trailing_SL_list.append(Stop_Loss)
+    running_log[Strike]["Date"]=date
+    running_log[Strike]["Time"]=time
+    running_log[Strike]["Right"]=Right
+    running_log[Strike]["Order ID"]=str(Order_ID)
+    running_log[Strike]["Status"]=Status_present
+    running_log[Strike]["Type"]=Buy_type
+    running_log[Strike]["Initial Price"]=price
+    running_log[Strike]["Trailing SL"]=Stop_Loss
 
-    if Right=="Call":
-        Right_list.append("Call")
-    elif Right=="Put":
-        Right_list.append("Put")
+    writing_market_status(running_log,"Running_log.txt")
 
     with open(Path_backtest_Report+'Running_log_file.txt', 'a') as file:
         file.write(f"Date: {date} Time: {time} Strike: {Strike} Market Price: {price} type of Order: Market Order Buy.\n")
 
-    data={"Date":Date,"Time":Time,"Strike":Strike_list,"Right":Right_list,"Order_ID":order_id,"Status":Status_list,"Type":Type_list,"Initial Price":Initial_price_list,"Trailing SL":Trailing_SL_list}
-    new_df=pd.DataFrame(data)
-    Initial_DF=pd.concat([Initial_DF, new_df], axis=0)
-
-    Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
-
-def Cleaning_lists():
-    global Date,Time,Strike_list,Right_list,order_id,Status_list,Type_list,Initial_price_list,Trailing_SL_list
-
-    Date=[]
-    Time=[]
-    Strike_list=[]
-    Right_list=[]
-    order_id=[]
-    Status_list=[]
-    Type_list=[]
-    Initial_price_list=[]
-    Trailing_SL_list=[]
 
 def pause(duration=10):
     """Pause execution for the specified duration in seconds."""
@@ -170,7 +143,7 @@ def Market_order_Sell(Quote,Size,Strike,Right,Sell_type):
     kite = KiteApp(enctoken=enctoken)
     global order_info
 
-    Initial_DF=pd.read_csv(Path_backtest_Report+"Running_Status_of_trade.csv")
+    running_log=reading_market_status("Running_log.txt")
 
     order = kite.place_order(variety=kite.VARIETY_REGULAR,
                          exchange=kite.EXCHANGE_NFO,
@@ -197,39 +170,31 @@ def Market_order_Sell(Quote,Size,Strike,Right,Sell_type):
     price=x[l1-1]["average_price"]
     Stop_Loss=0
 
-    Cleaning_lists()
+    Strike=-Strike
+    ensure_nested_dict(running_log, Strike)
 
-    Type_list.append(Sell_type)
-    Initial_price_list.append(price)
-    order_id.append(Order_ID)
-    Date.append(date)
-    Time.append(time)
-    Status_list.append(Status_present)
-    Strike_list.append(-Strike)
-    Trailing_SL_list.append(Stop_Loss)
+    running_log[Strike]["Date"]=date
+    running_log[Strike]["Time"]=time
+    running_log[Strike]["Right"]=Right
+    running_log[Strike]["Order ID"]=str(Order_ID)
+    running_log[Strike]["Status"]=Status_present
+    running_log[Strike]["Type"]=Sell_type
+    running_log[Strike]["Initial Price"]=price
+    running_log[Strike]["Trailing SL"]=Stop_Loss
 
-    if Right=="Call":
-        Right_list.append("Call")
-    elif Right=="Put":
-        Right_list.append("Put")
+    writing_market_status(running_log,"Running_log.txt")
 
     with open(Path_backtest_Report+'Running_log_file.txt', 'a') as file:
         file.write(f"Date: {date} Time: {time} Strike: {Strike} Market Price: {price} type of Order: Market Order Sell.\n")
 
-    data={"Date":Date,"Time":Time,"Strike":Strike_list,"Right":Right_list,"Order_ID":order_id,"Status":Status_list,"Type":Type_list,"Initial Price":Initial_price_list,"Trailing SL":Trailing_SL_list}
-    new_df=pd.DataFrame(data)
-    Initial_DF=pd.concat([Initial_DF, new_df], axis=0)
 
-    Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
-
-
-def Modify_SL_Order(OID,Size,Price,type_of_modification,Order_Type):
+def Modify_SL_Order(OID,Size,Price,type_of_modification,Order_Type,Strike):
     global order_info
     
     global enctoken
     kite = KiteApp(enctoken=enctoken)
 
-    Initial_DF=pd.read_csv(Path_backtest_Report+"Running_Status_of_trade.csv")
+    running_log=reading_market_status("Running_log.txt")
 
     if Order_Type=="Limit":
         type_of_order=kite.ORDER_TYPE_LIMIT
@@ -250,17 +215,17 @@ def Modify_SL_Order(OID,Size,Price,type_of_modification,Order_Type):
                   validity=kite.VALIDITY_DAY,
                   disclosed_quantity=None)
     
-    Index = Initial_DF.index[(Initial_DF['Order_ID'] == OID)].tolist()
-    Index=Index[0]
-    Initial_DF.loc[Index,type_of_modification]=Price
-    Strike_at_present=Initial_DF.loc[Index,"Strike"]
 
     if type_of_modification=="Trailing SL":
-        Index_new = Initial_DF.index[(Initial_DF['Strike'] == -Strike_at_present)].tolist()
-        Index_new=Index_new[0]
-        Initial_DF.loc[Index_new,type_of_modification]=Price
+        running_log[str(Strike)]["Trailing SL"]=Price
+        running_log[str(-Strike)]["Trailing SL"]=Price
+
+    elif type_of_modification=="Initial Price":
+        running_log[str(Strike)]["Initial Price"]=Price
     else:
         pass
+
+    writing_market_status(running_log,"Running_log.txt")
 
     x=kite.orders()
     l1=len(x)
@@ -268,17 +233,16 @@ def Modify_SL_Order(OID,Size,Price,type_of_modification,Order_Type):
     date, time = Date_time.split()
 
     with open(Path_backtest_Report+'Running_log_file.txt', 'a') as file:
-        file.write(f"Date: {date} Time: {time} Strike: {Strike_at_present} Price: {Price} type of modification {type_of_modification} and order type {Order_Type}.\n")
-
-    Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
+        file.write(f"Date: {date} Time: {time} Strike: {Strike} Price: {Price} type of modification {type_of_modification} and order type {Order_Type}.\n")
 
 
 def SL_Initiate_order(Quote,Size,SL_price,SL_Trig_price,Strike,Right,morning_order_state=None):
+
     global enctoken
     kite = KiteApp(enctoken=enctoken)
     global order_info
     
-    Initial_DF=pd.read_csv(Path_backtest_Report+"Running_Status_of_trade.csv")
+    running_log=reading_market_status("Running_log.txt")
 
     order = kite.place_order(variety=kite.VARIETY_REGULAR,
                          exchange=kite.EXCHANGE_NFO,
@@ -304,42 +268,42 @@ def SL_Initiate_order(Quote,Size,SL_price,SL_Trig_price,Strike,Right,morning_ord
     date, time = Date_time.split()
 
     if morning_order_state==None:
-        Cleaning_lists()
 
-        Type_list.append("Buy")
-        Initial_price_list.append(SL_price)
-        order_id.append(Order_ID)
-        Date.append(date)
-        Time.append(time)
-        Status_list.append(Status_present)
-        Strike_list.append(-Strike)
-        Trailing_SL_list.append(SL_price)
+        Strike=-Strike
+        ensure_nested_dict(running_log, Strike)
 
-        if Right=="Call":
-            Right_list.append("Call")
-        elif Right=="Put":
-            Right_list.append("Put")
+        running_log[Strike]["Date"]=date
+        running_log[Strike]["Time"]=time
+        running_log[Strike]["Right"]=Right
+        running_log[Strike]["Order ID"]=str(Order_ID)
+        running_log[Strike]["Status"]=Status_present
+        running_log[Strike]["Type"]="Buy"
+        running_log[Strike]["Initial Price"]=SL_price
+        running_log[Strike]["Trailing SL"]=SL_price
+
+        writing_market_status(running_log,"Running_log.txt")
+
 
         with open(Path_backtest_Report+'Running_log_file.txt', 'a') as file:
             file.write(f"Date: {date} Time: {time} Strike: {Strike} Stop Loss Price: {SL_price} type of Order: Stop Loss Order.\n")
-
-        data={"Date":Date,"Time":Time,"Strike":Strike_list,"Right":Right_list,"Order_ID":order_id,"Status":Status_list,"Type":Type_list,"Initial Price":Initial_price_list,"Trailing SL":Trailing_SL_list}
-        new_df=pd.DataFrame(data)
-        Initial_DF=pd.concat([Initial_DF, new_df], axis=0)
     
     elif morning_order_state==1:
-        Index_target = Initial_DF.index[(Initial_DF['Strike'] == -Strike)].tolist()
-        Initial_DF.loc[Index_target[0],"Order_ID"]=Order_ID
-        Initial_DF.loc[Index_target[0],"Trailing SL"]=SL_price
+        Strike=-Strike
+        running_log[str(Strike)]["Order ID"]=str(Order_ID)
+        running_log[str(Strike)]["Trailing SL"]=SL_price
 
-        Index_target_new = Initial_DF.index[(Initial_DF['Strike'] == Strike)].tolist()
-        Initial_DF.loc[Index_target_new[0],"Trailing SL"]=SL_price
+        Strike=-Strike
+
+        running_log[str(Strike)]["Trailing SL"]=SL_price
+
+        writing_market_status(running_log,"Running_log.txt")
+
+        with open(Path_backtest_Report+'Running_log_file.txt', 'a') as file:
+            file.write(f"Date: {date} Time: {time} Strike: {Strike} Stop Loss Price: {SL_price} type of Order: Stop Loss Order Modifiying morning order.\n")
 
     else:
         pass
 
-
-    Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
 
 def cancel_order(Order_ID):
 
@@ -397,9 +361,6 @@ def Compute_token_Closing_price(Strike,Right,time=5):
         atm_token_ce=kite.ltp("NFO:"+quote_CE)
         ATM_Token_CE=atm_token_ce["NFO:"+quote_CE]['instrument_token']
 
-
-
-
         import datetime
 
         from_datetime = datetime.datetime.now() - datetime.timedelta(days=1)     # From last & days
@@ -425,10 +386,7 @@ def Compute_token_Closing_price(Strike,Right,time=5):
     elif Right=="Put":
         quote_PE=Segment+modified_date+str(Strike)+"PE"
         atm_token_pe=kite.ltp("NFO:"+quote_PE)
-        ATM_Token_PE=atm_token_pe["NFO:"+quote_PE]['instrument_token']
-
-        # Strike_list.append(Strike)
-        # Right_list.append(Right)        
+        ATM_Token_PE=atm_token_pe["NFO:"+quote_PE]['instrument_token']    
 
         import datetime
 
@@ -452,14 +410,13 @@ def Compute_token_Closing_price(Strike,Right,time=5):
         return closing_price_PE, quote_PE    
 ############################################  MARKET RELATED FUNCTION ################################################################
 
-############################################  ALGO RELATED FUNCTIONS  ################################################################
 
-def writing_market_status(dict_name):
-    with open(Path_backtest_Report+"Market_status.txt", 'w') as file:
+def writing_market_status(dict_name,text_file="Market_status.txt"):
+    with open(Path_backtest_Report+text_file, 'w') as file:
         json.dump(dict_name, file)
 
-def reading_market_status():
-    with open(Path_backtest_Report+"Market_status.txt", 'r') as file:
+def reading_market_status(text_file="Market_status.txt"):
+    with open(Path_backtest_Report+text_file, 'r') as file:
         json_data = file.read()
         present_market_status= json.loads(json_data)
 
@@ -546,23 +503,18 @@ def Status_compute(Order_ID_current):
 def Order_execution_Check(Input_Strike_Call,Input_Strike_Put,quote_call_Hedges,quote_put_Hedges,quote_call,quote_put,Input_Strike_Call_Hedge,Input_Strike_Put_Hedge):
 
     global Deployed_Size
-    Initial_DF=pd.read_csv(Path_backtest_Report+"Running_Status_of_trade.csv")
+    running_log=reading_market_status("Running_log.txt")
     
     if Input_Strike_Call is not None and Input_Strike_Put is not None :
 
         #################################### GETTING THE STOP LOSS AND THE ORDER ID OF THE INPUT STRIKES ########################################################
-        Index_call = Initial_DF.index[(Initial_DF['Strike'] == Input_Strike_Call)].tolist()
-        Index_put = Initial_DF.index[(Initial_DF['Strike'] == Input_Strike_Put)].tolist()
 
-        Index_call=Index_call[0]
-        Index_put=Index_put[0]
+        Order_ID_Call=running_log[str(Input_Strike_Call)]["Order ID"]
+        Order_ID_Put=running_log[str(Input_Strike_Put)]["Order ID"]
 
-        Order_ID_Call=Initial_DF.loc[Index_call,"Order_ID"]
-        Order_ID_Put=Initial_DF.loc[Index_put,"Order_ID"]
-
-        SL_Call=Initial_DF.loc[Index_call,"Trailing SL"]
+        SL_Call=running_log[str(Input_Strike_Call)]["Trailing SL"]
         SL_Call_Trig=SL_Call-0.05
-        SL_Put=Initial_DF.loc[Index_put,"Trailing SL"]
+        SL_Put=running_log[str(Input_Strike_Put)]["Trailing SL"]
         SL_Put_Trig=SL_Put-0.05
         #################################### GETTING THE STOP LOSS AND THE ORDER ID OF THE INPUT STRIKES ########################################################
 
@@ -599,10 +551,10 @@ def Order_execution_Check(Input_Strike_Call,Input_Strike_Put,quote_call_Hedges,q
                 SL_Initiate_order(quote_call,Deployed_Size,SL_Call,SL_Call_Trig,Input_Strike_Call,"Call")
                 SL_Initiate_order(quote_put,Deployed_Size,SL_Put,SL_Put_Trig,Input_Strike_Put,"Put")
 
-                Initial_DF=pd.read_csv(Path_backtest_Report+"Running_Status_of_trade.csv")
-                Initial_DF.loc[Index_call,"Status"]="COMPLETE"
-                Initial_DF.loc[Index_put,"Status"]="COMPLETE"
-                Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
+                running_log=reading_market_status("Running_log.txt")
+                running_log[str(Input_Strike_Call)]["Status"]="COMPLETE"
+                running_log[str(Input_Strike_Put)]["Status"]="COMPLETE"
+                writing_market_status(running_log,"Running_log.txt")
 
                 break
 
@@ -620,29 +572,8 @@ def Order_execution_Check(Input_Strike_Call,Input_Strike_Put,quote_call_Hedges,q
                     Call_CP,quote_CE=Compute_token_Closing_price(Input_Strike_Call,"Call",1)
                     Put_CP,quote_PE=Compute_token_Closing_price(Input_Strike_Put,"Put",1)
 
-                    Modify_SL_Order(Order_ID_Call,Deployed_Size,Call_CP,"Initial Price","Limit")
-                    Modify_SL_Order(Order_ID_Put,Deployed_Size,Put_CP,"Initial Price","Limit")
-
-                    strikes_list_modified=Initial_DF["Strike"].to_list()
-
-                    if -Input_Strike_Call in strikes_list_modified and -Input_Strike_Put in strikes_list_modified:
-
-                        print(f"Modifiying the Call Strike SL {Input_Strike_Call} and Modifiying the Put Strike SL {Input_Strike_Put}")
-                        console_output_log_recording(f"Modifiying the Call Strike SL {Input_Strike_Call} and Modifiying the Put Strike SL {Input_Strike_Put}")
-
-                        Index_call_SL = Initial_DF.index[(Initial_DF['Strike'] == -Input_Strike_Call)].tolist()
-                        Index_put_SL = Initial_DF.index[(Initial_DF['Strike'] == -Input_Strike_Put)].tolist()
-
-                        OID_SL_CE=Initial_DF.loc[Index_call_SL[0],"Order_ID"]
-                        OID_SL_PE=Initial_DF.loc[Index_put_SL[0],"Order_ID"]
-
-                        SL_CE=2*Call_CP
-                        SL_PE=2*Put_CP
-
-                        Modify_SL_Order(OID_SL_CE,Deployed_Size,SL_CE,"Trailing SL","SL Limit")
-                        Modify_SL_Order(OID_SL_PE,Deployed_Size,SL_PE,"Trailing SL","SL Limit")
-                    else:
-                        pass
+                    Modify_SL_Order(Order_ID_Call,Deployed_Size,Call_CP,"Initial Price","Limit",Input_Strike_Call)
+                    Modify_SL_Order(Order_ID_Put,Deployed_Size,Put_CP,"Initial Price","Limit",Input_Strike_Put)
 
                 elif Status_call=="OPEN":
 
@@ -651,21 +582,7 @@ def Order_execution_Check(Input_Strike_Call,Input_Strike_Put,quote_call_Hedges,q
                     pause()
 
                     Call_CP,quote_CE=Compute_token_Closing_price(Input_Strike_Call,"Call",1)
-                    Modify_SL_Order(Order_ID_Call,Deployed_Size,Call_CP,"Initial Price","Limit")
-
-                    strikes_list_modified=Initial_DF["Strike"].to_list()
-
-                    if -Input_Strike_Call in strikes_list_modified:
-
-                        print(f"Modifiying the Call Strike SL {Input_Strike_Call} ")
-                        console_output_log_recording(f"Modifiying the Call Strike SL {Input_Strike_Call}")
-
-                        Index_call_SL = Initial_DF.index[(Initial_DF['Strike'] == -Input_Strike_Call)].tolist()
-                        OID_SL_CE=Initial_DF.loc[Index_call_SL[0],"Order_ID"]
-                        SL_CE=2*Call_CP
-                        Modify_SL_Order(OID_SL_CE,Deployed_Size,SL_CE,"Trailing SL","SL Limit")
-                    else:
-                        pass
+                    Modify_SL_Order(Order_ID_Call,Deployed_Size,Call_CP,"Initial Price","Limit",Input_Strike_Call)
 
                 elif Status_put=="OPEN":
 
@@ -674,21 +591,7 @@ def Order_execution_Check(Input_Strike_Call,Input_Strike_Put,quote_call_Hedges,q
                     pause()
 
                     Put_CP,quote_PE=Compute_token_Closing_price(Input_Strike_Put,"Put",1)
-                    Modify_SL_Order(Order_ID_Put,Deployed_Size,Put_CP,"Initial Price","Limit")
-
-                    strikes_list_modified=Initial_DF["Strike"].to_list()
-
-                    if -Input_Strike_Put in strikes_list_modified:
-
-                        print(f"Modifiying the Put Strike SL {Input_Strike_Put}")
-                        console_output_log_recording(f"Modifiying the Put Strike SL {Input_Strike_Put}")
-
-                        Index_put_SL = Initial_DF.index[(Initial_DF['Strike'] == -Input_Strike_Put)].tolist()
-                        OID_SL_PE=Initial_DF.loc[Index_put_SL[0],"Order_ID"]
-                        SL_PE=2*Put_CP
-                        Modify_SL_Order(OID_SL_PE,Deployed_Size,SL_PE,"Trailing SL","SL Limit")
-                    else:
-                        pass
+                    Modify_SL_Order(Order_ID_Put,Deployed_Size,Put_CP,"Initial Price","Limit",Input_Strike_Put)
 
                 else:
                     pass
@@ -708,11 +611,9 @@ def Order_execution_Check(Input_Strike_Call,Input_Strike_Put,quote_call_Hedges,q
     elif Input_Strike_Call is not None and Input_Strike_Put is None:
 
         #################################### GETTING THE STOP LOSS AND THE ORDER ID OF THE INPUT STRIKES ########################################################
-        Index_call = Initial_DF.index[(Initial_DF['Strike'] == Input_Strike_Call)].tolist()
-        Index_call=Index_call[0]
-        Order_ID_Call=Initial_DF.loc[Index_call,"Order_ID"]
+        Order_ID_Call=running_log[str(Input_Strike_Call)]["Order ID"]
 
-        SL_Call=Initial_DF.loc[Index_call,"Trailing SL"]
+        SL_Call=running_log[str(Input_Strike_Call)]["Trailing SL"]
         SL_Call_Trig=SL_Call-0.05
         Run=0
         #################################### GETTING THE STOP LOSS AND THE ORDER ID OF THE INPUT STRIKES ########################################################
@@ -745,9 +646,9 @@ def Order_execution_Check(Input_Strike_Call,Input_Strike_Put,quote_call_Hedges,q
                 Market_order_Buy(quote_call_Hedges,Deployed_Size,Input_Strike_Call_Hedge,"Call","Buy Hedges")
                 SL_Initiate_order(quote_call,Deployed_Size,SL_Call,SL_Call_Trig,Input_Strike_Call,"Call")
 
-                Initial_DF=pd.read_csv(Path_backtest_Report+"Running_Status_of_trade.csv")
-                Initial_DF.loc[Index_call,"Status"]="COMPLETE"
-                Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
+                running_log=reading_market_status("Running_log.txt")
+                running_log[str(Input_Strike_Call)]["Status"]="COMPLETE"
+                writing_market_status(running_log,"Running_log.txt")
                 break
 
             elif current_time_str>=New_time:
@@ -761,21 +662,7 @@ def Order_execution_Check(Input_Strike_Call,Input_Strike_Put,quote_call_Hedges,q
                     pause()
 
                     Call_CP,quote_CE=Compute_token_Closing_price(Input_Strike_Call,"Call",1)
-                    Modify_SL_Order(Order_ID_Call,Deployed_Size,Call_CP,"Initial Price","Limit")
-
-                    strikes_list_modified=Initial_DF["Strike"].to_list()
-
-                    if -Input_Strike_Call in strikes_list_modified:
-
-                        print(f"Modifiying the Call Strike SL {Input_Strike_Call}")
-                        console_output_log_recording(f"Modifiying the Call Strike SL {Input_Strike_Call}")
-
-                        Index_call_SL = Initial_DF.index[(Initial_DF['Strike'] == -Input_Strike_Call)].tolist()
-                        OID_SL_CE=Initial_DF.loc[Index_call_SL[0],"Order_ID"]
-                        SL_CE=2*Call_CP
-                        Modify_SL_Order(OID_SL_CE,Deployed_Size,SL_CE,"Trailing SL","SL Limit")
-                    else:
-                        pass
+                    Modify_SL_Order(Order_ID_Call,Deployed_Size,Call_CP,"Initial Price","Limit",Input_Strike_Call)
 
                 else:
                     pass
@@ -793,10 +680,9 @@ def Order_execution_Check(Input_Strike_Call,Input_Strike_Put,quote_call_Hedges,q
 
 
     elif Input_Strike_Put is not None and Input_Strike_Call is None:
-        Index_put = Initial_DF.index[(Initial_DF['Strike'] == Input_Strike_Put)].tolist()
-        Index_put=Index_put[0]
-        Order_ID_Put=Initial_DF.loc[Index_put,"Order_ID"]
-        SL_Put=Initial_DF.loc[Index_put,"Trailing SL"]
+
+        Order_ID_Put=running_log[str(Input_Strike_Put)]["Order ID"]
+        SL_Put=running_log[str(Input_Strike_Put)]["Trailing SL"]
         SL_Put_Trig=SL_Put-0.05
 
         current_time = datetime.now()
@@ -826,9 +712,9 @@ def Order_execution_Check(Input_Strike_Call,Input_Strike_Put,quote_call_Hedges,q
                 Market_order_Buy(quote_put_Hedges,Deployed_Size,Input_Strike_Put_Hedge,"Put","Buy Hedges")
                 SL_Initiate_order(quote_put,Deployed_Size,SL_Put,SL_Put_Trig,Input_Strike_Put,"Put")
 
-                Initial_DF=pd.read_csv(Path_backtest_Report+"Running_Status_of_trade.csv")
-                Initial_DF.loc[Index_put,"Status"]="COMPLETE"
-                Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
+                running_log=reading_market_status("Running_log.txt")
+                running_log[str(Input_Strike_Put)]["Status"]="COMPLETE"
+                writing_market_status(running_log,"Running_log.txt")
 
                 break
             elif current_time_str>=New_time:
@@ -842,21 +728,7 @@ def Order_execution_Check(Input_Strike_Call,Input_Strike_Put,quote_call_Hedges,q
                     pause()
 
                     Put_CP,quote_PE=Compute_token_Closing_price(Input_Strike_Put,"Put",1)
-                    Modify_SL_Order(Order_ID_Put,Deployed_Size,Put_CP,"Initial Price","Limit")
-
-                    strikes_list_modified=Initial_DF["Strike"].to_list()
-
-                    if -Input_Strike_Put in strikes_list_modified:
-
-                        print(f"Modifiying the Put Strike SL {Input_Strike_Put}")
-                        console_output_log_recording(f"Modifiying the Put Strike SL {Input_Strike_Put}")
-
-                        Index_put_SL = Initial_DF.index[(Initial_DF['Strike'] == -Input_Strike_Put)].tolist()
-                        OID_SL_PE=Initial_DF.loc[Index_put_SL[0],"Order_ID"]
-                        SL_PE=2*Put_CP
-                        Modify_SL_Order(OID_SL_PE,Deployed_Size,SL_PE,"Trailing SL","SL Limit")
-                    else:
-                        pass
+                    Modify_SL_Order(Order_ID_Put,Deployed_Size,Put_CP,"Initial Price","Limit",Input_Strike_Put)
 
                 else:
                     pass
@@ -877,7 +749,7 @@ def Order_execution_Check(Input_Strike_Call,Input_Strike_Put,quote_call_Hedges,q
 def Trailing_SL():
     global Deployed_Size
     
-    Initial_DF=pd.read_csv(Path_backtest_Report+"Running_Status_of_trade.csv")
+    running_log=reading_market_status("Running_log.txt")
 
     present_market_status=reading_market_status()
 
@@ -899,11 +771,11 @@ def Trailing_SL():
         CE_stk=Active_strike_list_Call[0]
         PE_stk=Active_strike_list_Put[0]
 
-        Index_call = Initial_DF.index[(Initial_DF['Strike'] == -CE_stk)].tolist()
-        Index_put = Initial_DF.index[(Initial_DF['Strike'] == -PE_stk)].tolist()
+        # Index_call = Initial_DF.index[(Initial_DF['Strike'] == -CE_stk)].tolist()
+        # Index_put = Initial_DF.index[(Initial_DF['Strike'] == -PE_stk)].tolist()
 
-        OID_Call=Initial_DF.loc[Index_call[0],"Order_ID"]
-        OID_Put=Initial_DF.loc[Index_put[0],"Order_ID"]
+        OID_Call=running_log[str(-CE_stk)]["Order ID"]
+        OID_Put=running_log[str(-PE_stk)]["Order ID"]
 
         Status_call=Status_compute(OID_Call)
         Status_put=Status_compute(OID_Put)
@@ -911,11 +783,11 @@ def Trailing_SL():
 
         if Status_call=="TRIGGER PENDING" and Status_put=="TRIGGER PENDING":
             ####################################### READING THE PRESENT STATUS OF THE SOLD STRIKES ORDERS #######################################
-            Idx_call = Initial_DF.index[(Initial_DF['Strike'] == CE_stk)].tolist()
-            Idx_put = Initial_DF.index[(Initial_DF['Strike'] == PE_stk)].tolist()
+            # Idx_call = Initial_DF.index[(Initial_DF['Strike'] == CE_stk)].tolist()
+            # Idx_put = Initial_DF.index[(Initial_DF['Strike'] == PE_stk)].tolist()
 
-            SL_Call=Initial_DF.loc[Idx_call[0],"Trailing SL"]
-            SL_Put=Initial_DF.loc[Idx_put[0],"Trailing SL"]
+            SL_Call=running_log[str(CE_stk)]["Trailing SL"]
+            SL_Put=running_log[str(PE_stk)]["Trailing SL"]
             ####################################### READING THE PRESENT STATUS OF THE SOLD STRIKES ORDERS ########################################
 
             pause()
@@ -933,7 +805,7 @@ def Trailing_SL():
                 print(f"Updating the Call strike {CE_stk} SL at price {New_SL_CE}")
                 console_output_log_recording(f"Updating the Call strike {CE_stk} SL at price {New_SL_CE}")
 
-                Modify_SL_Order(OID_Call,Deployed_Size,New_SL_CE,"Trailing SL","SL Limit")
+                Modify_SL_Order(OID_Call,Deployed_Size,New_SL_CE,"Trailing SL","SL Limit",CE_stk)
             elif New_SL_CE>=SL_Call and New_SL_CE>=Threshold_price:
                 print(f"No SL Update for the Call Strike {CE_stk}")
                 console_output_log_recording(f"No SL Update for the Call Strike {CE_stk}")
@@ -949,7 +821,7 @@ def Trailing_SL():
 
                 print(f"Updating the Put strike {PE_stk} SL at price {New_SL_PE}")
                 console_output_log_recording(f"Updating the Put strike {PE_stk} SL at price {New_SL_PE}")
-                Modify_SL_Order(OID_Put,Deployed_Size,New_SL_PE,"Trailing SL","SL Limit")
+                Modify_SL_Order(OID_Put,Deployed_Size,New_SL_PE,"Trailing SL","SL Limit",PE_stk)
 
             elif New_SL_PE>=SL_Put and New_SL_PE>=Threshold_price:
                 print(f"No SL Update for the Put Strike {PE_stk}")
@@ -962,11 +834,15 @@ def Trailing_SL():
             print(f"SL hit on the Call Strike {CE_stk} now Market Trend is Bullish")
             console_output_log_recording(f"SL hit on the Call Strike {CE_stk} now Market Trend is Bullish")
 
-            Initial_DF.loc[Index_call[0],"Status"]="COMPLETE"
+            
+            running_log[str(-CE_stk)]["Status"]="COMPLETE"
+            writing_market_status(running_log,"Running_log.txt")
+
             present_market_status['Market Trend']="Trending Up"
             writing_market_status(present_market_status)
+            
 
-            Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
+            # Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
 
             CE_Hedge=CE_stk+hedges_distance
 
@@ -975,8 +851,8 @@ def Trailing_SL():
             CE_Hedge_CP,QE_CE_Hedge=Compute_token_Closing_price(CE_Hedge,"Call")
             Market_order_Sell(QE_CE_Hedge,Deployed_Size,CE_Hedge,"Call","Hedge Sell")
 
-            with open(Path_backtest_Report+"Market_trend_file.txt", "w") as file:
-                file.write(Market_Trend)
+            # with open(Path_backtest_Report+"Market_trend_file.txt", "w") as file:
+            #     file.write(Market_Trend)
 
             print("Adding new Strikes")
             console_output_log_recording("Adding new Strikes")
@@ -989,11 +865,13 @@ def Trailing_SL():
             print(f"SL hit on the Put Strike {PE_stk} now Market Trend is Bearish")
             console_output_log_recording(f"SL hit on the Put Strike {PE_stk} now Market Trend is Bearish")
 
-            Initial_DF.loc[Index_put[0],"Status"]="COMPLETE"
+            running_log[str(-PE_stk)]["Status"]="COMPLETE"
+            writing_market_status(running_log,"Running_log.txt")
+
             present_market_status['Market Trend']="Trending Down"
             writing_market_status(present_market_status)
 
-            Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
+            # Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
 
             PE_Hedge=PE_stk-hedges_distance
 
@@ -1002,8 +880,8 @@ def Trailing_SL():
             PE_Hedge_CP,QE_PE_Hedge=Compute_token_Closing_price(PE_Hedge,"Put")
             Market_order_Sell(QE_PE_Hedge,Deployed_Size,PE_Hedge,"Put","Hedge Sell")
 
-            with open(Path_backtest_Report+"Market_trend_file.txt", "w") as file:
-                file.write(Market_Trend)
+            # with open(Path_backtest_Report+"Market_trend_file.txt", "w") as file:
+            #     file.write(Market_Trend)
 
             print("Adding new Strikes")
             console_output_log_recording("Adding new Strikes")
@@ -1017,139 +895,83 @@ def Trailing_SL():
 
 
     elif Market_Trend=="Trending Up":
-        CE_stk=Active_strike_list_Call[0]
+        
         print(f"Present market trend is {Market_Trend}")
+
+        if len(Active_strike_list_Put)!=0:
         
-        for i in range(len(Active_strike_list_Put)):
-            PE_stk=Active_strike_list_Put[i]
-            Index_put = Initial_DF.index[(Initial_DF['Strike'] == -PE_stk)].tolist()
-            OID_Put=Initial_DF.loc[Index_put[0],"Order_ID"]
-            print(f"OID : {OID_Put} strike: {-PE_stk}")
-            Status_put=Status_compute(OID_Put)
+            for i in range(len(Active_strike_list_Put)):
+                PE_stk=Active_strike_list_Put[i]
 
-            if Status_put=="TRIGGER PENDING":
-                Idx_put = Initial_DF.index[(Initial_DF['Strike'] == PE_stk)].tolist()
-                SL_Put=Initial_DF.loc[Idx_put[0],"Trailing SL"]
+                OID_Put=running_log[str(-PE_stk)]["Order ID"]
 
-                pause()
+                print(f"OID : {OID_Put} strike: {-PE_stk}")
+                Status_put=Status_compute(OID_Put)
 
-                PE_CP,QE_PE=Compute_token_Closing_price(PE_stk,"Put")
-                New_SL_PE=2*PE_CP
+                if Status_put=="TRIGGER PENDING":
+                    SL_Put=running_log[str(PE_stk)]["Trailing SL"]
 
-                print(f"Present SL PE {New_SL_PE} and Stored SL PE {SL_Put}")
-                console_output_log_recording(f"Present SL PE {New_SL_PE} and Stored SL PE {SL_Put}")
+                    pause()
 
-                if New_SL_PE<SL_Put and New_SL_PE>=Threshold_price:
-                    print(f"Updating the Put strike {PE_stk} SL at price {New_SL_PE}")
-                    console_output_log_recording(f"Updating the Put strike {PE_stk} SL at price {New_SL_PE}")
+                    PE_CP,QE_PE=Compute_token_Closing_price(PE_stk,"Put")
+                    New_SL_PE=2*PE_CP
 
-                    Modify_SL_Order(OID_Put,Deployed_Size,New_SL_PE,"Trailing SL","SL Limit")
-                elif New_SL_PE>=SL_Put and New_SL_PE>=Threshold_price:
-                    print(f"No SL Update for the Put Strike {PE_stk}")
-                    console_output_log_recording(f"No SL Update for the Put Strike {PE_stk}")
+                    print(f"Present SL PE {New_SL_PE} and Stored SL PE {SL_Put}")
+                    console_output_log_recording(f"Present SL PE {New_SL_PE} and Stored SL PE {SL_Put}")
+
+                    if New_SL_PE<SL_Put and New_SL_PE>=Threshold_price:
+                        print(f"Updating the Put strike {PE_stk} SL at price {New_SL_PE}")
+                        console_output_log_recording(f"Updating the Put strike {PE_stk} SL at price {New_SL_PE}")
+                        Modify_SL_Order(OID_Put,Deployed_Size,New_SL_PE,"Trailing SL","SL Limit",PE_stk)
+
+                    elif New_SL_PE>=SL_Put and New_SL_PE>=Threshold_price:
+                        print(f"No SL Update for the Put Strike {PE_stk}")
+                        console_output_log_recording(f"No SL Update for the Put Strike {PE_stk}")
+                    else:
+                        print(f"No SL Update for the Put Strike {PE_stk}")
+                        console_output_log_recording(f"No SL Update for the Put Strike {PE_stk}")
+
+                elif Status_put=="COMPLETE":
+
+                    present_market_status["Reversal status"]=1
+                    
+                    print(f"SL hit for strike {PE_stk} on put side the market reverses the trend")
+                    console_output_log_recording(f"SL hit for strike {PE_stk} on put side the market reverses the trend")
+
+                    running_log[str(-PE_stk)]["Status"]="COMPLETE"
+                    writing_market_status(running_log,"Running_log.txt")
+
+
+                    Active_strike_list_Put.remove(PE_stk)
+                    present_market_status["Active Put Strikes"]=Active_strike_list_Put
+                    writing_market_status(present_market_status)
+
+                    print(f"The new Active strike Put list is {Active_strike_list_Put}")
+                    console_output_log_recording(f"The new Active strike Put list is {Active_strike_list_Put}")
+                    PE_stk_Hedges=PE_stk-hedges_distance
+
+                    pause()
+
+                    PE_Hedge_CP,QE_PE_Hedge=Compute_token_Closing_price(PE_stk_Hedges,"Put")
+                    Market_order_Sell(QE_PE_Hedge,Deployed_Size,PE_stk_Hedges,"Put","Hedge Sell")
+
                 else:
-                    print(f"No SL Update for the Put Strike {PE_stk}")
-                    console_output_log_recording(f"No SL Update for the Put Strike {PE_stk}")
+                    pass
 
-            elif Status_put=="COMPLETE":
+        else:
+            pass
 
-                present_market_status["Reversal status"]=1
-                
-
-                print(f"SL hit for strike {PE_stk} on put side the market reverses the trend")
-                console_output_log_recording(f"SL hit for strike {PE_stk} on put side the market reverses the trend")
-                Initial_DF.loc[Index_put[0],"Status"]="COMPLETE"
-                Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
-
-                Active_strike_list_Put.remove(PE_stk)
-                present_market_status["Active Put Strikes"]=Active_strike_list_Put
-                writing_market_status(present_market_status)
-
-                print(f"The new Active strike Put list is {Active_strike_list_Put}")
-                console_output_log_recording(f"The new Active strike Put list is {Active_strike_list_Put}")
-                PE_stk_Hedges=PE_stk-hedges_distance
-
-                pause()
-
-                PE_Hedge_CP,QE_PE_Hedge=Compute_token_Closing_price(PE_stk_Hedges,"Put")
-                Market_order_Sell(QE_PE_Hedge,Deployed_Size,PE_stk_Hedges,"Put","Hedge Sell")
-
-            else:
-                pass
-
-        Index_call = Initial_DF.index[(Initial_DF['Strike'] == -CE_stk)].tolist()
-        OID_Call=Initial_DF.loc[Index_call[0],"Order_ID"]
-        Status_call=Status_compute(OID_Call)
-
-        if Status_call=="TRIGGER PENDING":
-            Idx_call = Initial_DF.index[(Initial_DF['Strike'] == CE_stk)].tolist()
-            SL_Call=Initial_DF.loc[Idx_call[0],"Trailing SL"]
-
-            pause()
-
-            CE_CP,QE_CE=Compute_token_Closing_price(CE_stk,"Call")
-            New_SL_CE=2*CE_CP
-
-            print(f"Present SL CE {New_SL_CE} and Stored SL CE {SL_Call}")
-            console_output_log_recording(f"Present SL CE {New_SL_CE} and Stored SL CE {SL_Call}")
-
-            if New_SL_CE<SL_Call and New_SL_CE>=Threshold_price:
-
-                print(f"Updating the Call strike {CE_stk} SL at price {New_SL_CE}")
-                console_output_log_recording(f"Updating the Call strike {CE_stk} SL at price {New_SL_CE}")
-                Modify_SL_Order(OID_Call,Deployed_Size,New_SL_CE,"Trailing SL","SL Limit")
-
-            elif New_SL_CE>=SL_Call and New_SL_CE>=Threshold_price:
-                print(f"No SL update for Call Strike {CE_stk}")
-                console_output_log_recording(f"No SL update for Call Strike {CE_stk}")
-            else:
-                print(f"No SL update for Call Strike {CE_stk}")
-                console_output_log_recording(f"No SL update for Call Strike {CE_stk}")
-        
-        elif Status_call=="COMPLETE":
-            print(f"SL hit on call Strike {CE_stk} the market continues in the same trend selling Additional Strikes")
-            console_output_log_recording(f"SL hit on call Strike {CE_stk} the market continues in the same trend selling Additional Strikes")
-            Initial_DF.loc[Index_call[0],"Status"]="COMPLETE"
-            Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
-
-            Length_put=len(Active_strike_list_Put)
-            CE_stk_Hedges=CE_stk+hedges_distance
-
-            pause()
-
-            CE_Hedge_CP,QE_CE_Hedge=Compute_token_Closing_price(CE_stk_Hedges,"Call")
-            Market_order_Sell(QE_CE_Hedge,Deployed_Size,CE_stk_Hedges,"Call","Hedge Sell")
-
-            if max_put_credit_spreads>=max_credit_spreads or reversal_status==1:
-                print("Maximum Credit limit reached can't sell more strikes")
-                console_output_log_recording("Maximum Credit limit reached can't sell more strikes")
-            elif max_put_credit_spreads<max_credit_spreads and reversal_status==0:
-                print("Adding new Strikes")
-                console_output_log_recording("Adding new Strikes")
-                Active_strike_list_Call,Active_strike_list_Put=New_order_Placement(Active_strike_list_Call,Active_strike_list_Put)
-                print(f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
-                console_output_log_recording(f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
-            else:
-                pass
-
-
-    elif Market_Trend=="Trending Down":
-        PE_stk=Active_strike_list_Put[0]
-
-        for i in range(len(Active_strike_list_Call)):
-            CE_stk=Active_strike_list_Call[i]
-            Index_call = Initial_DF.index[(Initial_DF['Strike'] == -CE_stk)].tolist()
-            OID_Call=Initial_DF.loc[Index_call[0],"Order_ID"]
+        if len(Active_strike_list_Call)!=0:
+            CE_stk=Active_strike_list_Call[0]
+            OID_Call=running_log[str(-CE_stk)]["Order ID"]
             Status_call=Status_compute(OID_Call)
 
             if Status_call=="TRIGGER PENDING":
-                Idx_call = Initial_DF.index[(Initial_DF['Strike'] == CE_stk)].tolist()
-                SL_Call=Initial_DF.loc[Idx_call[0],"Trailing SL"]
+                SL_Call=running_log[str(CE_stk)]["Trailing SL"]
 
                 pause()
 
                 CE_CP,QE_CE=Compute_token_Closing_price(CE_stk,"Call")
-
                 New_SL_CE=2*CE_CP
 
                 print(f"Present SL CE {New_SL_CE} and Stored SL CE {SL_Call}")
@@ -1159,97 +981,174 @@ def Trailing_SL():
 
                     print(f"Updating the Call strike {CE_stk} SL at price {New_SL_CE}")
                     console_output_log_recording(f"Updating the Call strike {CE_stk} SL at price {New_SL_CE}")
-                    Modify_SL_Order(OID_Call,Deployed_Size,New_SL_CE,"Trailing SL","SL Limit")
+                    Modify_SL_Order(OID_Call,Deployed_Size,New_SL_CE,"Trailing SL","SL Limit",CE_stk)
+
                 elif New_SL_CE>=SL_Call and New_SL_CE>=Threshold_price:
                     print(f"No SL update for Call Strike {CE_stk}")
                     console_output_log_recording(f"No SL update for Call Strike {CE_stk}")
                 else:
                     print(f"No SL update for Call Strike {CE_stk}")
                     console_output_log_recording(f"No SL update for Call Strike {CE_stk}")
-
+            
             elif Status_call=="COMPLETE":
-                present_market_status["Reversal status"]=1
-                
+                print(f"SL hit on call Strike {CE_stk} the market continues in the same trend selling Additional Strikes")
+                console_output_log_recording(f"SL hit on call Strike {CE_stk} the market continues in the same trend selling Additional Strikes")
 
-                print(f"SL hit for strike {CE_stk} on call side the market reverses the trend")
-                console_output_log_recording(f"SL hit for strike {CE_stk} on call side the market reverses the trend")
+                running_log[str(-CE_stk)]["Status"]="COMPLETE"
+                writing_market_status(running_log,"Running_log.txt")
 
-                Initial_DF.loc[Index_call[0],"Status"]="COMPLETE"
-                Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
-
-                Active_strike_list_Call.remove(CE_stk)
-                present_market_status["Active Call Strikes"]=Active_strike_list_Call
-                writing_market_status(present_market_status)
-
-                print(f"The new Active strike Call list is {Active_strike_list_Call}")
-                console_output_log_recording(f"The new Active strike Call list is {Active_strike_list_Call}")
-
+                Length_put=len(Active_strike_list_Put)
                 CE_stk_Hedges=CE_stk+hedges_distance
 
                 pause()
 
                 CE_Hedge_CP,QE_CE_Hedge=Compute_token_Closing_price(CE_stk_Hedges,"Call")
                 Market_order_Sell(QE_CE_Hedge,Deployed_Size,CE_stk_Hedges,"Call","Hedge Sell")
+
+                if max_put_credit_spreads>=max_credit_spreads or reversal_status==1:
+                    print("Maximum Credit limit reached can't sell more strikes")
+                    console_output_log_recording("Maximum Credit limit reached can't sell more strikes")
+                elif max_put_credit_spreads<max_credit_spreads and reversal_status==0:
+                    print("Adding new Strikes")
+                    console_output_log_recording("Adding new Strikes")
+                    Active_strike_list_Call,Active_strike_list_Put=New_order_Placement(Active_strike_list_Call,Active_strike_list_Put)
+                    print(f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
+                    console_output_log_recording(f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
+                else:
+                    pass
             else:
                 pass
 
-        Index_put = Initial_DF.index[(Initial_DF['Strike'] == -PE_stk)].tolist()
-        OID_Put=Initial_DF.loc[Index_put[0],"Order_ID"]
-        Status_put=Status_compute(OID_Put)
+        else:
+            pass
 
-        if Status_put=="TRIGGER PENDING":
-            Idx_put = Initial_DF.index[(Initial_DF['Strike'] == PE_stk)].tolist()
-            SL_Put=Initial_DF.loc[Idx_put[0],"Trailing SL"]
-            
-            pause()
 
-            PE_CP,QE_PE=Compute_token_Closing_price(PE_stk,"Put")
+    elif Market_Trend=="Trending Down":
+        
+        if len(Active_strike_list_Call)!=0:
+            for i in range(len(Active_strike_list_Call)):
+                CE_stk=Active_strike_list_Call[i]
+                OID_Call=running_log[str(-CE_stk)]["Order ID"]
+                Status_call=Status_compute(OID_Call)
 
-            New_SL_PE=2*PE_CP
+                if Status_call=="TRIGGER PENDING":
+                    SL_Call=running_log[str(CE_stk)]["Trailing SL"]
 
-            print(f"Present SL PE {New_SL_PE} and Stored SL PE {SL_Put}")
-            console_output_log_recording(f"Present SL PE {New_SL_PE} and Stored SL PE {SL_Put}")
+                    pause()
 
-            if New_SL_PE<SL_Put and New_SL_PE>=Threshold_price:
+                    CE_CP,QE_CE=Compute_token_Closing_price(CE_stk,"Call")
 
-                print(f"Updating the Put strike {PE_stk} SL at price {New_SL_PE}")
-                console_output_log_recording(f"Updating the Put strike {PE_stk} SL at price {New_SL_PE}")
-                Modify_SL_Order(OID_Put,Deployed_Size,New_SL_PE,"Trailing SL","SL Limit")
-            elif New_SL_PE>=SL_Put and New_SL_PE>=Threshold_price:
+                    New_SL_CE=2*CE_CP
 
-                print(f"No SL update for Put Strike {PE_stk}")
-                console_output_log_recording(f"No SL update for Put Strike {PE_stk}")
-            else:
-                print(f"No SL update for Put Strike {PE_stk}")
-                console_output_log_recording(f"No SL update for Put Strike {PE_stk}")
+                    print(f"Present SL CE {New_SL_CE} and Stored SL CE {SL_Call}")
+                    console_output_log_recording(f"Present SL CE {New_SL_CE} and Stored SL CE {SL_Call}")
 
-        elif Status_put=="COMPLETE":
-            print(f"SL hit on put Strike {PE_stk} the market continues in the same trend selling Additional Strikes")
-            console_output_log_recording(f"SL hit on put Strike {PE_stk} the market continues in the same trend selling Additional Strikes")
+                    if New_SL_CE<SL_Call and New_SL_CE>=Threshold_price:
 
-            Initial_DF.loc[Index_put[0],"Status"]="COMPLETE"
-            Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
+                        print(f"Updating the Call strike {CE_stk} SL at price {New_SL_CE}")
+                        console_output_log_recording(f"Updating the Call strike {CE_stk} SL at price {New_SL_CE}")
+                        Modify_SL_Order(OID_Call,Deployed_Size,New_SL_CE,"Trailing SL","SL Limit",CE_stk)
 
-            Length_call=len(Active_strike_list_Call)
-            PE_stk_Hedges=PE_stk-hedges_distance
+                    elif New_SL_CE>=SL_Call and New_SL_CE>=Threshold_price:
+                        print(f"No SL update for Call Strike {CE_stk}")
+                        console_output_log_recording(f"No SL update for Call Strike {CE_stk}")
+                    else:
+                        print(f"No SL update for Call Strike {CE_stk}")
+                        console_output_log_recording(f"No SL update for Call Strike {CE_stk}")
 
-            pause()
+                elif Status_call=="COMPLETE":
+                    present_market_status["Reversal status"]=1
+                    
+                    print(f"SL hit for strike {CE_stk} on call side the market reverses the trend")
+                    console_output_log_recording(f"SL hit for strike {CE_stk} on call side the market reverses the trend")
 
-            PE_Hedge_CP,QE_PE_Hedge=Compute_token_Closing_price(PE_stk_Hedges,"Put")
-            Market_order_Sell(QE_PE_Hedge,Deployed_Size,PE_stk_Hedges,"Put","Hedge Sell")
-            
-            if max_call_credit_spreads>=max_credit_spreads or reversal_status==1:
-                print("Maximum Credit limit reached can't sell more strikes")
-                console_output_log_recording("Maximum Credit limit reached can't sell more strikes")
+                    running_log[str(-CE_stk)]["Status"]="COMPLETE"
+                    writing_market_status(running_log,"Running_log.txt")
 
-            elif max_call_credit_spreads<max_credit_spreads and reversal_status==0:
-                print("Adding new Strikes")
-                console_output_log_recording("Adding new Strikes")
-                Active_strike_list_Call,Active_strike_list_Put=New_order_Placement(Active_strike_list_Call,Active_strike_list_Put)
-                print(f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
-                console_output_log_recording(f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
+
+                    Active_strike_list_Call.remove(CE_stk)
+                    present_market_status["Active Call Strikes"]=Active_strike_list_Call
+                    writing_market_status(present_market_status)
+
+                    print(f"The new Active strike Call list is {Active_strike_list_Call}")
+                    console_output_log_recording(f"The new Active strike Call list is {Active_strike_list_Call}")
+
+                    CE_stk_Hedges=CE_stk+hedges_distance
+
+                    pause()
+
+                    CE_Hedge_CP,QE_CE_Hedge=Compute_token_Closing_price(CE_stk_Hedges,"Call")
+                    Market_order_Sell(QE_CE_Hedge,Deployed_Size,CE_stk_Hedges,"Call","Hedge Sell")
+                else:
+                    pass
+
+        else:
+            pass
+
+
+        if len(Active_strike_list_Put)!=0:
+            PE_stk=Active_strike_list_Put[0]
+            OID_Put=running_log[str(-PE_stk)]["Order ID"]
+            Status_put=Status_compute(OID_Put)
+
+            if Status_put=="TRIGGER PENDING":
+                SL_Put=running_log[str(PE_stk)]["Trailing SL"]
+                
+                pause()
+
+                PE_CP,QE_PE=Compute_token_Closing_price(PE_stk,"Put")
+
+                New_SL_PE=2*PE_CP
+
+                print(f"Present SL PE {New_SL_PE} and Stored SL PE {SL_Put}")
+                console_output_log_recording(f"Present SL PE {New_SL_PE} and Stored SL PE {SL_Put}")
+
+                if New_SL_PE<SL_Put and New_SL_PE>=Threshold_price:
+
+                    print(f"Updating the Put strike {PE_stk} SL at price {New_SL_PE}")
+                    console_output_log_recording(f"Updating the Put strike {PE_stk} SL at price {New_SL_PE}")
+                    Modify_SL_Order(OID_Put,Deployed_Size,New_SL_PE,"Trailing SL","SL Limit",PE_stk)
+                elif New_SL_PE>=SL_Put and New_SL_PE>=Threshold_price:
+
+                    print(f"No SL update for Put Strike {PE_stk}")
+                    console_output_log_recording(f"No SL update for Put Strike {PE_stk}")
+                else:
+                    print(f"No SL update for Put Strike {PE_stk}")
+                    console_output_log_recording(f"No SL update for Put Strike {PE_stk}")
+
+            elif Status_put=="COMPLETE":
+                print(f"SL hit on put Strike {PE_stk} the market continues in the same trend selling Additional Strikes")
+                console_output_log_recording(f"SL hit on put Strike {PE_stk} the market continues in the same trend selling Additional Strikes")
+
+                running_log[str(-PE_stk)]["Status"]="COMPLETE"
+                writing_market_status(running_log,"Running_log.txt")
+
+
+                Length_call=len(Active_strike_list_Call)
+                PE_stk_Hedges=PE_stk-hedges_distance
+
+                pause()
+
+                PE_Hedge_CP,QE_PE_Hedge=Compute_token_Closing_price(PE_stk_Hedges,"Put")
+                Market_order_Sell(QE_PE_Hedge,Deployed_Size,PE_stk_Hedges,"Put","Hedge Sell")
+                
+                if max_call_credit_spreads>=max_credit_spreads or reversal_status==1:
+                    print("Maximum Credit limit reached can't sell more strikes")
+                    console_output_log_recording("Maximum Credit limit reached can't sell more strikes")
+
+                elif max_call_credit_spreads<max_credit_spreads and reversal_status==0:
+                    print("Adding new Strikes")
+                    console_output_log_recording("Adding new Strikes")
+                    Active_strike_list_Call,Active_strike_list_Put=New_order_Placement(Active_strike_list_Call,Active_strike_list_Put)
+                    print(f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
+                    console_output_log_recording(f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
+                else:
+                    pass
+
             else:
                 pass
+        else:
+            pass
 
     else:
         pass
@@ -1257,7 +1156,7 @@ def Trailing_SL():
 
     current_time = datetime.now().strftime("%H:%M")
     if current_time >= "15:30":
-        Day_end()
+        pass
     else:
         schedule_next_execution()
 
@@ -1481,7 +1380,6 @@ def New_order_Placement(Active_strike_list_Call,Active_strike_list_Put):
             pass
 
 
-
 def Resuming_code():
     Initial_DF=pd.read_csv(Path_backtest_Report+"Running_Status_of_trade.csv")
     Active_strike_list_Call=[]
@@ -1540,81 +1438,20 @@ def Resuming_code():
 
 
 def Morning_run():
-    global Active_strike_list_Call
-    global Active_strike_list_Put
-    global Deployed_Size
+    present_market_status=reading_market_status()
+    running_log=reading_market_status("Running_log.txt")
 
-    ################################# EXTRACTION OF THE ACTIVE CALL AND PUT STRIKES ################################
-    Initial_DF=pd.read_csv(Path_backtest_Report+"Running_Status_of_trade.csv")
-    Active_strike_list_Call=[]
-    Active_strike_list_Put=[]
-
-    dummy_strikes_call=[]
-    dummy_strikes_put=[]
-
-    with open(Path_backtest_Report+"Market_trend_file.txt", 'r') as file:
-        file_content = file.read()
-
-    Market_Trend=file_content
-    sell_rows = Initial_DF[Initial_DF['Type'] == 'Sell']
-    sell_indexes = sell_rows.index.tolist()
-
-    for i in sell_indexes:
-        ryt=Initial_DF.loc[i,"Right"]
-        
-        if ryt=="Call":
-            stk_ce=Initial_DF.loc[i,"Strike"]
-            dummy_strikes_call.append(stk_ce)
-        elif ryt=="Put":
-            stk_pe=Initial_DF.loc[i,"Strike"]
-            dummy_strikes_put.append(stk_pe)
-
-    internal_dict={}
-
-    modified_list_call = [-1 * x for x in dummy_strikes_call]
-    modified_list_put = [-1 * x for x in dummy_strikes_put]
-
-    internal_dict["Call"]=modified_list_call
-    internal_dict["Put"]=modified_list_put
-
-    keys_ii=list(internal_dict.keys())
-
-    for key in keys_ii:
-        for i in range(len(internal_dict[key])):
-            Index_new = Initial_DF.index[(Initial_DF['Strike'] == internal_dict[key][i-1])].tolist()
-            Index_new=Index_new[0]
-            status_present=Initial_DF.loc[Index_new,"Status"]
-            if status_present=="TRIGGER PENDING":
-                pass
-            elif status_present=="COMPLETE":
-                internal_dict[key].remove(internal_dict[key][i-1])
-            else:
-                pass
-
-    
-    Active_strike_list_Call=internal_dict["Call"]
-    Active_strike_list_Put=internal_dict["Put"]
-
-    Active_strike_list_Call = [-1 * x for x in Active_strike_list_Call]
-    Active_strike_list_Put = [-1 * x for x in Active_strike_list_Put]
-
-    print(f"Call strikes after filtering in morning: {Active_strike_list_Call}")
-    console_output_log_recording(f"Call strikes after filtering in morning: {Active_strike_list_Call}")
-    print(f"Put strikes after filtering in morning: {Active_strike_list_Put}")
-    console_output_log_recording(f"Call strikes after filtering in morning: {Active_strike_list_Call}")
-
+    Market_Trend=present_market_status['Market Trend']
+    Active_strike_list_Call=present_market_status["Active Call Strikes"]
+    Active_strike_list_Put=present_market_status["Active Put Strikes"]
     ################################# EXTRACTION OF THE ACTIVE CALL AND PUT STRIKES ################################
 
     if Market_Trend=="Neutral":
         CE_STK=Active_strike_list_Call[0]
         PE_STK=Active_strike_list_Put[0]
 
-        Index_call = Initial_DF.index[(Initial_DF['Strike'] == CE_STK)].tolist()
-        Index_put = Initial_DF.index[(Initial_DF['Strike'] == PE_STK)].tolist()
-
-        SL_CE=Initial_DF.loc[Index_call[0],"Trailing SL"]
-        SL_PE=Initial_DF.loc[Index_put[0],"Trailing SL"]
-
+        SL_CE=running_log[str(CE_STK)]["Trailing SL"]
+        SL_PE=running_log[str(PE_STK)]["Trailing SL"]
 
         while True:
             current_time = datetime.now()
@@ -1638,49 +1475,67 @@ def Morning_run():
 
                     SL_Call_Trig=CP_CALL-0.05
                     SL_Initiate_order(QTE_CALL,Deployed_Size,CP_CALL,SL_Call_Trig,Active_strike_list_Call[0],"Call",1)
-                    Market_Trend="Trending Up"
-                    with open(Path_backtest_Report+"Market_trend_file.txt", "w") as file:
-                        file.write(Market_Trend)
+                    present_market_status['Market Trend']="Trending Up"
+                    writing_market_status(present_market_status)
+
                 else:
-                    print(f"Not Modifiying the Stoploss for strike {CE_STK} at time {current_time} and Restoring the old SL {SL_CE}")
-                    console_output_log_recording(f"Not Modifiying the Stoploss for strike {CE_STK} at time {current_time} and Restoring the old SL {SL_CE}")
+                    if SL_CE>=2*CP_CALL:
+                        SL_CE=2*CP_CALL
+                        print(f"Not Modifiying the Stoploss for strike {CE_STK} at time {current_time} and Restoring the old SL {SL_CE}")
+                        console_output_log_recording(f"Not Modifiying the Stoploss for strike {CE_STK} at time {current_time} and Restoring the old SL {SL_CE}")
 
-                    SL_Call_Trig=SL_CE-0.05
-                    SL_Initiate_order(QTE_CALL,Deployed_Size,SL_CE,SL_Call_Trig,Active_strike_list_Call[0],"Call",1)
+                        SL_Call_Trig=SL_CE-0.05
+                        SL_Initiate_order(QTE_CALL,Deployed_Size,SL_CE,SL_Call_Trig,Active_strike_list_Call[0],"Call",1)
+                    elif SL_CE<2*CP_CALL:
+                        print(f"Not Modifiying the Stoploss for strike {CE_STK} at time {current_time} and Restoring the old SL {SL_CE}")
+                        console_output_log_recording(f"Not Modifiying the Stoploss for strike {CE_STK} at time {current_time} and Restoring the old SL {SL_CE}")
+
+                        SL_Call_Trig=SL_CE-0.05
+                        SL_Initiate_order(QTE_CALL,Deployed_Size,SL_CE,SL_Call_Trig,Active_strike_list_Call[0],"Call",1)
+                    else:
+                        pass                    
                     
-
                 if CP_PUT>=SL_PE:
                     print(f"Modifiying the Put Morning SL to {CP_PUT} for strike {PE_STK} at time {current_time}")
                     console_output_log_recording(f"Modifiying the Put Morning SL to {CP_PUT} for strike {PE_STK} at time {current_time}")
 
                     SL_Put_Trig=CP_PUT-0.05
                     SL_Initiate_order(QTE_PUT,Deployed_Size,CP_PUT,SL_Put_Trig,Active_strike_list_Put[0],"Put",1)
-                    Market_Trend="Trending Down"
-                    with open(Path_backtest_Report+"Market_trend_file.txt", "w") as file:
-                        file.write(Market_Trend)
+                    present_market_status['Market Trend']="Trending Down"
+                    writing_market_status(present_market_status)
                 else:
-                    print(f"Not Modifiying the Stoploss for strike {PE_STK} at time {current_time} and Restoring the old SL {SL_PE}")
-                    console_output_log_recording(f"Not Modifiying the Stoploss for strike {PE_STK} at time {current_time} and Restoring the old SL {SL_PE}")
-                    SL_Put_Trig=SL_PE-0.05
-                    SL_Initiate_order(QTE_PUT,Deployed_Size,SL_PE,SL_Put_Trig,Active_strike_list_Put[0],"Put",1)                   
+                    if SL_PE>=2*CP_PUT:
+                        SL_PE=2*CP_PUT
+                        print(f"Not Modifiying the Stoploss for strike {PE_STK} at time {current_time} and Restoring the old SL {SL_PE}")
+                        console_output_log_recording(f"Not Modifiying the Stoploss for strike {PE_STK} at time {current_time} and Restoring the old SL {SL_PE}")
+                        SL_Put_Trig=SL_PE-0.05
+                        SL_Initiate_order(QTE_PUT,Deployed_Size,SL_PE,SL_Put_Trig,Active_strike_list_Put[0],"Put",1)    
+                    elif SL_PE<2*CP_PUT:
+                        print(f"Not Modifiying the Stoploss for strike {PE_STK} at time {current_time} and Restoring the old SL {SL_PE}")
+                        console_output_log_recording(f"Not Modifiying the Stoploss for strike {PE_STK} at time {current_time} and Restoring the old SL {SL_PE}")
+                        SL_Put_Trig=SL_PE-0.05
+                        SL_Initiate_order(QTE_PUT,Deployed_Size,SL_PE,SL_Put_Trig,Active_strike_list_Put[0],"Put",1)    
+                    else:
+                        pass                                
 
                 break
             time.sleep(300)  
 
-    elif Market_Trend=="Tending Up":
+    elif Market_Trend=="Trending Up":
+        print(f"Incoming Active  call strikes {Active_strike_list_Call} and incoming Active put strikes {Active_strike_list_Put}")
+
         CE_STK=Active_strike_list_Call[0]
-        Index_call = Initial_DF.index[(Initial_DF['Strike'] == CE_STK)].tolist()
-        SL_CE=Initial_DF.loc[Index_call[0],"Trailing SL"]
+        SL_CE=running_log[str(CE_STK)]["Trailing SL"]
 
         Stop_Loss_arr_Put=[]
 
         for i in range(len(Active_strike_list_Put)):
 
             PE_STK=Active_strike_list_Put[i]
-            Index_put = Initial_DF.index[(Initial_DF['Strike'] == PE_STK)].tolist()
-            SL_PE=Initial_DF.loc[Index_put[0],"Trailing SL"]
+            SL_PE=running_log[str(PE_STK)]["Trailing SL"]
             Stop_Loss_arr_Put.append(SL_PE)
 
+        print(f"Stop loss array Put: {Stop_Loss_arr_Put}")
 
         while True:
             current_time = datetime.now()
@@ -1698,6 +1553,8 @@ def Morning_run():
                 closing_price_put.append(CP_PUT)
                 Qte_Put.append(QTE_PUT)
 
+            print(f"Closing Price Put: {closing_price_put}")
+
             if current_time >= Desired_time:
 
                 for i in range(len(Active_strike_list_Put)):
@@ -1712,11 +1569,27 @@ def Morning_run():
                         SL_Put_Trig=CP_PE-0.05
                         SL_Initiate_order(Quote_put,Deployed_Size,CP_PE,SL_Put_Trig,Active_strike_list_Put[i],"Put",1)
                     else:
-                        print(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Put[i]} at time {current_time} and Restoring to {SL_PE}")
-                        console_output_log_recording(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Put[i]} at time {current_time} and Restoring to {SL_PE}")
+                        
+                        if SL_PE>=2*CP_PE:
+                            SL_PE=2*CP_PE
+                            print(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Put[i]} at time {current_time} and Restoring to {SL_PE}")
+                            console_output_log_recording(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Put[i]} at time {current_time} and Restoring to {SL_PE}")
 
-                        SL_Put_Trig=SL_PE-0.05
-                        SL_Initiate_order(Quote_put,Deployed_Size,SL_PE,SL_Put_Trig,Active_strike_list_Put[i],"Put",1)
+                            SL_Put_Trig=SL_PE-0.05
+
+                            SL_Initiate_order(Quote_put,Deployed_Size,SL_PE,SL_Put_Trig,Active_strike_list_Put[i],"Put",1)
+
+                        elif SL_PE<2*CP_PE:
+                            
+                            print(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Put[i]} at time {current_time} and Restoring to {SL_PE}")
+                            console_output_log_recording(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Put[i]} at time {current_time} and Restoring to {SL_PE}")
+
+                            SL_Put_Trig=SL_PE-0.05
+
+                            SL_Initiate_order(Quote_put,Deployed_Size,SL_PE,SL_Put_Trig,Active_strike_list_Put[i],"Put",1)
+
+                        else:
+                            pass
 
                 if CP_CALL>=SL_CE:
                     print(f"Modifiying the Call Morning SL to {CP_CE} for strike {Active_strike_list_Call[0]} at time {current_time}")
@@ -1725,11 +1598,22 @@ def Morning_run():
                     SL_Call_Trig=CP_CALL-0.05
                     SL_Initiate_order(QTE_CALL,Deployed_Size,CP_CALL,SL_Call_Trig,Active_strike_list_Call[0],"Call",1)
                 else:
-                    print(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Call[0]} at time {current_time} and Restoring to {SL_CE}")
-                    console_output_log_recording(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Call[0]} at time {current_time} and Restoring to {SL_CE}")
 
-                    SL_Call_Trig=SL_CE-0.05
-                    SL_Initiate_order(QTE_CALL,Deployed_Size,SL_CE,SL_Call_Trig,Active_strike_list_Call[0],"Call",1)                 
+                    if SL_CE>=2*CP_CALL:
+                        SL_CE=2*CP_CALL
+                        print(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Call[0]} at time {current_time} and Restoring to {SL_CE}")
+                        console_output_log_recording(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Call[0]} at time {current_time} and Restoring to {SL_CE}")
+                        
+                        SL_Call_Trig=SL_CE-0.05
+                        SL_Initiate_order(QTE_CALL,Deployed_Size,SL_CE,SL_Call_Trig,Active_strike_list_Call[0],"Call",1)
+                    elif SL_CE<2*CP_CALL:   
+                        print(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Call[0]} at time {current_time} and Restoring to {SL_CE}")
+                        console_output_log_recording(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Call[0]} at time {current_time} and Restoring to {SL_CE}")
+                        
+                        SL_Call_Trig=SL_CE-0.05
+                        SL_Initiate_order(QTE_CALL,Deployed_Size,SL_CE,SL_Call_Trig,Active_strike_list_Call[0],"Call",1)      
+                    else:
+                        pass                               
 
                 break
 
@@ -1737,16 +1621,14 @@ def Morning_run():
             
     elif Market_Trend=="Trending Down":
         PE_STK=Active_strike_list_Put[0]
-        Index_put = Initial_DF.index[(Initial_DF['Strike'] == PE_STK)].tolist()
-        SL_PE=Initial_DF.loc[Index_put[0],"Trailing SL"]
+        SL_PE=running_log[str(PE_STK)]["Trailing SL"]
 
         Stop_Loss_arr_Call=[]
 
         for i in range(len(Active_strike_list_Call)):
 
             CE_STK=Active_strike_list_Call[i]
-            Index_call = Initial_DF.index[(Initial_DF['Strike'] == CE_STK)].tolist()
-            SL_CE=Initial_DF.loc[Index_call[0],"Trailing SL"]
+            SL_CE=running_log[str(CE_STK)]["Trailing SL"]
             Stop_Loss_arr_Call.append(SL_CE)
 
 
@@ -1763,7 +1645,7 @@ def Morning_run():
             for i in range(len(Active_strike_list_Call)):
                 CE_STK=Active_strike_list_Call[i]
                 CP_CALL,QTE_CALL=Compute_token_Closing_price(CE_STK,"Call")
-                closing_price_put.append(CP_CALL)
+                closing_price_call.append(CP_CALL)
                 Qte_Call.append(QTE_CALL)
 
             if current_time >= Desired_time:
@@ -1780,11 +1662,21 @@ def Morning_run():
                         SL_Call_Trig=CP_CE-0.05
                         SL_Initiate_order(Quote_call,Deployed_Size,CP_CE,SL_Call_Trig,Active_strike_list_Call[i],"Call",1)
                     else:
-                        print(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Call[i]} at time {current_time} and Restoring to {SL_CE}")
-                        console_output_log_recording(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Call[i]} at time {current_time} and Restoring to {SL_CE}")
+                        if SL_CE>=2*CP_CE:
+                            SL_CE=2*CP_CE
+                            print(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Call[i]} at time {current_time} and Restoring to {SL_CE}")
+                            console_output_log_recording(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Call[i]} at time {current_time} and Restoring to {SL_CE}")
 
-                        SL_Call_Trig=SL_CE-0.05
-                        SL_Initiate_order(Quote_call,Deployed_Size,SL_CE,SL_Call_Trig,Active_strike_list_Call[i],"Call",1)
+                            SL_Call_Trig=SL_CE-0.05
+                            SL_Initiate_order(Quote_call,Deployed_Size,SL_CE,SL_Call_Trig,Active_strike_list_Call[i],"Call",1)
+                        elif SL_CE<2*CP_CE:
+                            print(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Call[i]} at time {current_time} and Restoring to {SL_CE}")
+                            console_output_log_recording(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Call[i]} at time {current_time} and Restoring to {SL_CE}")
+
+                            SL_Call_Trig=SL_CE-0.05
+                            SL_Initiate_order(Quote_call,Deployed_Size,SL_CE,SL_Call_Trig,Active_strike_list_Call[i],"Call",1)   
+                        else:
+                            pass    
 
 
                 if CP_PUT>=SL_PE:
@@ -1792,36 +1684,29 @@ def Morning_run():
                     console_output_log_recording(f"Modifiying the Put Morning SL to {CP_PUT} for strike {Active_strike_list_Put[0]} at time {current_time}")
 
                     SL_Put_Trig=CP_PUT-0.05
-                    SL_Initiate_order(QTE_PUT,Deployed_Size,CP_PUT,SL_Put_Trig,Active_strike_list_Call[0],"Put",1)
+                    SL_Initiate_order(QTE_PUT,Deployed_Size,CP_PUT,SL_Put_Trig,Active_strike_list_Put[0],"Put",1)
                 else:
-                    print(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Put[0]} at time {current_time} and Restoring to {SL_PE}")
-                    console_output_log_recording(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Put[0]} at time {current_time} and Restoring to {SL_PE}")
+                    if SL_PE>=2*CP_PUT:
+                        SL_PE=2*CP_PUT
+                        print(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Put[0]} at time {current_time} and Restoring to {SL_PE}")
+                        console_output_log_recording(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Put[0]} at time {current_time} and Restoring to {SL_PE}")
 
-                    SL_Put_Trig=SL_PE-0.05
-                    SL_Initiate_order(QTE_PUT,Deployed_Size,SL_PE,SL_Put_Trig,Active_strike_list_Call[0],"Put",1)
+                        SL_Put_Trig=SL_PE-0.05
+                        SL_Initiate_order(QTE_PUT,Deployed_Size,SL_PE,SL_Put_Trig,Active_strike_list_Put[0],"Put",1)
+                    elif SL_PE<2*CP_PUT:
+                        print(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Put[0]} at time {current_time} and Restoring to {SL_PE}")
+                        console_output_log_recording(f"Not Modifiying the Morning Stoploss for strike {Active_strike_list_Put[0]} at time {current_time} and Restoring to {SL_PE}")
+
+                        SL_Put_Trig=SL_PE-0.05
+                        SL_Initiate_order(QTE_PUT,Deployed_Size,SL_PE,SL_Put_Trig,Active_strike_list_Put[0],"Put",1)
                 break
             time.sleep(300)  
     else:
         pass
 
-    return Active_strike_list_Call,Active_strike_list_Put,Market_Trend
 
 #################################################### ALGO FUNCTION UNDER TEST ##########################################################
-    
 
-def Day_end():
-    Initial_DF=pd.read_csv(Path_backtest_Report+"Running_Status_of_trade.csv")
-
-    df=Initial_DF
-    filtered_rows = df[(df['Strike'] < 0) & (df['Status'] == 'Trigger Pending') & (df['Type'] == 'Buy')]
-    row_indices = filtered_rows.index.tolist()
-
-    for i in row_indices:
-        order_id=Initial_DF.loc[i,"Order_ID"]
-
-        cancel_order(order_id)
-
-############################################  ALGO RELATED FUNCTIONS  ################################################################
         
 path_main="D:/ashu/Finance/algo_trading/Zerodha_GUI/Kite_Zerodha-main/Kite_Zerodha-main/"
 Path_backtest_Report="D:/ashu/Finance/algo_trading/Zerodha_GUI/Kite_Zerodha-main/Kite_Zerodha-main/Live_market_data_gathering/"
@@ -1835,17 +1720,18 @@ enctoken = content_enctoken
 ####################### Global Declared Variables ##############################
 
 
-
 ###################################### DAY SETTINGS #####################################
 
 Initial_day=1
 Interrupt=1
-Input_Strike_Call=22300
-Input_Strike_Put=21200
+Input_Strike_Call=22650
+Input_Strike_Put=22100
 ###################################### DAY SETTINGS #####################################
 
 Initiate_time="09:20"
-Desired_time="09:30"
+
+Desired_time="11:15"
+
 Threshold_price=1
 
 size=1
@@ -1896,16 +1782,6 @@ while current_time <= end_time:
 if Initial_day==1 and Interrupt==0:
 
     ######################## INITILIZATION OF LOGS FILE AND DATA FRAME AND MARKET TREND ########################################
-    Date=[]
-    Time=[]
-    Strike_list=[]
-    Right_list=[]
-    order_id=[]
-    Status_list=[]
-    Type_list=[]
-    Initial_price_list=[]
-    Trailing_SL_list=[]
-
 
     with open(Path_backtest_Report+'Running_log_file.txt', 'w') as file:
         pass
@@ -1913,15 +1789,6 @@ if Initial_day==1 and Interrupt==0:
     with open(Path_backtest_Report+'Console_output_log_file.txt', 'w') as file:
         pass
 
-    Initial_data={"Date":Date,"Time":Time,"Strike":Strike_list,"Right":Right_list,"Order_ID":order_id,"Status":Status_list,"Type":Type_list,"Initial Price":Initial_price_list,"Trailing SL":Trailing_SL_list}
-    Initial_DF=pd.DataFrame(Initial_data)
-
-    Initial_DF.to_csv(Path_backtest_Report+"Running_Status_of_trade.csv",index=False)
-
-    # Market_Trend="Neutral"
-
-    # with open(Path_backtest_Report+"Market_trend_file.txt", "w") as file:
-    #     file.write(Market_Trend)
 
     reversal_status=0
     max_call_credit_spreads=1
@@ -1953,6 +1820,9 @@ if Initial_day==1 and Interrupt==0:
     with open(Path_backtest_Report+"Market_status.txt", 'w') as file:
         json.dump(market_status, file)
 
+    running_log={}
+    writing_market_status(running_log,"Running_log.txt")
+
     ##################################  Writing the market status in the text file  ###############################################
 
     limit_order_Sell(quote_call,Deployed_Size,Call_Closing_Price,Input_Strike_Call,"Call")
@@ -1965,10 +1835,13 @@ if Initial_day==1 and Interrupt==0:
     Trailing_SL()
 
 elif Initial_day==0 and Interrupt==0:
-    Active_strike_list_Call,Active_strike_list_Put,Market_Trend=Morning_run()
+    Morning_run()
     Trailing_SL()
 
 elif Interrupt==1:
-    Trailing_SL()
+    # print(f"Interrupt")
+    # console_output_log_recording(f"Interrupt")
+    # Trailing_SL()
+    Morning_run()
 else:
     pass

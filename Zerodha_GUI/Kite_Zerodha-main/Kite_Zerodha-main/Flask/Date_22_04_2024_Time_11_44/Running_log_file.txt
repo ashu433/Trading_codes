@@ -1,0 +1,53 @@
+Date: 2024-04-19 Time: 09:20:55 Strike: 22300 Initiation Price: 26.55 type of Order: Limit Order Sell.
+Date: 2024-04-19 Time: 09:20:55 Strike: 21200 Initiation Price: 36.45 type of Order: Limit Order Sell.
+Date: 2024-04-19 Time: 09:21:12 Strike: 22300 Price: 26.2 type of modification Initial Price and order type Limit.
+Date: 2024-04-19 Time: 09:21:14 Strike: 22900 Market Price: 2.45 type of Order: Market Order Buy.
+Date: 2024-04-19 Time: 09:21:14 Strike: 20600 Market Price: 10.55 type of Order: Market Order Buy.
+Date: 2024-04-19 Time: 09:21:14 Strike: 22300 Stop Loss Price: 53.1 type of Order: Stop Loss Order.
+Date: 2024-04-19 Time: 09:21:14 Strike: 21200 Stop Loss Price: 72.9 type of Order: Stop Loss Order.
+Date: 2024-04-19 Time: 09:25:12 Strike: -21200 Price: 64.2 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-19 Time: 09:35:11 Strike: -21200 Price: 62.5 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-19 Time: 09:40:12 Strike: -21200 Price: 61.0 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-19 Time: 09:50:12 Strike: -21200 Price: 57.5 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-19 Time: 10:05:11 Strike: -21200 Price: 56.4 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-19 Time: 10:10:12 Strike: -21200 Price: 53.9 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-19 Time: 10:15:12 Strike: -21200 Price: 52.4 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-19 Time: 11:00:12 Strike: -22300 Price: 52.3 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-19 Time: 11:05:12 Strike: -22300 Price: 52.1 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-19 Time: 11:30:11 Strike: -21200 Price: 50.4 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-19 Time: 12:25:13 Strike: -21200 Price: 45.7 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-19 Time: 12:40:11 Strike: 22900 Market Price: 2.35 type of Order: Market Order Sell.
+Date: 2024-04-19 Time: 12:40:13 Strike: 22500 Initiation Price: 20 type of Order: Limit Order Sell.
+Date: 2024-04-19 Time: 12:40:13 Strike: 21250 Initiation Price: 25.2 type of Order: Limit Order Sell.
+Date: 2024-04-19 Time: 12:50:35 Strike: -21200 Price: 44.6 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 10:05:44 Strike: 21200 Stop Loss Price: 8.9 type of Order: Stop Loss Order Modifiying morning order.
+Date: 2024-04-22 Time: 10:05:44 Strike: 21250 Stop Loss Price: 10 type of Order: Stop Loss Order Modifiying morning order.
+Date: 2024-04-22 Time: 10:05:44 Strike: 22500 Stop Loss Price: 56.7 type of Order: Stop Loss Order Modifiying morning order.
+Date: 2024-04-22 Time: 10:10:10 Strike: 21200 Price: 8.7 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 10:10:21 Strike: 21250 Price: 9.7 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 10:15:11 Strike: 21200 Price: 8 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 10:15:22 Strike: 21250 Price: 9.1 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 10:20:11 Strike: 21200 Price: 7.8 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 10:20:22 Strike: 21250 Price: 8.8 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 10:40:10 Strike: 21200 Price: 7.5 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 10:40:21 Strike: 21250 Price: 8.6 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 10:45:11 Strike: 21200 Price: 7.1 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 10:45:22 Strike: 21250 Price: 8.2 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 10:50:10 Strike: 21200 Price: 7.0 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 10:50:21 Strike: 21250 Price: 7.9 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 10:55:10 Strike: 21200 Price: 6.5 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 10:55:21 Strike: 21250 Price: 7.4 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 11:00:21 Strike: 21250 Price: 7.3 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 11:00:32 Strike: -23100 Market Price: 1.35 type of Order: Market Order Sell.
+Date: 2024-04-22 Time: 11:00:33 Strike: 22700 Initiation Price: 8.65 type of Order: Limit Order Sell.
+Date: 2024-04-22 Time: 11:00:34 Strike: 21300 Initiation Price: 4.05 type of Order: Limit Order Sell.
+Date: 2024-04-22 Time: 11:01:12 Strike: 22700 Price: 8.2 type of modification Initial Price and order type Limit.
+Date: 2024-04-22 Time: 11:01:13 Strike: 23300 Market Price: 1.15 type of Order: Market Order Buy.
+Date: 2024-04-22 Time: 11:01:13 Strike: 20700 Market Price: 1.5 type of Order: Market Order Buy.
+Date: 2024-04-22 Time: 11:01:14 Strike: -22700 Stop Loss Price: 17.3 type of Order: Stop Loss Order.
+Date: 2024-04-22 Time: 11:01:14 Strike: -21300 Stop Loss Price: 8.1 type of Order: Stop Loss Order.
+Date: 2024-04-22 Time: 11:05:11 Strike: 21200 Price: 6.3 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 11:05:22 Strike: 21250 Price: 7.2 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 11:05:33 Strike: 21300 Price: 7.8 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 11:10:42 Strike: 22700 Price: 17.2 type of modification Trailing SL and order type SL Limit.
+Date: 2024-04-22 Time: 11:15:42 Strike: 22700 Price: 16.4 type of modification Trailing SL and order type SL Limit.

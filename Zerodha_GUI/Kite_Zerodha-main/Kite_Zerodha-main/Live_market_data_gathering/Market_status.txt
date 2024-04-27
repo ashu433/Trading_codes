@@ -1,1 +1,1 @@
-{"Market Trend": "Trending Up", "Active Call Strikes": [22500], "Active Put Strikes": [21200, 21250], "Reversal status": 0, "Maximum call credit Spread": 1, "Maximum put credit Spread": 2}
+{"Market Trend": "Neutral", "Active Call Strikes": [22950], "Active Put Strikes": [22150], "Reversal status": 0, "Maximum call credit Spread": 1, "Maximum put credit Spread": 1}
