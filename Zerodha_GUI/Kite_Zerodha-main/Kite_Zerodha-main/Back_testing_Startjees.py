@@ -111,9 +111,9 @@ Desired_time_CE="09:19"
 Desired_time_PE="09:19"
 Checking_time="09:30"
 MARGIN_DEPLOYED=92000
-Startjee_1=0
+Startjee_1=1
 Startjee_2=0
-Startjee_3=1
+Startjee_3=0
 Threshold_price=1
 Net_P_L=0
 Len_ce=0
@@ -1309,6 +1309,21 @@ def morning_code(path_expiry_date_recurring,date,Active_call_Strike,Active_put_S
             len_CE=len(Active_call_Strike)
             sliced_file=keys_ii[:6]
 
+            if rev==1 and len(Active_call_Strike)==0:
+                new_column_names_PE = {
+                'Date': 'Date',
+                "Time": "Time",
+                f"open PE": f"open PE {len_CE}",
+                f"high PE": f"high PE {len_CE}",
+                f"low PE": f"low PE {len_CE}",
+                f"close PE":f"close PE {len_CE}",
+                f"volume PE":f"volume PE {len_CE}",
+                f"oi PE":f"oi PE {len_CE}"
+                }
+                Morning_DF.rename(columns=new_column_names_PE, inplace=True)
+                morning_df[keys_list_collected[0]][0]=Morning_DF
+            else:
+                pass
 
             if sliced_file=="df_PE_":
                 string_1=keys_ii
@@ -1316,9 +1331,12 @@ def morning_code(path_expiry_date_recurring,date,Active_call_Strike,Active_put_S
                 file_num_1=string_1.replace(substring_to_remove_PE,"")
                 file_num_1=int(file_num_1)
 
+                print(f"Ingoing length of CE {len_CE} and file_num_1 {file_num_1}")
+
                 key_mapping[keys_ii]=f"df_PE_{len_CE}"
                 df_going=morning_df[keys_ii][0]
                 right=morning_df[keys_ii][1]
+                print(df_going)
                 got_df=renaming_columns(df_going,right,len_CE,file_num_1)
                 morning_df[keys_ii][0]=got_df 
 
@@ -1466,7 +1484,26 @@ def morning_SL_finding(df,Active_SL_call,Active_SL_put,input_index):
 
     return Active_SL_call,Active_SL_put
 
-def routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,Active_SL_Call,Active_SL_Put,Day,Initial_day,Expiry_date):
+
+def index_computation(key,Right):
+    if Right=="CE":
+        string_1 = key
+        substring_to_remove_CE = "df_CE_"
+        file_num_1 = string_1.replace(substring_to_remove_CE, "")
+        file_num_1 = int(file_num_1)
+        return file_num_1
+    elif Right=="PE":
+        string_1 = key
+        substring_to_remove_PE = "df_PE_"
+        file_num_1 = string_1.replace(substring_to_remove_PE, "")
+        file_num_1 = int(file_num_1)
+        return file_num_1
+    else:
+        pass
+
+
+
+def routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,Active_SL_Call,Active_SL_Put,Day,Initial_day,Expiry_date): 
     global Net_P_L
     global Market_trend
     global run_len
@@ -1531,6 +1568,7 @@ def routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_S
                     keys_kk=list(df_trending_down_dict.keys())
 
                     count=-1
+
                     Active_SL_Call,Active_SL_Put=morning_SL_finding(df_trending_down_dict,Active_SL_Call,Active_SL_Put,Morning_row_index)
                 else:
                     pass
@@ -1578,28 +1616,28 @@ def routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_S
                         console_output_log_recording(f"time: {time},Net Profit and Loss: {round(Net_P_L,2)}")
 
                         #####################################  Analysis Code  #######################################
-                        Date_ana.append(output_date)
-                        Time_ana.append(time)
-                        Call_preimum_ana.append(call_premium_collected)
-                        Put_premium_ana.append(put_premium_collected)
-                        Net_Profit_loss_ana.append(Net_P_L)
-                        Call_CE_1_CP_ana.append(CE_Current_pr_close)
-                        SL_1_Call_ana.append(CE_SL)
-                        Call_CE_2_CP_ana.append(None)
-                        SL_2_Call_ana.append(None)
-                        Call_CE_3_CP_ana.append(None)
-                        SL_3_Call_ana.append(None)
-                        Call_CE_4_CP_ana.append(None)
-                        SL_4_Call_ana.append(None)
+                        # Date_ana.append(output_date)
+                        # Time_ana.append(time)
+                        # Call_preimum_ana.append(call_premium_collected)
+                        # Put_premium_ana.append(put_premium_collected)
+                        # Net_Profit_loss_ana.append(Net_P_L)
+                        # Call_CE_1_CP_ana.append(CE_Current_pr_close)
+                        # SL_1_Call_ana.append(CE_SL)
+                        # Call_CE_2_CP_ana.append(None)
+                        # SL_2_Call_ana.append(None)
+                        # Call_CE_3_CP_ana.append(None)
+                        # SL_3_Call_ana.append(None)
+                        # Call_CE_4_CP_ana.append(None)
+                        # SL_4_Call_ana.append(None)
 
-                        Put_PE_1_CP_ana.append(PE_Current_pr_1_close)
-                        SL_1_Put_ana.append(PE_SL)
-                        Put_PE_2_CP_ana.append(None)
-                        SL_2_Put_ana.append(None)
-                        Put_PE_3_CP_ana.append(None)
-                        SL_3_Put_ana.append(None)
-                        Put_PE_4_CP_ana.append(None)
-                        SL_4_Put_ana.append(None)
+                        # Put_PE_1_CP_ana.append(PE_Current_pr_1_close)
+                        # SL_1_Put_ana.append(PE_SL)
+                        # Put_PE_2_CP_ana.append(None)
+                        # SL_2_Put_ana.append(None)
+                        # Put_PE_3_CP_ana.append(None)
+                        # SL_3_Put_ana.append(None)
+                        # Put_PE_4_CP_ana.append(None)
+                        # SL_4_Put_ana.append(None)
                         #####################################  Analysis Code  #######################################
 
                     elif CE_Current_pr>=CE_SL and PE_Current_pr_1<PE_SL:
@@ -1637,28 +1675,28 @@ def routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_S
                         console_output_log_recording(f"time: {time}, Initial_price PE: {round(pe_initial_Price,2)}, Current Price PE: {round(PE_Current_pr_1_close,2)}, Put Premium Collected: {round(put_premium_collected,2)}")
                         console_output_log_recording(f"time: {time},Net Profit and Loss: {round(Net_P_L,2)}")
 
-                        Date_ana.append(output_date)
-                        Time_ana.append(time)
-                        Call_preimum_ana.append(call_premium_collected)
-                        Put_premium_ana.append(put_premium_collected)
-                        Net_Profit_loss_ana.append(Net_P_L)
-                        Call_CE_1_CP_ana.append(CE_SL)
-                        SL_1_Call_ana.append(CE_SL)
-                        Call_CE_2_CP_ana.append(None)
-                        SL_2_Call_ana.append(None)
-                        Call_CE_3_CP_ana.append(None)
-                        SL_3_Call_ana.append(None)
-                        Call_CE_4_CP_ana.append(None)
-                        SL_4_Call_ana.append(None)
+                        # Date_ana.append(output_date)
+                        # Time_ana.append(time)
+                        # Call_preimum_ana.append(call_premium_collected)
+                        # Put_premium_ana.append(put_premium_collected)
+                        # Net_Profit_loss_ana.append(Net_P_L)
+                        # Call_CE_1_CP_ana.append(CE_SL)
+                        # SL_1_Call_ana.append(CE_SL)
+                        # Call_CE_2_CP_ana.append(None)
+                        # SL_2_Call_ana.append(None)
+                        # Call_CE_3_CP_ana.append(None)
+                        # SL_3_Call_ana.append(None)
+                        # Call_CE_4_CP_ana.append(None)
+                        # SL_4_Call_ana.append(None)
 
-                        Put_PE_1_CP_ana.append(PE_Current_pr_1_close)
-                        SL_1_Put_ana.append(PE_SL)
-                        Put_PE_2_CP_ana.append(None)
-                        SL_2_Put_ana.append(None)
-                        Put_PE_3_CP_ana.append(None)
-                        SL_3_Put_ana.append(None)
-                        Put_PE_4_CP_ana.append(None)
-                        SL_4_Put_ana.append(None)
+                        # Put_PE_1_CP_ana.append(PE_Current_pr_1_close)
+                        # SL_1_Put_ana.append(PE_SL)
+                        # Put_PE_2_CP_ana.append(None)
+                        # SL_2_Put_ana.append(None)
+                        # Put_PE_3_CP_ana.append(None)
+                        # SL_3_Put_ana.append(None)
+                        # Put_PE_4_CP_ana.append(None)
+                        # SL_4_Put_ana.append(None)
 
 
                         rows_df_len,index_row,df_trending_up_dict,Active_call_Strike,Active_put_Strike,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,Active_SL_Call,Active_SL_Put=volatility_strike_pred(Date,time,path_expiry_date_recurring,Startjee_1_dict_Call,Startjee_1_dict_Put)
@@ -1851,18 +1889,29 @@ def routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_S
                                         console_output_log_recording(f"Call premium collected at the time of the sl hit {Call_premium_collected}")
 
                                         for jj in range(len(Active_put_Strike)):
-                                            if len(Active_put_Strike)<=(max_credit_spreads-1):
-                                                PE_current_close=df_trending_up_dict[keys_list[jj+1]][0].loc[(i+index_row-count-1),f"close PE {jj+1}"]
+                                            if len(Active_put_Strike)<=(max_credit_spreads-1) and len(Active_call_Strike)!=0:
+                                                file_num_1 = index_computation(keys_list[jj+1],"PE")
+
+                                                PE_current_close=df_trending_up_dict[keys_list[jj+1]][0].loc[(i+index_row-count-1),f"close PE {file_num_1}"]
                                                 PE_instantinious_pr.insert((jj-1),PE_current_close)
-                                            else:
-                                                PE_current_close=df_trending_up_dict[keys_list[jj]][0].loc[(i+index_row-count-1),f"close PE {jj}"]
+                                            elif len(Active_put_Strike)<=(max_credit_spreads-1) and len(Active_call_Strike)==0:
+                                                file_num_1 = index_computation(keys_list[jj],"PE")
+
+                                                PE_current_close=df_trending_up_dict[keys_list[jj]][0].loc[(i+index_row-count-1),f"close PE {file_num_1}"]
                                                 PE_instantinious_pr.insert((jj-1),PE_current_close)   
+
+                                            else:
+                                                file_num_1 = index_computation(keys_list[jj],"PE")
+
+                                                PE_current_close=df_trending_up_dict[keys_list[jj]][0].loc[(i+index_row-count-1),f"close PE {file_num_1}"]
+                                                PE_instantinious_pr.insert((jj-1),PE_current_close)   
+
+                                        break
 
                                     else:
                                         pass                                      
                             else:
                                 pass
-
 
                         elif df_trending_up_dict[keys_list[j]][1]=="Put":
                             string_2=keys_list[j]
@@ -1949,14 +1998,14 @@ def routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_S
                         else:
                             pass
 
-                    if len(Active_put_Strike)>=max_credit_spreads:
+                    if max_historical_put_credit_spread>=max_credit_spreads:
                         Call_premium_collected=0
                         CE_instantinious_pr=[]
                         CE_SL=0
                     else:
                         pass
 
-                    if (i+index_row-count-1)<rows_df_len:
+                    if (i+index_row-count-1)<rows_df_len and len(union_strikes_list)!=0:
                         time=df_trending_up_dict[keys_list[j]][0].loc[(i+index_row-count-1),"Time"]
                         Net_P_L=Call_premium_collected+Put_premium_collected+historical_realized_profit_loss["Call"]+historical_realized_profit_loss["Put"]
                         Net_P_L=Lot_size*Net_P_L
@@ -1973,145 +2022,154 @@ def routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_S
                         console_output_log_recording(f"Instantinious Put premium collected list: {put_premium_collected_list}")
 
                     #####################################  Analysis Code  #######################################
-                        Date_ana.append(output_date)
-                        Time_ana.append(time)
-                        Call_preimum_ana.append(Call_premium_collected)
-                        Put_premium_ana.append(Put_premium_collected)
-                        Net_Profit_loss_ana.append(Net_P_L)
-                        if len(Active_put_Strike)==2:
-                            Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
-                            SL_1_Call_ana.append(Active_SL_Call[0])
-                            Call_CE_2_CP_ana.append(None)
-                            SL_2_Call_ana.append(None)
-                            Call_CE_3_CP_ana.append(None)
-                            SL_3_Call_ana.append(None)
-                            Call_CE_4_CP_ana.append(None)
-                            SL_4_Call_ana.append(None)
+                        # Date_ana.append(output_date)
+                        # Time_ana.append(time)
+                        # Call_preimum_ana.append(Call_premium_collected)
+                        # Put_premium_ana.append(Put_premium_collected)
+                        # Net_Profit_loss_ana.append(Net_P_L)
+                        # if len(Active_put_Strike)==2:
+                        #     Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
+                        #     SL_1_Call_ana.append(Active_SL_Call[0])
+                        #     Call_CE_2_CP_ana.append(None)
+                        #     SL_2_Call_ana.append(None)
+                        #     Call_CE_3_CP_ana.append(None)
+                        #     SL_3_Call_ana.append(None)
+                        #     Call_CE_4_CP_ana.append(None)
+                        #     SL_4_Call_ana.append(None)
 
-                            Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
-                            SL_1_Put_ana.append(Active_SL_Put[0])
-                            Put_PE_2_CP_ana.append(PE_instantinious_pr[1])
-                            SL_2_Put_ana.append(Active_SL_Put[1])
-                            Put_PE_3_CP_ana.append(None)
-                            SL_3_Put_ana.append(None)
-                            Put_PE_4_CP_ana.append(None)
-                            SL_4_Put_ana.append(None)
-                        elif len(Active_put_Strike)==3:
-                            Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
-                            SL_1_Call_ana.append(Active_SL_Call[0])
-                            Call_CE_2_CP_ana.append(None)
-                            SL_2_Call_ana.append(None)
-                            Call_CE_3_CP_ana.append(None)
-                            SL_3_Call_ana.append(None)
-                            Call_CE_4_CP_ana.append(None)
-                            SL_4_Call_ana.append(None)
+                        #     Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
+                        #     SL_1_Put_ana.append(Active_SL_Put[0])
+                        #     Put_PE_2_CP_ana.append(PE_instantinious_pr[1])
+                        #     SL_2_Put_ana.append(Active_SL_Put[1])
+                        #     Put_PE_3_CP_ana.append(None)
+                        #     SL_3_Put_ana.append(None)
+                        #     Put_PE_4_CP_ana.append(None)
+                        #     SL_4_Put_ana.append(None)
+                        # elif len(Active_put_Strike)==3:
+                        #     Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
+                        #     SL_1_Call_ana.append(Active_SL_Call[0])
+                        #     Call_CE_2_CP_ana.append(None)
+                        #     SL_2_Call_ana.append(None)
+                        #     Call_CE_3_CP_ana.append(None)
+                        #     SL_3_Call_ana.append(None)
+                        #     Call_CE_4_CP_ana.append(None)
+                        #     SL_4_Call_ana.append(None)
 
-                            Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
-                            SL_1_Put_ana.append(Active_SL_Put[0])
-                            Put_PE_2_CP_ana.append(PE_instantinious_pr[1])
-                            SL_2_Put_ana.append(Active_SL_Put[1])
-                            Put_PE_3_CP_ana.append(PE_instantinious_pr[2])
-                            SL_3_Put_ana.append(Active_SL_Put[2])
-                            Put_PE_4_CP_ana.append(None)
-                            SL_4_Put_ana.append(None)
-                        elif len(Active_put_Strike)==4:
-                            Call_CE_1_CP_ana.append(None)
-                            SL_1_Call_ana.append(None)
-                            Call_CE_2_CP_ana.append(None)
-                            SL_2_Call_ana.append(None)
-                            Call_CE_3_CP_ana.append(None)
-                            SL_3_Call_ana.append(None)
-                            Call_CE_4_CP_ana.append(None)
-                            SL_4_Call_ana.append(None)
+                        #     Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
+                        #     SL_1_Put_ana.append(Active_SL_Put[0])
+                        #     Put_PE_2_CP_ana.append(PE_instantinious_pr[1])
+                        #     SL_2_Put_ana.append(Active_SL_Put[1])
+                        #     Put_PE_3_CP_ana.append(PE_instantinious_pr[2])
+                        #     SL_3_Put_ana.append(Active_SL_Put[2])
+                        #     Put_PE_4_CP_ana.append(None)
+                        #     SL_4_Put_ana.append(None)
+                        # elif len(Active_put_Strike)==4:
+                        #     Call_CE_1_CP_ana.append(None)
+                        #     SL_1_Call_ana.append(None)
+                        #     Call_CE_2_CP_ana.append(None)
+                        #     SL_2_Call_ana.append(None)
+                        #     Call_CE_3_CP_ana.append(None)
+                        #     SL_3_Call_ana.append(None)
+                        #     Call_CE_4_CP_ana.append(None)
+                        #     SL_4_Call_ana.append(None)
 
 
-                            Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
-                            SL_1_Put_ana.append(Active_SL_Put[0])
-                            Put_PE_2_CP_ana.append(PE_instantinious_pr[1])
-                            SL_2_Put_ana.append(Active_SL_Put[1])
-                            Put_PE_3_CP_ana.append(PE_instantinious_pr[2])
-                            SL_3_Put_ana.append(Active_SL_Put[2])
-                            Put_PE_4_CP_ana.append(PE_instantinious_pr[3])
-                            SL_4_Put_ana.append(Active_SL_Put[3])
-                        elif len(Active_put_Strike)==3 and rev==1:
-                            Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
-                            SL_1_Call_ana.append(Active_SL_Call[0])
-                            Call_CE_2_CP_ana.append(None)
-                            SL_2_Call_ana.append(None)
-                            Call_CE_3_CP_ana.append(None)
-                            SL_3_Call_ana.append(None)
-                            Call_CE_4_CP_ana.append(None)
-                            SL_4_Call_ana.append(None)
+                        #     Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
+                        #     SL_1_Put_ana.append(Active_SL_Put[0])
+                        #     Put_PE_2_CP_ana.append(PE_instantinious_pr[1])
+                        #     SL_2_Put_ana.append(Active_SL_Put[1])
+                        #     Put_PE_3_CP_ana.append(PE_instantinious_pr[2])
+                        #     SL_3_Put_ana.append(Active_SL_Put[2])
+                        #     Put_PE_4_CP_ana.append(PE_instantinious_pr[3])
+                        #     SL_4_Put_ana.append(Active_SL_Put[3])
+                        # elif len(Active_put_Strike)==3 and rev==1:
+                        #     Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
+                        #     SL_1_Call_ana.append(Active_SL_Call[0])
+                        #     Call_CE_2_CP_ana.append(None)
+                        #     SL_2_Call_ana.append(None)
+                        #     Call_CE_3_CP_ana.append(None)
+                        #     SL_3_Call_ana.append(None)
+                        #     Call_CE_4_CP_ana.append(None)
+                        #     SL_4_Call_ana.append(None)
 
-                            Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
-                            SL_1_Put_ana.append(Active_SL_Put[0])
-                            Put_PE_2_CP_ana.append(PE_instantinious_pr[1])
-                            SL_2_Put_ana.append(Active_SL_Put[1])
-                            Put_PE_3_CP_ana.append(PE_instantinious_pr[2])
-                            SL_3_Put_ana.append(Active_SL_Put[2])
-                            Put_PE_4_CP_ana.append(None)
-                            SL_4_Put_ana.append(None)
+                        #     Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
+                        #     SL_1_Put_ana.append(Active_SL_Put[0])
+                        #     Put_PE_2_CP_ana.append(PE_instantinious_pr[1])
+                        #     SL_2_Put_ana.append(Active_SL_Put[1])
+                        #     Put_PE_3_CP_ana.append(PE_instantinious_pr[2])
+                        #     SL_3_Put_ana.append(Active_SL_Put[2])
+                        #     Put_PE_4_CP_ana.append(None)
+                        #     SL_4_Put_ana.append(None)
 
-                        elif len(Active_put_Strike)==2 and rev==1:
-                            Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
-                            SL_1_Call_ana.append(Active_SL_Call[0])
-                            Call_CE_2_CP_ana.append(None)
-                            SL_2_Call_ana.append(None)
-                            Call_CE_3_CP_ana.append(None)
-                            SL_3_Call_ana.append(None)
-                            Call_CE_4_CP_ana.append(None)
-                            SL_4_Call_ana.append(None)
+                        # elif len(Active_put_Strike)==2 and rev==1:
+                        #     Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
+                        #     SL_1_Call_ana.append(Active_SL_Call[0])
+                        #     Call_CE_2_CP_ana.append(None)
+                        #     SL_2_Call_ana.append(None)
+                        #     Call_CE_3_CP_ana.append(None)
+                        #     SL_3_Call_ana.append(None)
+                        #     Call_CE_4_CP_ana.append(None)
+                        #     SL_4_Call_ana.append(None)
 
-                            Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
-                            SL_1_Put_ana.append(Active_SL_Put[0])
-                            Put_PE_2_CP_ana.append(PE_instantinious_pr[1])
-                            SL_2_Put_ana.append(Active_SL_Put[1])
-                            Put_PE_3_CP_ana.append(None)
-                            SL_3_Put_ana.append(None)
-                            Put_PE_4_CP_ana.append(None)
-                            SL_4_Put_ana.append(None)
+                        #     Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
+                        #     SL_1_Put_ana.append(Active_SL_Put[0])
+                        #     Put_PE_2_CP_ana.append(PE_instantinious_pr[1])
+                        #     SL_2_Put_ana.append(Active_SL_Put[1])
+                        #     Put_PE_3_CP_ana.append(None)
+                        #     SL_3_Put_ana.append(None)
+                        #     Put_PE_4_CP_ana.append(None)
+                        #     SL_4_Put_ana.append(None)
 
-                        elif len(Active_put_Strike)==1 and rev==1:
-                            Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
-                            SL_1_Call_ana.append(Active_SL_Call[0])
-                            Call_CE_2_CP_ana.append(None)
-                            SL_2_Call_ana.append(None)
-                            Call_CE_3_CP_ana.append(None)
-                            SL_3_Call_ana.append(None)
-                            Call_CE_4_CP_ana.append(None)
-                            SL_4_Call_ana.append(None)
+                        # elif len(Active_put_Strike)==1 and rev==1:
+                        #     Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
+                        #     SL_1_Call_ana.append(Active_SL_Call[0])
+                        #     Call_CE_2_CP_ana.append(None)
+                        #     SL_2_Call_ana.append(None)
+                        #     Call_CE_3_CP_ana.append(None)
+                        #     SL_3_Call_ana.append(None)
+                        #     Call_CE_4_CP_ana.append(None)
+                        #     SL_4_Call_ana.append(None)
 
-                            Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
-                            SL_1_Put_ana.append(Active_SL_Put[0])
-                            Put_PE_2_CP_ana.append(None)
-                            SL_2_Put_ana.append(None)
-                            Put_PE_3_CP_ana.append(None)
-                            SL_3_Put_ana.append(None)
-                            Put_PE_4_CP_ana.append(None)
-                            SL_4_Put_ana.append(None)
+                        #     Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
+                        #     SL_1_Put_ana.append(Active_SL_Put[0])
+                        #     Put_PE_2_CP_ana.append(None)
+                        #     SL_2_Put_ana.append(None)
+                        #     Put_PE_3_CP_ana.append(None)
+                        #     SL_3_Put_ana.append(None)
+                        #     Put_PE_4_CP_ana.append(None)
+                        #     SL_4_Put_ana.append(None)
 
-                        elif len(Active_put_Strike)==0 and rev==1:
-                            Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
-                            SL_1_Call_ana.append(Active_SL_Call[0])
-                            Call_CE_2_CP_ana.append(None)
-                            SL_2_Call_ana.append(None)
-                            Call_CE_3_CP_ana.append(None)
-                            SL_3_Call_ana.append(None)
-                            Call_CE_4_CP_ana.append(None)
-                            SL_4_Call_ana.append(None)
+                        # elif len(Active_put_Strike)==0 and rev==1:
+                        #     Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
+                        #     SL_1_Call_ana.append(Active_SL_Call[0])
+                        #     Call_CE_2_CP_ana.append(None)
+                        #     SL_2_Call_ana.append(None)
+                        #     Call_CE_3_CP_ana.append(None)
+                        #     SL_3_Call_ana.append(None)
+                        #     Call_CE_4_CP_ana.append(None)
+                        #     SL_4_Call_ana.append(None)
 
-                            Put_PE_1_CP_ana.append(None)
-                            SL_1_Put_ana.append(None)
-                            Put_PE_2_CP_ana.append(None)
-                            SL_2_Put_ana.append(None)
-                            Put_PE_3_CP_ana.append(None)
-                            SL_3_Put_ana.append(None)
-                            Put_PE_4_CP_ana.append(None)
-                            SL_4_Put_ana.append(None)
-                        else:
-                            pass
-                    else:
-                        pass
+                        #     Put_PE_1_CP_ana.append(None)
+                        #     SL_1_Put_ana.append(None)
+                        #     Put_PE_2_CP_ana.append(None)
+                        #     SL_2_Put_ana.append(None)
+                        #     Put_PE_3_CP_ana.append(None)
+                        #     SL_3_Put_ana.append(None)
+                        #     Put_PE_4_CP_ana.append(None)
+                        #     SL_4_Put_ana.append(None)
+                        # else:
+                        #     pass
+                    elif len(union_strikes_list)==0:
+                        Net_P_L=historical_realized_profit_loss["Call"]+historical_realized_profit_loss["Put"]
+                        Net_P_L=Lot_size*Net_P_L
+                        historical_CE_premium_collected=round(historical_realized_profit_loss['Call'],2)
+                        historical_PE_premium_collected=round(historical_realized_profit_loss['Put'],2)
+                        print(f"time: {time},Net Profit and Loss: {round(Net_P_L,2)}, Historical realized profit Call: {historical_CE_premium_collected}, Historical realized profit Put: {historical_PE_premium_collected}")
+                        print(f"Instantinious Put premium collected list: {put_premium_collected_list}")
+
+                        console_output_log_recording(f"time: {time},Net Profit and Loss: {round(Net_P_L,2)}, Historical realized profit Call: {historical_CE_premium_collected}, Historical realized profit Put: {historical_PE_premium_collected}")
+                        console_output_log_recording(f"Instantinious Put premium collected list: {put_premium_collected_list}")
+                        break
                     #####################################  Analysis Code  #######################################
 
                     
@@ -2307,7 +2365,7 @@ def routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_S
                                         df_trending_down_dict.pop(keys_list[j])
                                         keys_list = list(df_trending_down_dict.keys())
 
-                                        print(f"Put credit spread removed after reversal for strike {PE_Strike}")
+                                        print(f"Put credit spread removed after reversal for strike {PE_Strike} and key list is {keys_list}")
 
                                         if len(Active_call_Strike) >= max_credit_spreads:
                                             Put_premium_collected = 0
@@ -2316,26 +2374,39 @@ def routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_S
                                         console_output_log_recording(f"Put premium collected at the time of the sl hit {Put_premium_collected}")
 
                                         for jj in range(len(Active_call_Strike)):
-                                            if len(Active_call_Strike) <= (max_credit_spreads - 1):
-                                                CE_current_close = df_trending_down_dict[keys_list[jj + 1]][0].loc[(i + index_row - count - 1), f"close CE {jj + 1}"]
+                                            if len(Active_call_Strike) <= (max_credit_spreads - 1) and len(Active_put_Strike)!=0:
+                                                file_num_1 = index_computation(keys_list[jj+1],"CE")
+
+                                                CE_current_close = df_trending_down_dict[keys_list[jj + 1]][0].loc[(i + index_row - count - 1), f"close CE {file_num_1}"]
+                                                CE_instantinious_pr.insert((jj - 1), CE_current_close)
+                                            elif len(Active_call_Strike) <= (max_credit_spreads - 1) and len(Active_put_Strike)==0:
+                                                file_num_1 = index_computation(keys_list[jj],"CE")
+
+                                                CE_current_close = df_trending_down_dict[keys_list[jj]][0].loc[(i + index_row - count - 1), f"close CE {file_num_1}"]
                                                 CE_instantinious_pr.insert((jj - 1), CE_current_close)
                                             else:
-                                                CE_current_close = df_trending_down_dict[keys_list[jj]][0].loc[(i + index_row - count - 1), f"close CE {jj}"]
+                                                file_num_1 = index_computation(keys_list[jj],"CE")
+
+                                                CE_current_close = df_trending_down_dict[keys_list[jj]][0].loc[(i + index_row - count - 1), f"close CE {file_num_1}"]
                                                 CE_instantinious_pr.insert((jj - 1), CE_current_close)
+
+                                        break
+
                                     else:
                                         pass
                             else:
                                 pass
 
 
-                    if len(Active_call_Strike) >= max_credit_spreads:
+                    if max_historical_call_credit_spread >= max_credit_spreads:
                         Put_premium_collected = 0
                         PE_instantinious_pr = []
                         PE_SL = 0
                     else:
                         pass
 
-                    if (i + index_row - count - 1) < rows_df_len:
+                    print(f"Max historical call {max_historical_call_credit_spread} and max credit spread {max_credit_spreads} and reversal is {rev}")
+                    if (i + index_row - count - 1) < rows_df_len and len(union_strikes_list)!=0:
                         time = df_trending_down_dict[keys_list[j]][0].loc[(i + index_row - count - 1), "Time"]
                         Net_P_L = Call_premium_collected + Put_premium_collected + historical_realized_profit_loss[
                             "Call"] + historical_realized_profit_loss["Put"]
@@ -2356,153 +2427,158 @@ def routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_S
                         console_output_log_recording(f"Instantinious Call premium collected list: {call_premium_collected_list}")
 
                         #####################################  Analysis Code  #######################################
-                        Date_ana.append(output_date)
-                        Time_ana.append(time)
-                        Call_preimum_ana.append(Call_premium_collected)
-                        Put_premium_ana.append(Put_premium_collected)
-                        Net_Profit_loss_ana.append(Net_P_L)
-                        if len(Active_call_Strike) == 2:
-                            Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
-                            SL_1_Call_ana.append(Active_SL_Call[0])
-                            Call_CE_2_CP_ana.append(CE_instantinious_pr[1])
-                            SL_2_Call_ana.append(Active_SL_Call[1])
-                            Call_CE_3_CP_ana.append(None)
-                            SL_3_Call_ana.append(None)
-                            Call_CE_4_CP_ana.append(None)
-                            SL_4_Call_ana.append(None)
+                        # Date_ana.append(output_date)
+                        # Time_ana.append(time)
+                        # Call_preimum_ana.append(Call_premium_collected)
+                        # Put_premium_ana.append(Put_premium_collected)
+                        # Net_Profit_loss_ana.append(Net_P_L)
+                        # if len(Active_call_Strike) == 2:
+                        #     Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
+                        #     SL_1_Call_ana.append(Active_SL_Call[0])
+                        #     Call_CE_2_CP_ana.append(CE_instantinious_pr[1])
+                        #     SL_2_Call_ana.append(Active_SL_Call[1])
+                        #     Call_CE_3_CP_ana.append(None)
+                        #     SL_3_Call_ana.append(None)
+                        #     Call_CE_4_CP_ana.append(None)
+                        #     SL_4_Call_ana.append(None)
 
-                            Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
-                            SL_1_Put_ana.append(Active_SL_Put[0])
-                            Put_PE_2_CP_ana.append(None)
-                            SL_2_Put_ana.append(None)
-                            Put_PE_3_CP_ana.append(None)
-                            SL_3_Put_ana.append(None)
-                            Put_PE_4_CP_ana.append(None)
-                            SL_4_Put_ana.append(None)
-                        elif len(Active_call_Strike) == 3:
-                            Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
-                            SL_1_Call_ana.append(Active_SL_Call[0])
-                            Call_CE_2_CP_ana.append(CE_instantinious_pr[1])
-                            SL_2_Call_ana.append(Active_SL_Call[1])
-                            Call_CE_3_CP_ana.append(CE_instantinious_pr[2])
-                            SL_3_Call_ana.append(Active_SL_Call[2])
-                            Call_CE_4_CP_ana.append(None)
-                            SL_4_Call_ana.append(None)
+                        #     Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
+                        #     SL_1_Put_ana.append(Active_SL_Put[0])
+                        #     Put_PE_2_CP_ana.append(None)
+                        #     SL_2_Put_ana.append(None)
+                        #     Put_PE_3_CP_ana.append(None)
+                        #     SL_3_Put_ana.append(None)
+                        #     Put_PE_4_CP_ana.append(None)
+                        #     SL_4_Put_ana.append(None)
+                        # elif len(Active_call_Strike) == 3:
+                        #     Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
+                        #     SL_1_Call_ana.append(Active_SL_Call[0])
+                        #     Call_CE_2_CP_ana.append(CE_instantinious_pr[1])
+                        #     SL_2_Call_ana.append(Active_SL_Call[1])
+                        #     Call_CE_3_CP_ana.append(CE_instantinious_pr[2])
+                        #     SL_3_Call_ana.append(Active_SL_Call[2])
+                        #     Call_CE_4_CP_ana.append(None)
+                        #     SL_4_Call_ana.append(None)
 
-                            Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
-                            SL_1_Put_ana.append(Active_SL_Put[0])
-                            Put_PE_2_CP_ana.append(None)
-                            SL_2_Put_ana.append(None)
-                            Put_PE_3_CP_ana.append(None)
-                            SL_3_Put_ana.append(None)
-                            Put_PE_4_CP_ana.append(None)
-                            SL_4_Put_ana.append(None)
-                        elif len(Active_call_Strike) == 4:
-                            Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
-                            SL_1_Call_ana.append(Active_SL_Call[0])
-                            Call_CE_2_CP_ana.append(CE_instantinious_pr[1])
-                            SL_2_Call_ana.append(Active_SL_Call[1])
-                            Call_CE_3_CP_ana.append(CE_instantinious_pr[2])
-                            SL_3_Call_ana.append(Active_SL_Call[2])
-                            Call_CE_4_CP_ana.append(CE_instantinious_pr[3])
-                            SL_4_Call_ana.append(Active_SL_Call[3])
+                        #     Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
+                        #     SL_1_Put_ana.append(Active_SL_Put[0])
+                        #     Put_PE_2_CP_ana.append(None)
+                        #     SL_2_Put_ana.append(None)
+                        #     Put_PE_3_CP_ana.append(None)
+                        #     SL_3_Put_ana.append(None)
+                        #     Put_PE_4_CP_ana.append(None)
+                        #     SL_4_Put_ana.append(None)
+                        # elif len(Active_call_Strike) == 4:
+                        #     Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
+                        #     SL_1_Call_ana.append(Active_SL_Call[0])
+                        #     Call_CE_2_CP_ana.append(CE_instantinious_pr[1])
+                        #     SL_2_Call_ana.append(Active_SL_Call[1])
+                        #     Call_CE_3_CP_ana.append(CE_instantinious_pr[2])
+                        #     SL_3_Call_ana.append(Active_SL_Call[2])
+                        #     Call_CE_4_CP_ana.append(CE_instantinious_pr[3])
+                        #     SL_4_Call_ana.append(Active_SL_Call[3])
 
-                            Put_PE_1_CP_ana.append(None)
-                            SL_1_Put_ana.append(None)
-                            Put_PE_2_CP_ana.append(None)
-                            SL_2_Put_ana.append(None)
-                            Put_PE_3_CP_ana.append(None)
-                            SL_3_Put_ana.append(None)
-                            Put_PE_4_CP_ana.append(None)
-                            SL_4_Put_ana.append(None)
-                        elif len(Active_call_Strike) == 3 and rev == 1:
-                            Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
-                            SL_1_Call_ana.append(Active_SL_Call[0])
-                            Call_CE_2_CP_ana.append(CE_instantinious_pr[1])
-                            SL_2_Call_ana.append(Active_SL_Call[1])
-                            Call_CE_3_CP_ana.append(CE_instantinious_pr[2])
-                            SL_3_Call_ana.append(Active_SL_Call[2])
-                            Call_CE_4_CP_ana.append(None)
-                            SL_4_Call_ana.append(None)
+                        #     Put_PE_1_CP_ana.append(None)
+                        #     SL_1_Put_ana.append(None)
+                        #     Put_PE_2_CP_ana.append(None)
+                        #     SL_2_Put_ana.append(None)
+                        #     Put_PE_3_CP_ana.append(None)
+                        #     SL_3_Put_ana.append(None)
+                        #     Put_PE_4_CP_ana.append(None)
+                        #     SL_4_Put_ana.append(None)
+                        # elif len(Active_call_Strike) == 3 and rev == 1:
+                        #     Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
+                        #     SL_1_Call_ana.append(Active_SL_Call[0])
+                        #     Call_CE_2_CP_ana.append(CE_instantinious_pr[1])
+                        #     SL_2_Call_ana.append(Active_SL_Call[1])
+                        #     Call_CE_3_CP_ana.append(CE_instantinious_pr[2])
+                        #     SL_3_Call_ana.append(Active_SL_Call[2])
+                        #     Call_CE_4_CP_ana.append(None)
+                        #     SL_4_Call_ana.append(None)
 
-                            Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
-                            SL_1_Put_ana.append(Active_SL_Put[0])
-                            Put_PE_2_CP_ana.append(None)
-                            SL_2_Put_ana.append(None)
-                            Put_PE_3_CP_ana.append(None)
-                            SL_3_Put_ana.append(None)
-                            Put_PE_4_CP_ana.append(None)
-                            SL_4_Put_ana.append(None)
+                        #     Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
+                        #     SL_1_Put_ana.append(Active_SL_Put[0])
+                        #     Put_PE_2_CP_ana.append(None)
+                        #     SL_2_Put_ana.append(None)
+                        #     Put_PE_3_CP_ana.append(None)
+                        #     SL_3_Put_ana.append(None)
+                        #     Put_PE_4_CP_ana.append(None)
+                        #     SL_4_Put_ana.append(None)
 
-                        elif len(Active_call_Strike) == 2 and rev == 1:
-                            Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
-                            SL_1_Call_ana.append(Active_SL_Call[0])
-                            Call_CE_2_CP_ana.append(CE_instantinious_pr[1])
-                            SL_2_Call_ana.append(Active_SL_Call[1])
-                            Call_CE_3_CP_ana.append(None)
-                            SL_3_Call_ana.append(None)
-                            Call_CE_4_CP_ana.append(None)
-                            SL_4_Call_ana.append(None)
+                        # elif len(Active_call_Strike) == 2 and rev == 1:
+                        #     Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
+                        #     SL_1_Call_ana.append(Active_SL_Call[0])
+                        #     Call_CE_2_CP_ana.append(CE_instantinious_pr[1])
+                        #     SL_2_Call_ana.append(Active_SL_Call[1])
+                        #     Call_CE_3_CP_ana.append(None)
+                        #     SL_3_Call_ana.append(None)
+                        #     Call_CE_4_CP_ana.append(None)
+                        #     SL_4_Call_ana.append(None)
 
-                            Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
-                            SL_1_Put_ana.append(Active_SL_Put[0])
-                            Put_PE_2_CP_ana.append(None)
-                            SL_2_Put_ana.append(None)
-                            Put_PE_3_CP_ana.append(None)
-                            SL_3_Put_ana.append(None)
-                            Put_PE_4_CP_ana.append(None)
-                            SL_4_Put_ana.append(None)
+                        #     Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
+                        #     SL_1_Put_ana.append(Active_SL_Put[0])
+                        #     Put_PE_2_CP_ana.append(None)
+                        #     SL_2_Put_ana.append(None)
+                        #     Put_PE_3_CP_ana.append(None)
+                        #     SL_3_Put_ana.append(None)
+                        #     Put_PE_4_CP_ana.append(None)
+                        #     SL_4_Put_ana.append(None)
 
-                        elif len(Active_call_Strike) == 1 and rev == 1:
-                            Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
-                            SL_1_Call_ana.append(Active_SL_Call[0])
-                            Call_CE_2_CP_ana.append(None)
-                            SL_2_Call_ana.append(None)
-                            Call_CE_3_CP_ana.append(None)
-                            SL_3_Call_ana.append(None)
-                            Call_CE_4_CP_ana.append(None)
-                            SL_4_Call_ana.append(None)
+                        # elif len(Active_call_Strike) == 1 and rev == 1:
+                        #     Call_CE_1_CP_ana.append(CE_instantinious_pr[0])
+                        #     SL_1_Call_ana.append(Active_SL_Call[0])
+                        #     Call_CE_2_CP_ana.append(None)
+                        #     SL_2_Call_ana.append(None)
+                        #     Call_CE_3_CP_ana.append(None)
+                        #     SL_3_Call_ana.append(None)
+                        #     Call_CE_4_CP_ana.append(None)
+                        #     SL_4_Call_ana.append(None)
 
-                            Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
-                            SL_1_Put_ana.append(Active_SL_Put[0])
-                            Put_PE_2_CP_ana.append(None)
-                            SL_2_Put_ana.append(None)
-                            Put_PE_3_CP_ana.append(None)
-                            SL_3_Put_ana.append(None)
-                            Put_PE_4_CP_ana.append(None)
-                            SL_4_Put_ana.append(None)
+                        #     Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
+                        #     SL_1_Put_ana.append(Active_SL_Put[0])
+                        #     Put_PE_2_CP_ana.append(None)
+                        #     SL_2_Put_ana.append(None)
+                        #     Put_PE_3_CP_ana.append(None)
+                        #     SL_3_Put_ana.append(None)
+                        #     Put_PE_4_CP_ana.append(None)
+                        #     SL_4_Put_ana.append(None)
 
-                        elif len(Active_call_Strike) == 0 and rev == 1:
-                            Call_CE_1_CP_ana.append(None)
-                            SL_1_Call_ana.append(None)
-                            Call_CE_2_CP_ana.append(None)
-                            SL_2_Call_ana.append(None)
-                            Call_CE_3_CP_ana.append(None)
-                            SL_3_Call_ana.append(None)
-                            Call_CE_4_CP_ana.append(None)
-                            SL_4_Call_ana.append(None)
+                        # elif len(Active_call_Strike) == 0 and rev == 1:
+                        #     Call_CE_1_CP_ana.append(None)
+                        #     SL_1_Call_ana.append(None)
+                        #     Call_CE_2_CP_ana.append(None)
+                        #     SL_2_Call_ana.append(None)
+                        #     Call_CE_3_CP_ana.append(None)
+                        #     SL_3_Call_ana.append(None)
+                        #     Call_CE_4_CP_ana.append(None)
+                        #     SL_4_Call_ana.append(None)
 
-                            Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
-                            SL_1_Put_ana.append(Active_SL_Put[0])
-                            Put_PE_2_CP_ana.append(None)
-                            SL_2_Put_ana.append(None)
-                            Put_PE_3_CP_ana.append(None)
-                            SL_3_Put_ana.append(None)
-                            Put_PE_4_CP_ana.append(None)
-                            SL_4_Put_ana.append(None)
-                        else:
-                            pass
-                    else:
-                        pass
+                        #     Put_PE_1_CP_ana.append(PE_instantinious_pr[0])
+                        #     SL_1_Put_ana.append(Active_SL_Put[0])
+                        #     Put_PE_2_CP_ana.append(None)
+                        #     SL_2_Put_ana.append(None)
+                        #     Put_PE_3_CP_ana.append(None)
+                        #     SL_3_Put_ana.append(None)
+                        #     Put_PE_4_CP_ana.append(None)
+                        #     SL_4_Put_ana.append(None)
+                        # else:
+                        #     pass
+                    elif len(union_strikes_list)==0:
+                        Net_P_L = historical_realized_profit_loss["Call"] + historical_realized_profit_loss["Put"]
+                        Net_P_L = Lot_size * Net_P_L
+                        historical_CE_premium_collected = round(historical_realized_profit_loss['Call'], 2)
+                        historical_PE_premium_collected = round(historical_realized_profit_loss['Put'], 2)
+                        print(f"time: {time},Net Profit and Loss: {round(Net_P_L, 2)}, Historical realized profit Call: {historical_CE_premium_collected}, Historical realized profit Put: {historical_PE_premium_collected}")
+                        print(f"Instantinious Call premium collected list: {call_premium_collected_list}")
+
+                        console_output_log_recording(f"time: {time},Net Profit and Loss: {round(Net_P_L, 2)}, Historical realized profit Call: {historical_CE_premium_collected}, Historical realized profit Put: {historical_PE_premium_collected}")
+                        console_output_log_recording(f"Instantinious Call premium collected list: {call_premium_collected_list}")
+                        break
                     #####################################  Analysis Code  #######################################
 
 
                 else:
                     pass
-
-            
-
-
 
 
 
@@ -2556,12 +2632,13 @@ for k in range(len(formatted_Date_of_Init)):
 
         with open(Path_backtest_Report+'Back_testing_Console_output_log_file.txt', 'w') as file:
             file.truncate()
+
         
         for j in range(num_days):
             if Day==0:
                 ############# Path Update ###################
-                path_init_date=f"{Access_path_date}/{formatted_Date_of_Init[k]}/"
-                path_expiry_date=f"{path_init_date}/NIFTY_{formatted_Date_of_Expiry[k]}/"
+                path_init_date=f"{Access_path_date}{formatted_Date_of_Init[k]}/"
+                path_expiry_date=f"{path_init_date}NIFTY_{formatted_Date_of_Expiry[k]}/"
 
                 ############# Extracting Closing Price from Initial Strike ###################
                 Call_Strike=file_startjee.loc[k,"Call Strike"]
@@ -2573,6 +2650,7 @@ for k in range(len(formatted_Date_of_Init)):
 
                 file_call=f"NIFTY{str(Call_Strike)}_CE.csv"
                 file_put=f"NIFTY{str(Put_Strike)}_PE.csv"
+
                 df_call_init=pd.read_csv(path_expiry_date+file_call)
                 df_put_init=pd.read_csv(path_expiry_date+file_put)
 
@@ -2633,13 +2711,17 @@ for k in range(len(formatted_Date_of_Init)):
                 Initial_day=formatted_Date_of_Init[k]
                 Expiry_date=formatted_Date_of_Expiry[k]
 
-
+                print(f"Length of the Call Strike is {Active_call_Strike} Length of the Put Strike is {Active_put_Strike}")
                 routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,Active_SL_Call,Active_SL_Put,Day,Initial_day,Expiry_date)
                 Day=Day+1
             
             else:
-                routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,Active_SL_Call,Active_SL_Put,Day,Initial_day,Expiry_date)
-                Day=Day+1
+                union_strike_list_computed=Active_call_Strike+Active_put_Strike
+                if len(union_strike_list_computed)!=0:
+                    routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_Sold_premium_call,Active_Initial_Sold_premium_put,Active_SL_Call,Active_SL_Put,Day,Initial_day,Expiry_date)
+                    Day=Day+1
+                elif len(union_strike_list_computed)==0:
+                    print("All SL hit day End")
 
     margin_deployed=MARGIN_DEPLOYED
 

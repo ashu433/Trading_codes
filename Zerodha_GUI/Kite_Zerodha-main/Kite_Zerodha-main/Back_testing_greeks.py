@@ -157,13 +157,20 @@ for i in range(len(formatted_Date_of_Init)):
 
         index_Put = (df_Put["Put Delta"] - 0.15)
         closest_to_zero_index = index_Put.abs().idxmin()
-        Selected_Strike_Put=df_Put.loc[closest_to_zero_index, "Put Strike"]
+        diff_delta=int(index_Put[closest_to_zero_index])
 
-        print(f"Selected Call Strike: {Selected_Strike_Call} and Selected Put Strike {Selected_Strike_Put}")
-        Date_of_initiation.append(formatted_Date_of_Init[i])
-        Expiry_date.append(formatted_Date_of_Expiry[i])
-        Call_Strike.append(Selected_Strike_Call)
-        Put_Strike.append(Selected_Strike_Put)
+        if closest_to_zero_index!=0:
+            if diff_delta==0:
+                Selected_Strike_Put=df_Put.loc[closest_to_zero_index-1, "Put Strike"]
+            else:
+                Selected_Strike_Put=df_Put.loc[closest_to_zero_index, "Put Strike"]
+        
+
+            print(f"Selected Call Strike: {Selected_Strike_Call} and Selected Put Strike {Selected_Strike_Put}")
+            Date_of_initiation.append(formatted_Date_of_Init[i])
+            Expiry_date.append(formatted_Date_of_Expiry[i])
+            Call_Strike.append(Selected_Strike_Call)
+            Put_Strike.append(Selected_Strike_Put)
 
 
 final_generated_dict={"Date of Initiation":Date_of_initiation,"Expiry":Expiry_date,"Call Strike":Call_Strike,"Put Strike":Put_Strike}

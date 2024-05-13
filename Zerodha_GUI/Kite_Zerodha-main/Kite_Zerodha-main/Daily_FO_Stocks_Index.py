@@ -9,6 +9,11 @@ import numpy as np
 import time
 import os
 import date_time_format
+import zipfile
+import io
+import requests
+import json
+import shutil
 
 
 def formatted_dates(expiry,month_end):
@@ -624,10 +629,165 @@ def Futures_stock():
             df_Futures.to_csv(path_future_new+Instrument_list[k]+".csv",index=False)
 
 
+def daily_bhav_copy_download():
+    from datetime import datetime
+
+    today_date = datetime.today().strftime('%d%b%Y')
+    today_date=today_date.upper()
+    final_file=f"fo{today_date}bhav.csv"
 
 
+    import datetime
+    current_month = datetime.datetime.now().strftime('%b')
+    current_month = current_month.upper()
+    current_year = datetime.datetime.now().strftime('%Y')
+
+    # URL of the zip file
+    zip_file_url = f"https://nsearchives.nseindia.com/content/historical/DERIVATIVES/{current_year}/{current_month}/{final_file}.zip"
+
+    # Directory to save the downloaded file
+    save_dir = "D:/ashu/Finance/algo_trading/Option_chain_data"
 
 
+    folder_name = f"fo{today_date}bhav.csv"
+
+    # Path to the folder
+    folder_path = os.path.join(save_dir, folder_name)
+
+    # Create the folder if it doesn't exist
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+    save_dir=f"{save_dir}/{final_file}/"
+
+    # Create the directory if it doesn't exist
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+    }
+
+    # Path to save the zip file
+    zip_file_path = os.path.join(save_dir, f"fo{today_date}bhav.csv.zip")
+
+    # Send a GET request to the URL
+    response = requests.get(zip_file_url, headers=headers)
+
+    # Check if the request was successful (status code 200)
+    if response.status_code == 200:
+        # Save the zip file to the specified location
+        with open(zip_file_path, "wb") as f:
+            f.write(response.content)
+
+        # Open the saved zip file
+        with zipfile.ZipFile(zip_file_path, 'r') as zip_file:
+            # Extract all files from the zip file to the specified directory
+            # Extract only files to the folder fo26APR2024bhav.csv
+            for file in zip_file.namelist():
+                filename = os.path.basename(file)
+                if filename:  # Ensure it's not a directory
+                    with zip_file.open(file) as source, open(os.path.join(save_dir, final_file), 'wb') as target:
+                        target.write(source.read())
+
+        print("Zip file downloaded and extracted successfully.")
+    else:
+        print("Failed to download the zip file.")
+
+def Holidays_dates_determination():
+    url = "https://www.nseindia.com/api/holiday-master?type=trading"
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    }
+
+    response = requests.get(url, headers=headers)
+    # Check if the request was successful (status code 200)
+    if response.status_code == 200:
+        # Print the content of the response
+        content_output=response.text
+    else:
+        print("Failed to retrieve data from the URL:", response.status_code)
+
+    content_output = json.loads(content_output)
+    Holidays_date=[]
+    Description_of_holidays=[]
+    Week_on_holiday=[]
+
+
+    for ii in range(len(content_output["FO"])):
+        holiday_date=content_output["FO"][ii]['tradingDate']
+        discrip=content_output["FO"][ii]['description']
+        week=content_output["FO"][ii]['weekDay']
+
+        Holidays_date.append(holiday_date)
+        Description_of_holidays.append(discrip)
+        Week_on_holiday.append(week)
+
+    ####################### COMPUTING DATES FOR SUNDAY AND SATURDAY ###################################
+
+    import datetime
+
+    # Get the current year
+    current_year = datetime.datetime.now().year
+
+    # Initialize lists to store Saturdays and Sundays as strings
+    saturdays = []
+    sundays = []
+
+    # Iterate over all the days in the current year
+    for month in range(1, 13):
+        for day in range(1, 32):
+            try:
+                # Try to create a datetime object for the current date
+                date_obj = datetime.datetime(current_year, month, day)
+                # Check if the day is Saturday or Sunday
+                if date_obj.weekday() == 5:  # Saturday (Monday is 0, Sunday is 6)
+                    saturdays.append(date_obj.strftime("%d-%m-%Y"))  # Format as string
+                elif date_obj.weekday() == 6:  # Sunday
+                    sundays.append(date_obj.strftime("%d-%m-%Y"))  # Format as string
+            except ValueError:
+                # If the day is invalid for the current month, ignore it
+                pass
+
+    Holidays_list=saturdays+sundays
+
+    Holidays_date=Holidays_date+Holidays_list
+    ####################### COMPUTING DATES FOR SUNDAY AND SATURDAY ###################################
+
+    return Holidays_date,Description_of_holidays,Week_on_holiday
+
+def Chainging_expiry_days():
+    from datetime import datetime,timedelta
+    today_date = datetime.today()
+    formatted_todays_date = today_date.strftime('%d-%m-%Y')
+
+    input_date = datetime.strptime(formatted_todays_date, "%d-%m-%Y")
+    new_date = input_date + timedelta(days=1)
+    New_Initial_date = new_date.strftime("%d-%b-%Y")
+
+    file_path=path_main+"Stock_Expiry.txt"
+    with open(file_path, 'r') as file:
+        expiry_date=file.read()
+        path_stock="D:/ashu/Finance/algo_trading/Option_chain_data"
+        today_date = datetime.today().strftime('%d%b%Y')
+        today_date=today_date.upper()
+        final_file=f"fo{today_date}bhav.csv"
+        path_new=f"{path_stock}/{final_file}/"
+
+        if expiry_date==New_Initial_date:
+            stock_data=pd.read_csv(path_new+final_file)
+            stock_DF=stock_data[stock_data['INSTRUMENT'] == 'FUTSTK']
+            stock_DF=stock_DF.reset_index(drop=True)
+            New_expiry_date=stock_DF.loc[1,"EXPIRY_DT"]
+
+            with open(file_path,'w') as file:
+                file.write(New_expiry_date)
+
+        else:
+            print("Not Chainging Expiry Dates")
+
+    # shutil.rmtree(path_new)
 
 path_main="D:/ashu/Finance/algo_trading/Zerodha_GUI/Kite_Zerodha-main/Kite_Zerodha-main/"
 path_index="D:/ashu/Finance/Daily_F_O_data/Options/Index/"
@@ -640,7 +800,33 @@ content_enctoken=df.iloc[0,0]
 enctoken = content_enctoken
 kite = KiteApp(enctoken=enctoken)
 
-# Options_index() 
-# stock_Options()
-Future_index()
-Futures_stock()  
+
+from datetime import datetime
+
+today_date = datetime.today()
+formatted_todays_date = today_date.strftime('%d-%m-%Y')
+Holidays_list,Description_of_holidays,Week_on_holiday=Holidays_dates_determination()
+
+if formatted_todays_date in Holidays_list:
+    print("Today is holiday")
+else:
+    print("Today is not holiday")
+    daily_bhav_copy_download()
+    # Options_index() 
+    # stock_Options()
+    Future_index()
+    Futures_stock()  
+    Chainging_expiry_days()
+
+    Path_Options="D:/ashu/Finance/Daily_F_O_data/Options/"
+    Path_Futures="D:/ashu/Finance/Daily_F_O_data/Futures/"
+
+    with open(Path_Options+"Last_update_date.txt",'w') as file:
+        today_date = datetime.today()
+        formatted_todays_date = today_date.strftime('%d-%m-%Y')
+        file.write(str(formatted_todays_date))
+
+    with open(Path_Futures+"Last_update_date.txt",'w') as file:
+        today_date = datetime.today()
+        formatted_todays_date = today_date.strftime('%d-%m-%Y')
+        file.write(str(formatted_todays_date))

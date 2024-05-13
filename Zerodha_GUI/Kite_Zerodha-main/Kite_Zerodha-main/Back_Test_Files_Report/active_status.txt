@@ -1,8 +1,8 @@
-Active_call_Strike=18250,18200,18150
-Active_put_Strike=17350
-Active_Initial_Sold_premium_call=16.0,2.85,3.55
-Active_Initial_Sold_premium_put=8.7
-Deactive Put Strike=,17650,17500
-Deactive Put Strike Premium Initial=,18.0,13.25
+Active_call_Strike=19000
+Active_put_Strike=18450
+Active_Initial_Sold_premium_call=13.0
+Active_Initial_Sold_premium_put=15.7
+Deactive Put Strike=
+Deactive Put Strike Premium Initial=
 Deactive Call Strike=
 Deactive Call Strike Premium Initial=

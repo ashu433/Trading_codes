@@ -1,16 +1,16 @@
 Underlying,Symbol,Expiry Date,Month End
-Nifty 50,NIFTY,02-May-24,0
-Nifty 50,NIFTY,09-May-24,0
 Nifty 50,NIFTY,16-May-24,0
 Nifty 50,NIFTY,23-May-24,0
 Nifty 50,NIFTY,30-May-24,1
+Nifty 50,NIFTY,06-Jun-24,0
+Nifty 50,NIFTY,13-Jun-24,0
 Nifty 50,NIFTY,27-Jun-24,1
-Nifty Bank,BANKNIFTY,30-Apr-24,0
-Nifty Bank,BANKNIFTY,08-May-24,0
 Nifty Bank,BANKNIFTY,15-May-24,0
 Nifty Bank,BANKNIFTY,22-May-24,0
 Nifty Bank,BANKNIFTY,29-May-24,1
+Nifty Bank,BANKNIFTY,05-Jun-24,0
+Nifty Bank,BANKNIFTY,12-Jun-24,0
 Nifty Bank,BANKNIFTY,26-Jun-24,1
-Nifty Financial Service,FINNIFTY,30-Apr-24,1
-Nifty Midcap,MIDCPNIFTY,29-Apr-24,1
-Sensex,SENSEX,26-Apr-24,1
+Nifty Financial Service,FINNIFTY,14-May-24,0
+Nifty Midcap,MIDCPNIFTY,13-May-24,0
+Sensex,SENSEX,17-May-24,0

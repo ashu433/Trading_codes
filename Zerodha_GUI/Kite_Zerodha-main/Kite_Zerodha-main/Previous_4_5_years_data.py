@@ -4,7 +4,7 @@ import datetime
 import os
 
 ma = historical('ashud43317@gmail.com')
-ma.login("642911")
+ma.login("929058")
 path_main="D:/ashu/Finance/algo_trading/Zerodha_GUI/Kite_Zerodha-main/Kite_Zerodha-main/"
 path_index="D:/ashu/Finance/Daily_F_O_data/Options/Index/"
 path_stocks_path="D:/ashu/Finance/Daily_F_O_data/Options/Stocks/"
