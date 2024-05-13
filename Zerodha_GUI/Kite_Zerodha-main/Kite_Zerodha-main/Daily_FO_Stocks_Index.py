@@ -789,6 +789,369 @@ def Chainging_expiry_days():
 
     # shutil.rmtree(path_new)
 
+
+def prompt_Stocks_CP_data_collection(DAYS,symbol):
+    path_closing_price="H:/My Drive/Daily_F_O_data/Daily_closing_price_data/"
+    import datetime
+    quote=str(symbol)
+    print(f"Collecting closing price data for {quote}")
+    df_old=pd.read_csv(path_closing_price+quote+".csv")
+
+    token=kite.ltp("NSE:"+quote)
+    instrument_token=token["NSE:"+quote]["instrument_token"]
+    from_datetime = datetime.datetime.now() - datetime.timedelta(days=DAYS)     # From last & days historical limit 100 days for 5 mins
+    to_datetime = datetime.datetime.now()
+
+    interval="5minute"
+    content=kite.historical_data(instrument_token, from_datetime, to_datetime, interval, continuous=False, oi=True)
+    Content=str(content)
+    cleaned_contents = Content.replace("datetime.datetime", "").replace(", tzinfo=tzoffset(None, 19800)", "")
+    data = ast.literal_eval(cleaned_contents)
+    df = pd.DataFrame(data)
+
+
+    if 'date' in df.columns:
+        df['date'] = df['date'].apply(lambda x: pd.Timestamp(year=x[0], month=x[1], day=x[2], hour=x[3], minute=x[4]))
+        df['Date'] = df['date'].dt.strftime('%Y-%m-%d')
+        df['Time'] = df['date'].dt.strftime('%H:%M')
+        df = df.drop(columns=['date'])
+        df = df[['Date', 'Time', 'open', 'high', 'low', 'close','volume','oi']]
+
+        df['Time'] = pd.to_datetime(df['Time'])
+        df = df[df['Time'] <= pd.to_datetime(filter_time)]
+        df['Time'] = df['Time'].dt.strftime('%H:%M')
+
+        if DAYS==1:
+            df_new=pd.concat([df_old, df], axis=0)
+            df_new.to_csv(path_closing_price+quote+".csv",index=False)
+        else:
+            df.to_csv(path_closing_price+quote+".csv",index=False)
+
+def F_O_Stocks_closing_price():
+    from datetime import datetime
+
+    path="D:/ashu/Finance/algo_trading/Option_chain_data/"
+    path_closing_price="H:/My Drive/Daily_F_O_data/Daily_closing_price_data/"
+
+    today_date = datetime.today().strftime('%d%b%Y')
+    today_date=today_date.upper()
+    final_file=f"fo{today_date}bhav.csv"
+    path_new=f"{path}/{final_file}/"
+
+    stock_data=pd.read_csv(path_new+final_file)
+    stock_DF=stock_data[stock_data['INSTRUMENT'] == 'FUTSTK']
+    stock_DF=stock_DF.reset_index(drop=True)
+    unique_symbol=stock_DF["SYMBOL"].unique().tolist()
+
+    stock_data_old=pd.read_csv(path_main+"Old_list_F_O_stocks.csv")
+    old_symbol_list=stock_data_old["SYMBOL"].unique().tolist()
+
+    common_symbols = [symbol for symbol in unique_symbol if symbol in old_symbol_list]
+    non_common_symbols = [symbol for symbol in unique_symbol if symbol not in old_symbol_list] + [symbol for symbol in old_symbol_list if symbol not in unique_symbol]
+
+    for symbol in common_symbols:
+        import datetime
+        quote=str(symbol)
+        print(f"Collecting closing price data for {quote}")
+        df_old=pd.read_csv(path_closing_price+quote+".csv")
+
+        token=kite.ltp("NSE:"+quote)
+        instrument_token=token["NSE:"+quote]["instrument_token"]
+        from_datetime = datetime.datetime.now() - datetime.timedelta(days=1)     # From last & days historical limit 100 days for 5 mins
+        to_datetime = datetime.datetime.now()
+
+        interval="5minute"
+        content=kite.historical_data(instrument_token, from_datetime, to_datetime, interval, continuous=False, oi=True)
+        Content=str(content)
+        cleaned_contents = Content.replace("datetime.datetime", "").replace(", tzinfo=tzoffset(None, 19800)", "")
+        data = ast.literal_eval(cleaned_contents)
+        df = pd.DataFrame(data)
+
+
+        if 'date' in df.columns:
+            df['date'] = df['date'].apply(lambda x: pd.Timestamp(year=x[0], month=x[1], day=x[2], hour=x[3], minute=x[4]))
+            df['Date'] = df['date'].dt.strftime('%Y-%m-%d')
+            df['Time'] = df['date'].dt.strftime('%H:%M')
+            df = df.drop(columns=['date'])
+            df = df[['Date', 'Time', 'open', 'high', 'low', 'close','volume','oi']]
+
+            df['Time'] = pd.to_datetime(df['Time'])
+            df = df[df['Time'] <= pd.to_datetime(filter_time)]
+            df['Time'] = df['Time'].dt.strftime('%H:%M')
+
+            df_new=pd.concat([df_old, df], axis=0)
+            df_new.to_csv(path_closing_price+quote+".csv",index=False)
+
+    for non_common_quotes in non_common_symbols:
+        print(f"The Non Common Symbols: {non_common_quotes}")
+        if non_common_quotes in old_symbol_list:
+            today_date = datetime.today()
+            formatted_todays_date = today_date.strftime('%d-%b-%Y')
+
+            prompt_Stocks_CP_data_collection(1,non_common_quotes)
+
+            Index = stock_data_old.index[(stock_data_old['SYMBOL'] == non_common_quotes)].tolist()
+            Index = Index[0]
+
+            stock_data_old.loc[Index,"Status"]="Removed"
+            stock_data_old.loc[Index,"Date of Update"]=str(formatted_todays_date)
+            stock_data_old.to_csv(path_main+"Old_list_F_O_stocks.csv",index=False)
+
+        elif non_common_quotes in unique_symbol:
+            today_date = datetime.today()
+            formatted_todays_date = today_date.strftime('%d-%b-%Y')
+
+            prompt_Stocks_CP_data_collection(100,non_common_quotes)
+            
+            Instrument_list=stock_data_old["INSTRUMENT"].unique().tolist()
+            Status_list=stock_data_old["Status"].unique().tolist()
+            Todays_Date=stock_data_old["Date of Update"].unique().tolist()
+
+            old_symbol_list.append(non_common_quotes)
+            Instrument_list.append("FUTSTK")
+            Status_list.append("Newely Added")
+            Todays_Date.append(str(formatted_todays_date))
+
+            dict_old_saving={"INSTRUMENT":Instrument_list,"SYMBOL":old_symbol_list,"Status":Status_list,"Date of Update":Todays_Date}
+            df_old_saving=pd.DataFrame(dict_old_saving)
+            df_old_saving.to_csv(path_main+"Old_list_F_O_stocks.csv",index=False)
+        else:
+            pass
+
+def Sectors_indices_closing_price():
+    path_closing_price="H:/My Drive/Daily_F_O_data/Daily_closing_price_data/"
+    list_1_min=["NIFTY 50", "NIFTY BANK","NIFTY FIN SERVICE","NIFTY MID SELECT","SENSEX"]
+    Sectors_list=["IT","FMCG","HEALTHCARE","PHARMA","AUTO","REALTY","METAL","MEDIA","OIL AND GAS","CONSR DURBL","PSU BANK","INDIA VIX"]
+
+    for index_1_min in list_1_min:
+        import datetime
+        quote=str(index_1_min)
+        print(f"Collecting closing price data for {quote}")
+        df_old=pd.read_csv(path_closing_price+quote+".csv")
+
+        if quote!="SENSEX":
+            token=kite.ltp("NSE:"+quote)
+            instrument_token=token["NSE:"+quote]["instrument_token"]
+
+        elif quote=="SENSEX":
+            token=kite.ltp("BSE:"+quote)
+            instrument_token=token["BSE:"+quote]["instrument_token"]
+
+        from_datetime = datetime.datetime.now() - datetime.timedelta(days=1)     # From last & days historical limit 60 days for 1 min
+        to_datetime = datetime.datetime.now()
+
+        interval="minute"
+        content=kite.historical_data(instrument_token, from_datetime, to_datetime, interval, continuous=False, oi=True)
+        Content=str(content)
+        cleaned_contents = Content.replace("datetime.datetime", "").replace(", tzinfo=tzoffset(None, 19800)", "")
+        data = ast.literal_eval(cleaned_contents)
+        df = pd.DataFrame(data)
+
+        if 'date' in df.columns:
+            df['date'] = df['date'].apply(lambda x: pd.Timestamp(year=x[0], month=x[1], day=x[2], hour=x[3], minute=x[4]))
+            df['Date'] = df['date'].dt.strftime('%Y-%m-%d')
+            df['Time'] = df['date'].dt.strftime('%H:%M')
+            df = df.drop(columns=['date'])
+            df = df[['Date', 'Time', 'open', 'high', 'low', 'close','volume','oi']]
+
+            df['Time'] = pd.to_datetime(df['Time'])
+            df = df[df['Time'] <= pd.to_datetime(filter_time)]
+            df['Time'] = df['Time'].dt.strftime('%H:%M')
+
+            df_new=pd.concat([df_old, df], axis=0)
+            df_new.to_csv(path_closing_price+quote+".csv",index=False)
+
+    for sector in Sectors_list:
+        import datetime
+        if sector!="INDIA VIX":
+            quote="NIFTY "+str(sector)
+        elif sector=="INDIA VIX":
+            quote=str(sector)
+        else:
+            pass
+
+        print(f"Collecting closing price data for {quote}")
+        df_old=pd.read_csv(path_closing_price+quote+".csv")
+
+        token=kite.ltp("NSE:"+quote)
+        instrument_token=token["NSE:"+quote]["instrument_token"]
+
+        from_datetime = datetime.datetime.now() - datetime.timedelta(days=1)     # From last & days
+        to_datetime = datetime.datetime.now()
+
+        interval="5minute"
+        content=kite.historical_data(instrument_token, from_datetime, to_datetime, interval, continuous=False, oi=True)
+        Content=str(content)
+        cleaned_contents = Content.replace("datetime.datetime", "").replace(", tzinfo=tzoffset(None, 19800)", "")
+        data = ast.literal_eval(cleaned_contents)
+        df = pd.DataFrame(data)
+
+        if 'date' in df.columns:
+            df['date'] = df['date'].apply(lambda x: pd.Timestamp(year=x[0], month=x[1], day=x[2], hour=x[3], minute=x[4]))
+            df['Date'] = df['date'].dt.strftime('%Y-%m-%d')
+            df['Time'] = df['date'].dt.strftime('%H:%M')
+            df = df.drop(columns=['date'])
+            df = df[['Date', 'Time', 'open', 'high', 'low', 'close','volume','oi']]
+
+            df['Time'] = pd.to_datetime(df['Time'])
+            df = df[df['Time'] <= pd.to_datetime(filter_time)]
+            df['Time'] = df['Time'].dt.strftime('%H:%M')
+
+            df_new=pd.concat([df_old, df], axis=0)
+            df_new.to_csv(path_closing_price+quote+".csv",index=False)
+
+
+def Pre_market_data_collection(path,content_read):
+    Date=[]
+    Time=[]
+    Advance=[]
+    Decline=[]
+    Unchanged=[]
+    Total_traded_value_in_cr=[]
+    Total_market_cap=[]
+    Total_traded_volume=[]
+
+    #################################  Values in the data #############################
+    Symbol=[]
+    Opening_price_today=[]
+    Closing_price=[]
+    Change=[]
+    Percent_change=[]
+    Final_setteled_qty=[]
+    Total_turn_over_in_cr=[]
+    Market_cap_in_cr=[]
+    Year_high=[]
+    Year_low=[]
+
+    Price=[]
+    Buy_Qty=[]
+    Sell_Qty=[]
+
+    ATO_Buy_Qty=[]
+    ATO_Sell_Qty=[]
+    Total_traded_volume_eqilibrim_qty=[]
+    Total_sell_Qty=[]
+    Total_Buy_Qty=[]
+
+    max_len=[]
+
+    for i in range(len(content_read['data'])):
+        date,time=content_read['timestamp'].split()
+        Date.append(date)
+        Time.append(time)
+        Advance.append(content_read['advances'])
+        Decline.append(content_read['declines'])
+        Unchanged.append(content_read['unchanged'])
+        Total_traded_value_in_cr.append(content_read['totalTradedValue'])
+        Total_market_cap.append(content_read['totalmarketcap'])
+        Total_traded_volume.append(content_read['totalTradedVolume'])
+
+        Symbol.append(content_read['data'][i]['metadata']['symbol'])
+        print(f"Collecting Preopen market for: {content_read['data'][i]['metadata']['symbol']}")
+        Opening_price_today.append(content_read['data'][i]['metadata']['lastPrice'])
+        Closing_price.append(content_read['data'][i]['metadata']['previousClose'])
+        Change.append(round(content_read['data'][i]['metadata']['change'],2))
+        Percent_change.append((round(content_read['data'][i]['metadata']['pChange'],2)))
+        Final_setteled_qty.append((content_read['data'][i]['metadata']['finalQuantity']))
+        Total_turn_over_in_cr.append(content_read['data'][i]['metadata']['totalTurnover'])
+        Market_cap_in_cr.append(content_read['data'][i]['metadata']['marketCap'])
+        Year_high.append(content_read['data'][i]['metadata']['yearHigh'])
+        Year_low.append(content_read['data'][i]['metadata']['yearLow'])
+
+        max_len_price=len(content_read['data'][i]['detail']['preOpenMarket']['preopen'])
+
+        max_len.append(max_len_price)
+
+        price_lists = [[] for _ in range(max_len_price)]
+        buy_qty_lists = [[] for _ in range(max_len_price)]
+        sell_qty_lists = [[] for _ in range(max_len_price)]
+
+        for j in range(max_len_price):
+            price_lists[j].append(content_read['data'][i]['detail']['preOpenMarket']['preopen'][j]["price"])
+            buy_qty_lists[j].append(content_read['data'][i]['detail']['preOpenMarket']['preopen'][j]['buyQty'])
+            sell_qty_lists[j].append(content_read['data'][i]['detail']['preOpenMarket']['preopen'][j]['sellQty'])
+
+        Price.append(price_lists)
+        Buy_Qty.append(buy_qty_lists)
+        Sell_Qty.append(sell_qty_lists)
+
+        ATO_Buy_Qty.append(content_read['data'][i]['detail']['preOpenMarket']['ato']['totalBuyQuantity'])
+        ATO_Sell_Qty.append(content_read['data'][i]['detail']['preOpenMarket']['ato']['totalSellQuantity'])
+        Total_traded_volume_eqilibrim_qty.append(content_read['data'][i]['detail']['preOpenMarket']['totalTradedVolume'])
+        Total_sell_Qty.append(content_read['data'][i]['detail']['preOpenMarket']['totalSellQuantity'])
+        Total_Buy_Qty.append(content_read['data'][i]['detail']['preOpenMarket']['totalBuyQuantity'])
+
+    maximum_length_overall=max(max_len)
+
+
+    Price_list={}
+    Buy_list={}
+    Sell_list={}
+
+    for mm in range(maximum_length_overall):
+        Price_list[f"Price_{mm}"]=[]
+        Buy_list[f"Buy_{mm}"]=[]
+        Sell_list[f"Sell_{mm}"]=[]
+
+    for mmm in range(len(content_read['data'])):
+        slice=max_len[mmm]
+        residual=maximum_length_overall-slice
+        for ii in range(slice):
+            Price_list[f"Price_{ii}"].append(Price[mmm][ii][0])
+            Buy_list[f"Buy_{ii}"].append(Buy_Qty[mmm][ii][0])
+            Sell_list[f"Sell_{ii}"].append(Sell_Qty[mmm][ii][0])
+
+        for kk in range(residual):
+            Price_list[f"Price_{slice+kk}"].append(None)
+            Buy_list[f"Buy_{slice+kk}"].append(None)
+            Sell_list[f"Sell_{slice+kk}"].append(None)
+
+    Price_df=pd.DataFrame(Price_list)
+    Buy_df=pd.DataFrame(Buy_list)
+    Sell_df=pd.DataFrame(Sell_list)
+
+    Pre_market_data_1={"Date":Date,"Time":Time,"Advance":Advance,"Decline":Decline,"Unchanged":Unchanged,"Total Traded Value in Crores":Total_traded_value_in_cr,"Total Market Cap":Total_market_cap,"Total traded volume":Total_traded_volume
+                    ,"Symbol":Symbol,"Opening Price Today":Opening_price_today,"Closing Price":Closing_price,"Change":Change,"Percentage Change":Percent_change,"Final Setteled Quantity":Final_setteled_qty,
+                    "Total Turnover in Crore":Total_turn_over_in_cr,"Market Captilization":Market_cap_in_cr,"Year High":Year_high,"Year Low":Year_low}
+
+    Pre_market_data_3={"ATO Buy Qty":ATO_Buy_Qty,"ATO Sell Qty":ATO_Sell_Qty,"Equilibrium Volume":Total_traded_volume_eqilibrim_qty,"Total Sell Quantity":Total_sell_Qty,"Total Buy Quantity":Total_Buy_Qty}
+
+    Pre_market_data_1_df=pd.DataFrame(Pre_market_data_1)
+    Pre_market_data_3_df=pd.DataFrame(Pre_market_data_3)
+
+    today_date = datetime.today()
+    formatted_todays_date = today_date.strftime('%d-%b-%Y')
+
+    Pre_market_df=pd.concat([Pre_market_data_1_df, Price_df,Buy_df,Sell_df,Pre_market_data_3_df], axis=1)
+    Pre_market_df.to_csv(path+"Pre_Market_Data_"+str(formatted_todays_date)+".csv",index=False)
+
+def Pre_market():
+    path="H:/My Drive/Daily_F_O_data/Pre_Market_data/"
+    url = "https://www.nseindia.com/api/market-data-pre-open?key=FO"
+
+    # Set headers with API key
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    }
+    while True:
+        import time
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            content=response.json()
+            print("Pre Market data Extracted")
+            Pre_market_data_collection(path,content)
+            break
+        else:
+            print("Failed to retrieve data:", response.status_code)
+
+        time.sleep(1)
+
+
+
+
+
+
 path_main="D:/ashu/Finance/algo_trading/Zerodha_GUI/Kite_Zerodha-main/Kite_Zerodha-main/"
 path_index="D:/ashu/Finance/Daily_F_O_data/Options/Index/"
 path_stocks_path="D:/ashu/Finance/Daily_F_O_data/Options/Stocks/"
@@ -800,6 +1163,7 @@ content_enctoken=df.iloc[0,0]
 enctoken = content_enctoken
 kite = KiteApp(enctoken=enctoken)
 
+filter_time="15:30"
 
 from datetime import datetime
 
@@ -812,11 +1176,14 @@ if formatted_todays_date in Holidays_list:
 else:
     print("Today is not holiday")
     daily_bhav_copy_download()
-    # Options_index() 
-    # stock_Options()
+    Options_index() 
+    stock_Options()
     Future_index()
     Futures_stock()  
     Chainging_expiry_days()
+    F_O_Stocks_closing_price()
+    Sectors_indices_closing_price()
+    Pre_market()
 
     Path_Options="D:/ashu/Finance/Daily_F_O_data/Options/"
     Path_Futures="D:/ashu/Finance/Daily_F_O_data/Futures/"
