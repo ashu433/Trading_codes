@@ -49,3 +49,4 @@ Date: 2024-06-18 Time: 10:05:29 Strike: 23050 Price: 13.7 type of modification T
 Date: 2024-06-18 Time: 10:10:46 Strike: 23950 Price: 9.0 type of modification Trailing SL and order type SL Limit.
 Date: 2024-06-18 Time: 10:15:47 Strike: 23950 Price: 8 type of modification Trailing SL and order type SL Limit.
 Date: 2024-06-18 Time: 10:20:45 Strike: 23950 Price: 7.1 type of modification Trailing SL and order type SL Limit.
+Date: 2024-06-18 Time: 10:25:43 Strike: 23950 Price: 6.5 type of modification Trailing SL and order type SL Limit.

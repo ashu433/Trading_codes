@@ -541,3 +541,11 @@ Date: 18-06-2024 Time: 10:20:31: No SL Update for the Put Strike 23050.
 Date: 18-06-2024 Time: 10:20:45: Present SL CE 7.1 and Stored SL CE 8.
 Date: 18-06-2024 Time: 10:20:45: Updating the Call strike 23950 SL at price 7.1.
 Date: 18-06-2024 Time: 10:20:45: Trailing SL run 10 and current time is 10:20:45.
+Date: 18-06-2024 Time: 10:25:00: Incoming Active Put Strikes is [23000, 23050] and Incoming Active Call strikes is [23950].
+Date: 18-06-2024 Time: 10:25:15: Present SL PE 13.4 and Stored SL PE 11.4.
+Date: 18-06-2024 Time: 10:25:15: No SL Update for the Put Strike 23000.
+Date: 18-06-2024 Time: 10:25:29: Present SL PE 16.4 and Stored SL PE 13.7.
+Date: 18-06-2024 Time: 10:25:29: No SL Update for the Put Strike 23050.
+Date: 18-06-2024 Time: 10:25:43: Present SL CE 6.5 and Stored SL CE 7.1.
+Date: 18-06-2024 Time: 10:25:43: Updating the Call strike 23950 SL at price 6.5.
+Date: 18-06-2024 Time: 10:25:43: Trailing SL run 11 and current time is 10:25:43.
