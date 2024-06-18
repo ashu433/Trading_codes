@@ -8,7 +8,10 @@ import json
 import requests
 import Intraday_live_data
 import pytz
-
+import logging
+from kiteconnect import KiteConnect
+from pyotp import TOTP
+from kiteconnect import KiteTicker
 
 ############################################  MARKET RELATED FUNCTION ################################################################
 def ensure_nested_dict(main_dict, key):
@@ -30,57 +33,77 @@ def sleep_time_compute(target_time_str):
 
 
 def limit_order_Sell(Quote, Size, price, Strike, Right):
-    global enctoken
-    kite = KiteApp(enctoken=enctoken)
     global order_info
+    import time
 
     running_log = reading_market_status("Running_log.txt")
 
-    order = kite.place_order(variety=kite.VARIETY_REGULAR,
-                             exchange=kite.EXCHANGE_NFO,
-                             tradingsymbol=Quote,
-                             transaction_type=kite.TRANSACTION_TYPE_SELL,
-                             quantity=Size,
-                             product=kite.PRODUCT_NRML,
-                             order_type=kite.ORDER_TYPE_LIMIT,
-                             price=price,
-                             validity=kite.VALIDITY_DAY,
-                             disclosed_quantity=None,
-                             trigger_price=None,
-                             squareoff=None,
-                             stoploss=None,
-                             trailing_stoploss=None,
-                             tag="TradeViaPython")
-    x = kite.orders()
-    l1 = len(x)
-    Order_ID = x[l1 - 1]['order_id']
-    Date_time = x[l1 - 1]['order_timestamp']
-    Status_present = x[l1 - 1]['status']
-    date, time = Date_time.split()
-    Stop_Loss = 2 * price
+    while True:
+        try:
+            order = kite.place_order(variety=kite.VARIETY_REGULAR,
+                                    exchange=kite.EXCHANGE_NFO,
+                                    tradingsymbol=Quote,
+                                    transaction_type=kite.TRANSACTION_TYPE_SELL,
+                                    quantity=Size,
+                                    product=kite.PRODUCT_NRML,
+                                    order_type=kite.ORDER_TYPE_LIMIT,
+                                    price=price,
+                                    validity=kite.VALIDITY_DAY,
+                                    disclosed_quantity=None,
+                                    trigger_price=None,
+                                    tag="TradeViaPython")
+            x = kite.orders()
+            l1 = len(x)
+            Order_ID = x[l1 - 1]['order_id']
+            Date_time = x[l1 - 1]['order_timestamp']
+            Status_present = x[l1 - 1]['status']
 
-    ensure_nested_dict(running_log, Strike)
+            date_part = Date_time.date()
+            time_part = Date_time.time() 
+            date = date_part.isoformat()
+            time = time_part.isoformat() 
 
-    running_log[Strike]["Date"] = date
-    running_log[Strike]["Time"] = time
-    running_log[Strike]["Right"] = Right
-    running_log[Strike]["Order ID"] = str(Order_ID)
-    running_log[Strike]["Status"] = Status_present
-    running_log[Strike]["Type"] = "Sell"
-    running_log[Strike]["Initial Price"] = price
-    running_log[Strike]["Trailing SL"] = Stop_Loss
+            Stop_Loss = 2 * price
 
-    writing_market_status(running_log, "Running_log.txt")
+            ensure_nested_dict(running_log, Strike)
 
-    with open(Path_backtest_Report + 'Running_log_file.txt', 'a') as file:
-        file.write(
-            f"Date: {date} Time: {time} Strike: {Strike} Initiation Price: {price} type of Order: Limit Order Sell.\n")
+            running_log[Strike]["Date"] = date
+            running_log[Strike]["Time"] = time
+            running_log[Strike]["Right"] = Right
+            running_log[Strike]["Order ID"] = str(Order_ID)
+            running_log[Strike]["Status"] = Status_present
+            running_log[Strike]["Type"] = "Sell"
+            running_log[Strike]["Initial Price"] = price
+            running_log[Strike]["Trailing SL"] = Stop_Loss
+
+            writing_market_status(running_log, "Running_log.txt")
+
+            with open(Path_backtest_Report + 'Running_log_file.txt', 'a') as file:
+                file.write(
+                    f"Date: {date} Time: {time} Strike: {Strike} Initiation Price: {price} type of Order: Limit Order Sell.\n")
+            
+            break
+
+
+        except Exception as e:
+            # Print the error message and wait for 1 second before retrying
+            Error_statement=str(e)
+            if "Markets are closed right now" not in Error_statement:
+                print(f"Error: {e}")
+                console_output_log_recording(f"Error: {e}")
+                print("Retrying after 1 second for Modify SL order")
+                console_output_log_recording("Retrying after 1 second for Modify SL order")
+                time.sleep(1)
+            elif "Markets are closed right now" in Error_statement:
+                print("Market is closed right now")
+                console_output_log_recording("Market is closed right now")
+                break
+
 
 
 def limit_order_buy(Quote, Size, price):
-    global enctoken
-    kite = KiteApp(enctoken=enctoken)
     global order_info
+    import time
 
     order = kite.place_order(variety=kite.VARIETY_REGULAR,
                              exchange=kite.EXCHANGE_NFO,
@@ -93,62 +116,77 @@ def limit_order_buy(Quote, Size, price):
                              validity=kite.VALIDITY_DAY,
                              disclosed_quantity=None,
                              trigger_price=None,
-                             squareoff=None,
-                             stoploss=None,
-                             trailing_stoploss=None,
                              tag="TradeViaPython")
 
     ## Save the order info in the log list
 
 
 def Market_order_Buy(Quote, Size, Strike, Right, Buy_type):
-    global enctoken
-    kite = KiteApp(enctoken=enctoken)
     global order_info
+    import time
 
     running_log = reading_market_status("Running_log.txt")
 
-    order = kite.place_order(variety=kite.VARIETY_REGULAR,
-                             exchange=kite.EXCHANGE_NFO,
-                             tradingsymbol=Quote,
-                             transaction_type=kite.TRANSACTION_TYPE_BUY,
-                             quantity=Size,
-                             product=kite.PRODUCT_NRML,
-                             order_type=kite.ORDER_TYPE_MARKET,
-                             price=None,
-                             validity=None,
-                             disclosed_quantity=None,
-                             trigger_price=None,
-                             squareoff=None,
-                             stoploss=None,
-                             trailing_stoploss=None,
-                             tag="TradeViaPython")
+    while True:
+        try:
+            order = kite.place_order(variety=kite.VARIETY_REGULAR,
+                                    exchange=kite.EXCHANGE_NFO,
+                                    tradingsymbol=Quote,
+                                    transaction_type=kite.TRANSACTION_TYPE_BUY,
+                                    quantity=Size,
+                                    product=kite.PRODUCT_NRML,
+                                    order_type=kite.ORDER_TYPE_MARKET,
+                                    price=None,
+                                    validity=None,
+                                    disclosed_quantity=None,
+                                    trigger_price=None,
+                                    tag="TradeViaPython")
 
-    x = kite.orders()
-    l1 = len(x)
-    Order_ID = x[l1 - 1]['order_id']
-    Date_time = x[l1 - 1]['order_timestamp']
-    Status_present = x[l1 - 1]['status']
-    date, time = Date_time.split()
-    price = x[l1 - 1]["average_price"]
-    Stop_Loss = 0
+            x = kite.orders()
+            l1 = len(x)
+            Order_ID = x[l1 - 1]['order_id']
+            Date_time = x[l1 - 1]['order_timestamp']
+            Status_present = x[l1 - 1]['status']
 
-    ensure_nested_dict(running_log, Strike)
+            date_part = Date_time.date()
+            time_part = Date_time.time() 
+            date = date_part.isoformat()
+            time = time_part.isoformat() 
 
-    running_log[Strike]["Date"] = date
-    running_log[Strike]["Time"] = time
-    running_log[Strike]["Right"] = Right
-    running_log[Strike]["Order ID"] = str(Order_ID)
-    running_log[Strike]["Status"] = Status_present
-    running_log[Strike]["Type"] = Buy_type
-    running_log[Strike]["Initial Price"] = price
-    running_log[Strike]["Trailing SL"] = Stop_Loss
+            price = x[l1 - 1]["average_price"]
+            Stop_Loss = 0
 
-    writing_market_status(running_log, "Running_log.txt")
+            ensure_nested_dict(running_log, Strike)
 
-    with open(Path_backtest_Report + 'Running_log_file.txt', 'a') as file:
-        file.write(
-            f"Date: {date} Time: {time} Strike: {Strike} Market Price: {price} type of Order: Market Order Buy.\n")
+            running_log[Strike]["Date"] = date
+            running_log[Strike]["Time"] = time
+            running_log[Strike]["Right"] = Right
+            running_log[Strike]["Order ID"] = str(Order_ID)
+            running_log[Strike]["Status"] = Status_present
+            running_log[Strike]["Type"] = Buy_type
+            running_log[Strike]["Initial Price"] = price
+            running_log[Strike]["Trailing SL"] = Stop_Loss
+
+            writing_market_status(running_log, "Running_log.txt")
+
+            with open(Path_backtest_Report + 'Running_log_file.txt', 'a') as file:
+                file.write(
+                    f"Date: {date} Time: {time} Strike: {Strike} Market Price: {price} type of Order: Market Order Buy.\n")
+            break
+
+        except Exception as e:
+            # Print the error message and wait for 1 second before retrying
+            Error_statement=str(e)
+            if "Markets are closed right now" not in Error_statement:
+                print(f"Error: {e}")
+                console_output_log_recording(f"Error: {e}")
+                print("Retrying after 1 second for Modify SL order")
+                console_output_log_recording("Retrying after 1 second for Modify SL order")
+                time.sleep(1)
+            elif "Markets are closed right now" in Error_statement:
+                print("Market is closed right now")
+                console_output_log_recording("Market is closed right now")
+                break
 
 
 def pause(duration=10):
@@ -157,177 +195,231 @@ def pause(duration=10):
 
 
 def Market_order_Sell(Quote, Size, Strike, Right, Sell_type):
-    global enctoken
-    kite = KiteApp(enctoken=enctoken)
     global order_info
+    import time
 
     running_log = reading_market_status("Running_log.txt")
 
-    order = kite.place_order(variety=kite.VARIETY_REGULAR,
-                             exchange=kite.EXCHANGE_NFO,
-                             tradingsymbol=Quote,
-                             transaction_type=kite.TRANSACTION_TYPE_SELL,
-                             quantity=Size,
-                             product=kite.PRODUCT_NRML,
-                             order_type=kite.ORDER_TYPE_MARKET,
-                             price=None,
-                             validity=None,
-                             disclosed_quantity=None,
-                             trigger_price=None,
-                             squareoff=None,
-                             stoploss=None,
-                             trailing_stoploss=None,
-                             tag="TradeViaPython")
+    while True:
+        try:
+            order = kite.place_order(variety=kite.VARIETY_REGULAR,
+                                    exchange=kite.EXCHANGE_NFO,
+                                    tradingsymbol=Quote,
+                                    transaction_type=kite.TRANSACTION_TYPE_SELL,
+                                    quantity=Size,
+                                    product=kite.PRODUCT_NRML,
+                                    order_type=kite.ORDER_TYPE_MARKET,
+                                    price=None,
+                                    validity=None,
+                                    disclosed_quantity=None,
+                                    trigger_price=None,
+                                    tag="TradeViaPython")
 
-    x = kite.orders()
-    l1 = len(x)
-    Order_ID = x[l1 - 1]['order_id']
-    Date_time = x[l1 - 1]['order_timestamp']
-    Status_present = x[l1 - 1]['status']
-    date, time = Date_time.split()
-    price = x[l1 - 1]["average_price"]
-    Stop_Loss = 0
+            x = kite.orders()
+            l1 = len(x)
+            Order_ID = x[l1 - 1]['order_id']
+            Date_time = x[l1 - 1]['order_timestamp']
+            Status_present = x[l1 - 1]['status']
 
-    Strike = -Strike
-    ensure_nested_dict(running_log, Strike)
+            date_part = Date_time.date()
+            time_part = Date_time.time() 
+            date = date_part.isoformat()
+            time = time_part.isoformat() 
 
-    running_log[Strike]["Date"] = date
-    running_log[Strike]["Time"] = time
-    running_log[Strike]["Right"] = Right
-    running_log[Strike]["Order ID"] = str(Order_ID)
-    running_log[Strike]["Status"] = Status_present
-    running_log[Strike]["Type"] = Sell_type
-    running_log[Strike]["Initial Price"] = price
-    running_log[Strike]["Trailing SL"] = Stop_Loss
+            price = x[l1 - 1]["average_price"]
+            Stop_Loss = 0
 
-    writing_market_status(running_log, "Running_log.txt")
+            Strike = -Strike
+            ensure_nested_dict(running_log, Strike)
 
-    with open(Path_backtest_Report + 'Running_log_file.txt', 'a') as file:
-        file.write(
-            f"Date: {date} Time: {time} Strike: {Strike} Market Price: {price} type of Order: Market Order Sell.\n")
+            running_log[Strike]["Date"] = date
+            running_log[Strike]["Time"] = time
+            running_log[Strike]["Right"] = Right
+            running_log[Strike]["Order ID"] = str(Order_ID)
+            running_log[Strike]["Status"] = Status_present
+            running_log[Strike]["Type"] = Sell_type
+            running_log[Strike]["Initial Price"] = price
+            running_log[Strike]["Trailing SL"] = Stop_Loss
+
+            writing_market_status(running_log, "Running_log.txt")
+
+            with open(Path_backtest_Report + 'Running_log_file.txt', 'a') as file:
+                file.write(
+                    f"Date: {date} Time: {time} Strike: {Strike} Market Price: {price} type of Order: Market Order Sell.\n")
+            
+            break
+        except Exception as e:
+            # Print the error message and wait for 1 second before retrying
+            Error_statement=str(e)
+            if "Markets are closed right now" not in Error_statement:
+                print(f"Error: {e}")
+                console_output_log_recording(f"Error: {e}")
+                print("Retrying after 1 second for Modify SL order")
+                console_output_log_recording("Retrying after 1 second for Modify SL order")
+                time.sleep(1)
+            elif "Markets are closed right now" in Error_statement:
+                print("Market is closed right now")
+                console_output_log_recording("Market is closed right now")
+                break
 
 
 def Modify_SL_Order(OID, Size, Price, type_of_modification, Order_Type, Strike):
     global order_info
-
-    global enctoken
-    kite = KiteApp(enctoken=enctoken)
+    import time
 
     running_log = reading_market_status("Running_log.txt")
 
-    if Order_Type == "Limit":
-        type_of_order = kite.ORDER_TYPE_LIMIT
-        Triggering_price = None
-    elif Order_Type == "SL Limit":
-        type_of_order = kite.ORDER_TYPE_SL
-        Triggering_price = Price - 0.05
-    else:
-        pass
+    while True:
+        try:
+            if Order_Type == "Limit":
+                type_of_order = kite.ORDER_TYPE_LIMIT
+                Triggering_price = None
+            elif Order_Type == "SL Limit":
+                type_of_order = kite.ORDER_TYPE_SL
+                Triggering_price = Price - 0.05
+            else:
+                pass
 
-    kite.modify_order(variety=kite.VARIETY_REGULAR,
-                      order_id=OID,
-                      parent_order_id=None,
-                      quantity=Size,
-                      price=Price,
-                      order_type=type_of_order,
-                      trigger_price=Triggering_price,
-                      validity=kite.VALIDITY_DAY,
-                      disclosed_quantity=None)
+            kite.modify_order(variety=kite.VARIETY_REGULAR,
+                            order_id=OID,
+                            parent_order_id=None,
+                            quantity=Size,
+                            price=Price,
+                            order_type=type_of_order,
+                            trigger_price=Triggering_price,
+                            validity=kite.VALIDITY_DAY,
+                            disclosed_quantity=None)
 
-    if type_of_modification == "Trailing SL":
-        running_log[str(Strike)]["Trailing SL"] = Price
-        running_log[str(-Strike)]["Trailing SL"] = Price
+            if type_of_modification == "Trailing SL":
+                running_log[str(Strike)]["Trailing SL"] = Price
+                running_log[str(-Strike)]["Trailing SL"] = Price
 
-    elif type_of_modification == "Initial Price":
-        running_log[str(Strike)]["Initial Price"] = Price
-    else:
-        pass
+            elif type_of_modification == "Initial Price":
+                running_log[str(Strike)]["Initial Price"] = Price
+            else:
+                pass
 
-    writing_market_status(running_log, "Running_log.txt")
+            writing_market_status(running_log, "Running_log.txt")
 
-    x = kite.orders()
-    l1 = len(x)
-    Date_time = x[l1 - 1]['order_timestamp']
-    date, time = Date_time.split()
+            x = kite.orders()
+            l1 = len(x)
+            Date_time = x[l1 - 1]['order_timestamp']
 
-    with open(Path_backtest_Report + 'Running_log_file.txt', 'a') as file:
-        file.write(
-            f"Date: {date} Time: {time} Strike: {Strike} Price: {Price} type of modification {type_of_modification} and order type {Order_Type}.\n")
+            date_part = Date_time.date()
+            time_part = Date_time.time() 
+            date = date_part.isoformat()
+            time = time_part.isoformat() 
+
+            with open(Path_backtest_Report + 'Running_log_file.txt', 'a') as file:
+                file.write(
+                    f"Date: {date} Time: {time} Strike: {Strike} Price: {Price} type of modification {type_of_modification} and order type {Order_Type}.\n")
+            break
+
+        except Exception as e:
+            # Print the error message and wait for 1 second before retrying
+            Error_statement=str(e)
+            if "Markets are closed right now" not in Error_statement:
+                print(f"Error: {e}")
+                console_output_log_recording(f"Error: {e}")
+                print("Retrying after 1 second for Modify SL order")
+                console_output_log_recording("Retrying after 1 second for Modify SL order")
+                time.sleep(1)
+            elif "Markets are closed right now" in Error_statement:
+                print("Market is closed right now")
+                console_output_log_recording("Market is closed right now")
+                break
 
 
 def SL_Initiate_order(Quote, Size, SL_price, SL_Trig_price, Strike, Right, morning_order_state=None):
-    global enctoken
-    kite = KiteApp(enctoken=enctoken)
     global order_info
+    import time
 
     running_log = reading_market_status("Running_log.txt")
 
-    order = kite.place_order(variety=kite.VARIETY_REGULAR,
-                             exchange=kite.EXCHANGE_NFO,
-                             tradingsymbol=Quote,
-                             transaction_type=kite.TRANSACTION_TYPE_BUY,
-                             quantity=Size,
-                             product=kite.PRODUCT_NRML,
-                             order_type=kite.ORDER_TYPE_SL,
-                             price=SL_price,
-                             validity=kite.VALIDITY_DAY,
-                             disclosed_quantity=None,
-                             trigger_price=SL_Trig_price,
-                             squareoff=None,
-                             stoploss=None,
-                             trailing_stoploss=None,
-                             tag="TradeViaPython")
+    while True:
+        try:
+            order = kite.place_order(variety=kite.VARIETY_REGULAR,
+                                    exchange=kite.EXCHANGE_NFO,
+                                    tradingsymbol=Quote,
+                                    transaction_type=kite.TRANSACTION_TYPE_BUY,
+                                    quantity=Size,
+                                    product=kite.PRODUCT_NRML,
+                                    order_type=kite.ORDER_TYPE_SL,
+                                    price=SL_price,
+                                    validity=kite.VALIDITY_DAY,
+                                    disclosed_quantity=None,
+                                    trigger_price=SL_Trig_price,
+                                    tag="TradeViaPython")
 
-    x = kite.orders()
-    l1 = len(x)
-    Order_ID = x[l1 - 1]['order_id']
-    Date_time = x[l1 - 1]['order_timestamp']
-    Status_present = "TRIGGER PENDING"
-    date, time = Date_time.split()
+            x = kite.orders()
+            l1 = len(x)
+            Order_ID = x[l1 - 1]['order_id']
+            Date_time = x[l1 - 1]['order_timestamp']
+            Status_present = "TRIGGER PENDING"
 
-    if morning_order_state == None:
+            date_part = Date_time.date()
+            time_part = Date_time.time() 
+            date = date_part.isoformat()
+            time = time_part.isoformat() 
 
-        Strike = -Strike
-        ensure_nested_dict(running_log, Strike)
+            if morning_order_state == None:
 
-        running_log[Strike]["Date"] = date
-        running_log[Strike]["Time"] = time
-        running_log[Strike]["Right"] = Right
-        running_log[Strike]["Order ID"] = str(Order_ID)
-        running_log[Strike]["Status"] = Status_present
-        running_log[Strike]["Type"] = "Buy"
-        running_log[Strike]["Initial Price"] = SL_price
-        running_log[Strike]["Trailing SL"] = SL_price
+                Strike = -Strike
+                ensure_nested_dict(running_log, Strike)
 
-        writing_market_status(running_log, "Running_log.txt")
+                running_log[Strike]["Date"] = date
+                running_log[Strike]["Time"] = time
+                running_log[Strike]["Right"] = Right
+                running_log[Strike]["Order ID"] = str(Order_ID)
+                running_log[Strike]["Status"] = Status_present
+                running_log[Strike]["Type"] = "Buy"
+                running_log[Strike]["Initial Price"] = SL_price
+                running_log[Strike]["Trailing SL"] = SL_price
 
-        with open(Path_backtest_Report + 'Running_log_file.txt', 'a') as file:
-            file.write(
-                f"Date: {date} Time: {time} Strike: {Strike} Stop Loss Price: {SL_price} type of Order: Stop Loss Order.\n")
+                writing_market_status(running_log, "Running_log.txt")
 
-    elif morning_order_state == 1:
-        Strike = -Strike
-        running_log[str(Strike)]["Order ID"] = str(Order_ID)
-        running_log[str(Strike)]["Trailing SL"] = SL_price
+                with open(Path_backtest_Report + 'Running_log_file.txt', 'a') as file:
+                    file.write(
+                        f"Date: {date} Time: {time} Strike: {Strike} Stop Loss Price: {SL_price} type of Order: Stop Loss Order.\n")
 
-        Strike = -Strike
+            elif morning_order_state == 1:
+                Strike = -Strike
+                running_log[str(Strike)]["Order ID"] = str(Order_ID)
+                running_log[str(Strike)]["Trailing SL"] = SL_price
 
-        running_log[str(Strike)]["Trailing SL"] = SL_price
+                Strike = -Strike
 
-        writing_market_status(running_log, "Running_log.txt")
+                running_log[str(Strike)]["Trailing SL"] = SL_price
 
-        with open(Path_backtest_Report + 'Running_log_file.txt', 'a') as file:
-            file.write(
-                f"Date: {date} Time: {time} Strike: {Strike} Stop Loss Price: {SL_price} type of Order: Stop Loss Order Modifiying morning order.\n")
+                writing_market_status(running_log, "Running_log.txt")
 
-    else:
-        pass
+                with open(Path_backtest_Report + 'Running_log_file.txt', 'a') as file:
+                    file.write(
+                        f"Date: {date} Time: {time} Strike: {Strike} Stop Loss Price: {SL_price} type of Order: Stop Loss Order Modifiying morning order.\n")
+
+            else:
+                pass
+
+            break
+
+        except Exception as e:
+            # Print the error message and wait for 1 second before retrying
+            Error_statement=str(e)
+            if "Markets are closed right now" not in Error_statement:
+                print(f"Error: {e}")
+                console_output_log_recording(f"Error: {e}")
+                print("Retrying after 1 second for Modify SL order")
+                console_output_log_recording("Retrying after 1 second for Modify SL order")
+                time.sleep(1)
+            elif "Markets are closed right now" in Error_statement:
+                print("Market is closed right now")
+                console_output_log_recording("Market is closed right now")
+                break
+
 
 
 def cancel_order(Order_ID):
     global order_info
-    global enctoken
-    kite = KiteApp(enctoken=enctoken)
 
     Initial_DF = pd.read_csv(Path_backtest_Report + "Running_Status_of_trade.csv")
 
@@ -354,9 +446,10 @@ def cancel_order(Order_ID):
     Initial_DF.to_csv(Path_backtest_Report + "Running_Status_of_trade.csv", index=False)
 
 
-def Compute_token_Closing_price(Strike, Right, time=5):
+def Compute_token_Closing_price(Strike, Right, Time=5):
     global path_main
     from datetime import datetime
+    import time
 
     present_market_status = reading_market_status()
     Current_market_segment = present_market_status["Segment"]
@@ -366,33 +459,68 @@ def Compute_token_Closing_price(Strike, Right, time=5):
     Segment = Current_market_segment
     expiry_date = Current_expiry_date
     Month_end = Current_month_end
-    content_enctoken = df.iloc[0, 0]
-    enctoken = content_enctoken
-    kite = KiteApp(enctoken=enctoken)
 
     date_object = datetime.strptime(expiry_date, '%d-%b-%y')
     expiry_date = date_object.strftime('%d-%b-%Y')
 
     modified_date = formatted_dates(expiry_date, Month_end)
+    # instrument_dump_NFO=kite.instruments("NFO")
+
+    while True:
+        try:
+            instrument_dump_NFO=kite.instruments("NFO")
+            break
+        except Exception as e:
+            Error_statement=str(e)
+            if "Markets are closed right now" not in Error_statement:
+                print(f"Error: {e}")
+                console_output_log_recording(f"Error: {e}")
+                print("Retrying after 1 second for Closing Price")
+                console_output_log_recording("Retrying after 1 second for Closing Price")
+                time.sleep(1)
+            elif "Markets are closed right now" in Error_statement:
+                print("Market is closed right now")
+                console_output_log_recording("Market is closed right now")
+                break
+
+    instrument_NFO_df=pd.DataFrame(instrument_dump_NFO)
 
     if Right == "Call":
         quote_CE = Segment + modified_date + str(Strike) + "CE"
-        atm_token_ce = kite.ltp("NFO:" + quote_CE)
-        ATM_Token_CE = atm_token_ce["NFO:" + quote_CE]['instrument_token']
+        index_CE=instrument_NFO_df.index[instrument_NFO_df['tradingsymbol'] ==quote_CE].tolist()
+        ATM_Token_CE=instrument_NFO_df.loc[index_CE[0],"instrument_token"]
 
         import datetime
 
         from_datetime = datetime.datetime.now() - datetime.timedelta(days=1)  # From last & days
         to_datetime = datetime.datetime.now()
 
-        if time == 1:
+        if Time == 1:
             interval = "minute"
-        elif time == 5:
+        elif Time == 5:
             interval = "5minute"
         else:
             pass
 
-        content_CE = kite.historical_data(ATM_Token_CE, from_datetime, to_datetime, interval, continuous=False, oi=True)
+        # content_CE = kite.historical_data(ATM_Token_CE, from_datetime, to_datetime, interval, continuous=False, oi=True)
+
+        while True:
+            try:
+                content_CE = kite.historical_data(ATM_Token_CE, from_datetime, to_datetime, interval, continuous=False, oi=True)
+                break
+            except Exception as e:
+                Error_statement=str(e)
+                if "Markets are closed right now" not in Error_statement:
+                    print(f"Error: {e}")
+                    console_output_log_recording(f"Error: {e}")
+                    print("Retrying after 1 second for Closing Price")
+                    console_output_log_recording("Retrying after 1 second for Closing Price")
+                    time.sleep(1)
+                elif "Markets are closed right now" in Error_statement:
+                    print("Market is closed right now")
+                    console_output_log_recording("Market is closed right now")
+                    break
+
         length = len(content_CE)
         Content_CE = str(content_CE[length - 2])
         cleaned_contents_CE = Content_CE.replace("datetime.datetime", "").replace(", tzinfo=tzoffset(None, 19800)", "")
@@ -404,21 +532,42 @@ def Compute_token_Closing_price(Strike, Right, time=5):
 
     elif Right == "Put":
         quote_PE = Segment + modified_date + str(Strike) + "PE"
-        atm_token_pe = kite.ltp("NFO:" + quote_PE)
-        ATM_Token_PE = atm_token_pe["NFO:" + quote_PE]['instrument_token']
+
+        index_PE=instrument_NFO_df.index[instrument_NFO_df['tradingsymbol'] ==quote_PE].tolist()
+        ATM_Token_PE=instrument_NFO_df.loc[index_PE[0],"instrument_token"]
+
 
         import datetime
 
         from_datetime = datetime.datetime.now() - datetime.timedelta(days=1)  # From last & days
         to_datetime = datetime.datetime.now()
 
-        if time == 1:
+        if Time == 1:
             interval = "minute"
-        elif time == 5:
+        elif Time == 5:
             interval = "5minute"
         else:
             pass
-        content_PE = kite.historical_data(ATM_Token_PE, from_datetime, to_datetime, interval, continuous=False, oi=True)
+
+        # content_PE = kite.historical_data(ATM_Token_PE, from_datetime, to_datetime, interval, continuous=False, oi=True)
+
+        while True:
+            try:
+                content_PE = kite.historical_data(ATM_Token_PE, from_datetime, to_datetime, interval, continuous=False, oi=True)
+                break
+            except Exception as e:
+                Error_statement=str(e)
+                if "Markets are closed right now" not in Error_statement:
+                    print(f"Error: {e}")
+                    console_output_log_recording(f"Error: {e}")
+                    print("Retrying after 1 second for Closing Price")
+                    console_output_log_recording("Retrying after 1 second for Closing Price")
+                    time.sleep(1)
+                elif "Markets are closed right now" in Error_statement:
+                    print("Market is closed right now")
+                    console_output_log_recording("Market is closed right now")
+                    break
+
         length = len(content_PE)
         Content_PE = str(content_PE[length - 2])
         cleaned_contents_PE = Content_PE.replace("datetime.datetime", "").replace(", tzinfo=tzoffset(None, 19800)", "")
@@ -475,11 +624,14 @@ def formatted_dates(expiry, month_end):
 
 def console_output_log_recording(content):
     current_time = datetime.now()
+    current_datetime = datetime.today()
+    current_date = current_datetime.date()
+    formatted_date = current_date.strftime("%d-%m-%Y")
 
     current_time_str = current_time.strftime("%H:%M:%S")
 
     with open(Path_backtest_Report + 'Console_output_log_file.txt', 'a') as file:
-        file.write(f"{current_time_str}: {content}.\n")
+        file.write(f"Date: {formatted_date} Time: {current_time_str}: {content}.\n")
 
 
 def closest_time(current_time_str, time_list_obs):
@@ -501,8 +653,6 @@ def closest_time(current_time_str, time_list_obs):
 
 
 def Status_compute(Order_ID_current):
-    global enctoken
-    kite = KiteApp(enctoken=enctoken)
 
     Log = kite.orders()
     order_id_to_find = str(Order_ID_current)
@@ -771,6 +921,256 @@ def Order_execution_Check(Input_Strike_Call, Input_Strike_Put, quote_call_Hedges
     else:
         pass
 
+def Last_5_mins_update():
+    global Deployed_Size
+
+    running_log = reading_market_status("Running_log.txt")
+
+    present_market_status = reading_market_status()
+
+    Market_Trend = present_market_status['Market Trend']
+    Active_strike_list_Call = present_market_status["Active Call Strikes"]
+    Active_strike_list_Put = present_market_status["Active Put Strikes"]
+
+    reversal_status = present_market_status["Reversal status"]
+    max_call_credit_spreads = present_market_status["Maximum call credit Spread"]
+    max_put_credit_spreads = present_market_status["Maximum put credit Spread"]
+
+    while True:
+        current_time = datetime.now().strftime("%H:%M:%S")
+
+        if current_time<=Market_close_time:
+            print(f"Running Final Evaluvation of the orders at time {current_time}")
+
+            if Market_Trend == "Neutral":
+                CE_stk = Active_strike_list_Call[0]
+                PE_stk = Active_strike_list_Put[0]
+
+                OID_Call = running_log[str(-CE_stk)]["Order ID"]
+                OID_Put = running_log[str(-PE_stk)]["Order ID"]
+
+                Status_call = Status_compute(OID_Call)
+                Status_put = Status_compute(OID_Put)
+
+                if Status_call == "TRIGGER PENDING" and Status_put == "TRIGGER PENDING":
+                    pass
+                elif Status_call == "COMPLETE":
+                    print(f"SL hit on the Call Strike {CE_stk} now Market Trend is Bullish")
+                    console_output_log_recording(f"SL hit on the Call Strike {CE_stk} now Market Trend is Bullish")
+
+                    running_log[str(-CE_stk)]["Status"] = "COMPLETE"
+                    writing_market_status(running_log, "Running_log.txt")
+
+                    present_market_status['Market Trend'] = "Trending Up"
+                    writing_market_status(present_market_status)
+
+                    CE_Hedge = CE_stk + hedges_distance
+                    CE_Hedge_CP, QE_CE_Hedge = Compute_token_Closing_price(CE_Hedge, "Call")
+                    Market_order_Sell(QE_CE_Hedge, Deployed_Size, CE_Hedge, "Call", "Hedge Sell")
+
+                    print("Adding new Strikes through Market orders")
+                    console_output_log_recording("Adding new Strikes through Market orders")
+                    Active_strike_list_Call, Active_strike_list_Put = New_order_Placement(Active_strike_list_Call,Active_strike_list_Put,"Market")
+
+                    print(
+                        f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
+                    console_output_log_recording(
+                        f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
+                    
+                elif Status_put == "COMPLETE":
+                    print(f"SL hit on the Put Strike {PE_stk} now Market Trend is Bearish")
+                    console_output_log_recording(f"SL hit on the Put Strike {PE_stk} now Market Trend is Bearish")
+
+                    running_log[str(-PE_stk)]["Status"] = "COMPLETE"
+                    writing_market_status(running_log, "Running_log.txt")
+
+                    present_market_status['Market Trend'] = "Trending Down"
+                    writing_market_status(present_market_status)
+
+                    PE_Hedge = PE_stk - hedges_distance
+
+                    PE_Hedge_CP, QE_PE_Hedge = Compute_token_Closing_price(PE_Hedge, "Put")
+                    Market_order_Sell(QE_PE_Hedge, Deployed_Size, PE_Hedge, "Put", "Hedge Sell")
+
+                    print("Adding new Strikes through Market orders")
+                    console_output_log_recording("Adding new Strikes through Market orders")
+                    Active_strike_list_Call, Active_strike_list_Put = New_order_Placement(Active_strike_list_Call,Active_strike_list_Put,"Market")
+
+                    print(
+                        f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
+                    console_output_log_recording(
+                        f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
+                else:
+                    pass
+                
+            elif Market_Trend == "Trending Up":
+
+                print(f"Present market trend is {Market_Trend}")
+
+                if len(Active_strike_list_Put) != 0:
+
+                    for i in range(len(Active_strike_list_Put)):
+                        PE_stk = Active_strike_list_Put[i]
+
+                        OID_Put = running_log[str(-PE_stk)]["Order ID"]
+
+                        print(f"OID : {OID_Put} strike: {-PE_stk}")
+                        Status_put = Status_compute(OID_Put)
+
+                        if Status_put == "TRIGGER PENDING":
+                            pass
+
+                        elif Status_put == "COMPLETE":
+
+                            present_market_status["Reversal status"] = 1
+
+                            print(f"SL hit for strike {PE_stk} on put side the market reverses the trend")
+                            console_output_log_recording(f"SL hit for strike {PE_stk} on put side the market reverses the trend")
+
+                            running_log[str(-PE_stk)]["Status"] = "COMPLETE"
+                            writing_market_status(running_log, "Running_log.txt")
+
+                            Active_strike_list_Put.remove(PE_stk)
+                            present_market_status["Active Put Strikes"] = Active_strike_list_Put
+                            writing_market_status(present_market_status)
+
+                            print(f"The new Active strike Put list is {Active_strike_list_Put}")
+                            console_output_log_recording(f"The new Active strike Put list is {Active_strike_list_Put}")
+                            PE_stk_Hedges = PE_stk - hedges_distance
+
+                            PE_Hedge_CP, QE_PE_Hedge = Compute_token_Closing_price(PE_stk_Hedges, "Put")
+                            Market_order_Sell(QE_PE_Hedge, Deployed_Size, PE_stk_Hedges, "Put", "Hedge Sell")
+
+                        else:
+                            pass
+                else:
+                    pass
+
+                if len(Active_strike_list_Call) != 0:
+                    CE_stk = Active_strike_list_Call[0]
+                    OID_Call = running_log[str(-CE_stk)]["Order ID"]
+                    Status_call = Status_compute(OID_Call)
+
+                    if Status_call == "TRIGGER PENDING":
+                        pass
+                    elif Status_call == "COMPLETE":
+                        print(
+                            f"SL hit on call Strike {CE_stk} the market continues in the same trend selling Additional Strikes")
+                        console_output_log_recording(
+                            f"SL hit on call Strike {CE_stk} the market continues in the same trend selling Additional Strikes")
+
+                        running_log[str(-CE_stk)]["Status"] = "COMPLETE"
+                        writing_market_status(running_log, "Running_log.txt")
+
+                        Length_put = len(Active_strike_list_Put)
+                        CE_stk_Hedges = CE_stk + hedges_distance
+
+                        CE_Hedge_CP, QE_CE_Hedge = Compute_token_Closing_price(CE_stk_Hedges, "Call")
+                        Market_order_Sell(QE_CE_Hedge, Deployed_Size, CE_stk_Hedges, "Call", "Hedge Sell")
+
+                        if max_put_credit_spreads >= max_credit_spreads or reversal_status == 1:
+                            print("Maximum Credit limit reached can't sell more strikes")
+                            console_output_log_recording("Maximum Credit limit reached can't sell more strikes")
+                        elif max_put_credit_spreads < max_credit_spreads and reversal_status == 0:
+                            print("Adding new Strikes through Market orders")
+                            console_output_log_recording("Adding new Strikes through Market orders")
+                            Active_strike_list_Call, Active_strike_list_Put = New_order_Placement(Active_strike_list_Call,Active_strike_list_Put,"Market")
+                            print(
+                                f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
+                            console_output_log_recording(
+                                f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
+                        else:
+                            pass
+                    else:
+                        pass
+
+                else:
+                    pass
+
+            elif Market_Trend == "Trending Down":
+
+                if len(Active_strike_list_Call) != 0:
+                    for i in range(len(Active_strike_list_Call)):
+                        CE_stk = Active_strike_list_Call[i]
+                        OID_Call = running_log[str(-CE_stk)]["Order ID"]
+                        Status_call = Status_compute(OID_Call)
+
+                        if Status_call == "TRIGGER PENDING":
+                            pass
+                        elif Status_call == "COMPLETE":
+                            present_market_status["Reversal status"] = 1
+
+                            print(f"SL hit for strike {CE_stk} on call side the market reverses the trend")
+                            console_output_log_recording(
+                                f"SL hit for strike {CE_stk} on call side the market reverses the trend")
+
+                            running_log[str(-CE_stk)]["Status"] = "COMPLETE"
+                            writing_market_status(running_log, "Running_log.txt")
+
+                            Active_strike_list_Call.remove(CE_stk)
+                            present_market_status["Active Call Strikes"] = Active_strike_list_Call
+                            writing_market_status(present_market_status)
+
+                            print(f"The new Active strike Call list is {Active_strike_list_Call}")
+                            console_output_log_recording(f"The new Active strike Call list is {Active_strike_list_Call}")
+
+                            CE_stk_Hedges = CE_stk + hedges_distance
+
+                            CE_Hedge_CP, QE_CE_Hedge = Compute_token_Closing_price(CE_stk_Hedges, "Call")
+                            Market_order_Sell(QE_CE_Hedge, Deployed_Size, CE_stk_Hedges, "Call", "Hedge Sell")
+                        else:
+                            pass
+
+                else:
+                    pass
+
+                if len(Active_strike_list_Put) != 0:
+                    PE_stk = Active_strike_list_Put[0]
+                    OID_Put = running_log[str(-PE_stk)]["Order ID"]
+                    Status_put = Status_compute(OID_Put)
+
+                    if Status_put == "TRIGGER PENDING":
+                        pass
+
+                    elif Status_put == "COMPLETE":
+                        print(f"SL hit on put Strike {PE_stk} the market continues in the same trend selling Additional Strikes")
+                        console_output_log_recording(f"SL hit on put Strike {PE_stk} the market continues in the same trend selling Additional Strikes")
+
+                        running_log[str(-PE_stk)]["Status"] = "COMPLETE"
+                        writing_market_status(running_log, "Running_log.txt")
+
+                        Length_call = len(Active_strike_list_Call)
+                        PE_stk_Hedges = PE_stk - hedges_distance
+
+                        PE_Hedge_CP, QE_PE_Hedge = Compute_token_Closing_price(PE_stk_Hedges, "Put")
+                        Market_order_Sell(QE_PE_Hedge, Deployed_Size, PE_stk_Hedges, "Put", "Hedge Sell")
+
+                        if max_call_credit_spreads >= max_credit_spreads or reversal_status == 1:
+                            print("Maximum Credit limit reached can't sell more strikes")
+                            console_output_log_recording("Maximum Credit limit reached can't sell more strikes")
+
+                        elif max_call_credit_spreads < max_credit_spreads and reversal_status == 0:
+                            print("Adding new Strikes")
+                            console_output_log_recording("Adding new Strikes")
+                            Active_strike_list_Call, Active_strike_list_Put = New_order_Placement(Active_strike_list_Call,Active_strike_list_Put,"Market")
+                            print(f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
+                            console_output_log_recording(f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
+                        else:
+                            pass
+
+                    else:
+                        pass
+                else:
+                    pass
+
+            else:
+                pass
+        else:
+            print("Closing for the day")
+            break
+
+        time.sleep(1)
+
 
 def Trailing_SL():
     global Deployed_Size
@@ -835,8 +1235,8 @@ def Trailing_SL():
                 print(f"No SL Update for the Call Strike {CE_stk}")
                 console_output_log_recording(f"No SL Update for the Call Strike {CE_stk}")
 
-            print(f"Present SL CE {New_SL_PE} and Stored SL CE {SL_Put}")
-            console_output_log_recording(f"Present SL CE {New_SL_PE} and Stored SL CE {SL_Put}")
+            print(f"Present SL PE {New_SL_PE} and Stored SL PE {SL_Put}")
+            console_output_log_recording(f"Present SL PE {New_SL_PE} and Stored SL PE {SL_Put}")
 
             if New_SL_PE < SL_Put and New_SL_PE >= Threshold_price:
 
@@ -870,8 +1270,7 @@ def Trailing_SL():
 
             print("Adding new Strikes")
             console_output_log_recording("Adding new Strikes")
-            Active_strike_list_Call, Active_strike_list_Put = New_order_Placement(Active_strike_list_Call,
-                                                                                  Active_strike_list_Put)
+            Active_strike_list_Call, Active_strike_list_Put = New_order_Placement(Active_strike_list_Call,Active_strike_list_Put)
 
             print(
                 f"New Strikes list for Call {Active_strike_list_Call} and New Strikes list for put {Active_strike_list_Put}")
@@ -1177,8 +1576,8 @@ def Trailing_SL():
         pass
 
     current_time = datetime.now().strftime("%H:%M")
-    if current_time >= "15:30":
-        pass
+    if current_time >= last_trailing_time:
+        Last_5_mins_update()
     else:
         schedule_next_execution()
 
@@ -1206,9 +1605,7 @@ def schedule_next_execution():
 
     if next_time:
         # Calculate the time difference in seconds
-        time_difference = (datetime.strptime(next_time, "%H:%M:%S") - datetime.strptime(current_time,
-                                                                                        "%H:%M:%S")).total_seconds()
-
+        time_difference = (datetime.strptime(next_time, "%H:%M:%S") - datetime.strptime(current_time,"%H:%M:%S")).total_seconds()
         time.sleep(int(time_difference))
         Trailing_SL()
 
@@ -1217,8 +1614,7 @@ def schedule_next_execution():
         print("No more times to execute today")
 
 
-def New_order_Placement(Active_strike_list_Call, Active_strike_list_Put):
-    global enctoken
+def New_order_Placement(Active_strike_list_Call, Active_strike_list_Put,Type="Normal"):
     global Market_Trend
     global Deployed_Size
 
@@ -1230,7 +1626,6 @@ def New_order_Placement(Active_strike_list_Call, Active_strike_list_Put):
     max_call_credit_spreads = present_market_status["Maximum call credit Spread"]
     max_put_credit_spreads = present_market_status["Maximum put credit Spread"]
 
-    kite = KiteApp(enctoken=enctoken)
 
     Nifty = kite.ltp(["NSE:NIFTY 50"])
     Nifty_Spot_price = Nifty['NSE:NIFTY 50']['last_price']
@@ -1246,6 +1641,7 @@ def New_order_Placement(Active_strike_list_Call, Active_strike_list_Put):
 
     print(f"The Offset computed is {offset}")
     console_output_log_recording(f"The Offset computed is {offset}")
+
 
     if Market_Trend == "Trending Up":
         Call_strike = Active_strike_list_Call[0]
@@ -1281,11 +1677,28 @@ def New_order_Placement(Active_strike_list_Call, Active_strike_list_Put):
             CP_Call_hedge, qte_call_hedge = Compute_token_Closing_price(New_Call_Strike_hedges, "Call")
             CP_Put_hedge, qte_put_hedge = Compute_token_Closing_price(New_Put_Strike_hedges, "Put")
 
-            limit_order_Sell(qte_call, Deployed_Size, CP_Call, New_Call_Strike, "Call")
-            limit_order_Sell(qte_put, Deployed_Size, CP_Put, New_Put_Strike, "Put")
+            if Type=="Normal":
+                limit_order_Sell(qte_call, Deployed_Size, CP_Call, New_Call_Strike, "Call")
+                limit_order_Sell(qte_put, Deployed_Size, CP_Put, New_Put_Strike, "Put")
 
-            Order_execution_Check(New_Call_Strike, New_Put_Strike, qte_call_hedge, qte_put_hedge, qte_call, qte_put,
-                                  New_Call_Strike_hedges, New_Put_Strike_hedges)
+                Order_execution_Check(New_Call_Strike, New_Put_Strike, qte_call_hedge, qte_put_hedge, qte_call, qte_put,New_Call_Strike_hedges, New_Put_Strike_hedges)
+            
+            elif Type=="Market":
+                Market_order_Sell(qte_call,Deployed_Size,New_Call_Strike,"Call","Sell")
+                running_log = reading_market_status("Running_log.txt")
+                SL_Call=running_log[str(New_Call_Strike)]["Initial Price"]
+                SL_Call_Trig = SL_Call - 0.05
+                SL_Initiate_order(qte_call, Deployed_Size, SL_Call, SL_Call_Trig, New_Call_Strike, "Call")
+                Market_order_Buy(qte_call_hedge,Deployed_Size,New_Call_Strike_hedges,"Call","Buy Hedge")
+
+                Market_order_Sell(qte_put,Deployed_Size,New_Put_Strike,"Put","Sell")
+                running_log = reading_market_status("Running_log.txt")
+                SL_Put=running_log[str(New_Put_Strike)]["Initial Price"]
+                SL_Put_Trig = SL_Put - 0.05
+                SL_Initiate_order(qte_put, Deployed_Size, SL_Put, SL_Put_Trig, New_Put_Strike, "Put")
+                Market_order_Buy(qte_put_hedge,Deployed_Size,New_Put_Strike_hedges,"Put","Buy Hedge")   
+            else:
+                pass
             ############################## SENDING THE ORDER TO THE MARKET #####################################
 
             return Active_strike_list_Call, Active_strike_list_Put
@@ -1315,9 +1728,18 @@ def New_order_Placement(Active_strike_list_Call, Active_strike_list_Put):
             CP_Put, qte_put = Compute_token_Closing_price(New_Put_Strike, "Put")
             CP_Put_hedge, qte_put_hedge = Compute_token_Closing_price(New_Put_Strike_hedges, "Put")
 
-            limit_order_Sell(qte_put, Deployed_Size, CP_Put, New_Put_Strike, "Put")
-
-            Order_execution_Check(None, New_Put_Strike, None, qte_put_hedge, None, qte_put, None, New_Put_Strike_hedges)
+            if Type=="Normal":
+                limit_order_Sell(qte_put, Deployed_Size, CP_Put, New_Put_Strike, "Put")
+                Order_execution_Check(None, New_Put_Strike, None, qte_put_hedge, None, qte_put, None, New_Put_Strike_hedges)
+            elif Type=="Market":
+                Market_order_Sell(qte_put,Deployed_Size,New_Put_Strike,"Put","Sell")
+                running_log = reading_market_status("Running_log.txt")
+                SL_Put=running_log[str(New_Put_Strike)]["Initial Price"]
+                SL_Put_Trig = SL_Put - 0.05
+                SL_Initiate_order(qte_put, Deployed_Size, SL_Put, SL_Put_Trig, New_Put_Strike, "Put")
+                Market_order_Buy(qte_put_hedge,Deployed_Size,New_Put_Strike_hedges,"Put","Buy Hedge")   
+            else:
+                pass
             ############################## SENDING THE ORDER TO THE MARKET #####################################
 
             return Active_strike_list_Call, Active_strike_list_Put
@@ -1360,11 +1782,27 @@ def New_order_Placement(Active_strike_list_Call, Active_strike_list_Put):
             CP_Call_hedge, qte_call_hedge = Compute_token_Closing_price(New_Call_Strike_hedges, "Call")
             CP_Put_hedge, qte_put_hedge = Compute_token_Closing_price(New_Put_Strike_hedges, "Put")
 
-            limit_order_Sell(qte_call, Deployed_Size, CP_Call, New_Call_Strike, "Call")
-            limit_order_Sell(qte_put, Deployed_Size, CP_Put, New_Put_Strike, "Put")
+            if Type=="Normal":
+                limit_order_Sell(qte_call, Deployed_Size, CP_Call, New_Call_Strike, "Call")
+                limit_order_Sell(qte_put, Deployed_Size, CP_Put, New_Put_Strike, "Put")
 
-            Order_execution_Check(New_Call_Strike, New_Put_Strike, qte_call_hedge, qte_put_hedge, qte_call, qte_put,
-                                  New_Call_Strike_hedges, New_Put_Strike_hedges)
+                Order_execution_Check(New_Call_Strike, New_Put_Strike, qte_call_hedge, qte_put_hedge, qte_call, qte_put,New_Call_Strike_hedges, New_Put_Strike_hedges)
+            elif Type=="Market":
+                Market_order_Sell(qte_call,Deployed_Size,New_Call_Strike,"Call","Sell")
+                running_log = reading_market_status("Running_log.txt")
+                SL_Call=running_log[str(New_Call_Strike)]["Initial Price"]
+                SL_Call_Trig = SL_Call - 0.05
+                SL_Initiate_order(qte_call, Deployed_Size, SL_Call, SL_Call_Trig, New_Call_Strike, "Call")
+                Market_order_Buy(qte_call_hedge,Deployed_Size,New_Call_Strike_hedges,"Call","Buy Hedge")
+
+                Market_order_Sell(qte_put,Deployed_Size,New_Put_Strike,"Put","Sell")
+                running_log = reading_market_status("Running_log.txt")
+                SL_Put=running_log[str(New_Put_Strike)]["Initial Price"]
+                SL_Put_Trig = SL_Put - 0.05
+                SL_Initiate_order(qte_put, Deployed_Size, SL_Put, SL_Put_Trig, New_Put_Strike, "Put")
+                Market_order_Buy(qte_put_hedge,Deployed_Size,New_Put_Strike_hedges,"Put","Buy Hedge")   
+            else:
+                pass
             ############################## SENDING THE ORDER TO THE MARKET #####################################
 
             return Active_strike_list_Call, Active_strike_list_Put
@@ -1393,10 +1831,18 @@ def New_order_Placement(Active_strike_list_Call, Active_strike_list_Put):
             CP_Call, qte_call = Compute_token_Closing_price(New_Call_Strike, "Call")
             CP_Call_hedge, qte_call_hedge = Compute_token_Closing_price(New_Call_Strike_hedges, "Call")
 
-            limit_order_Sell(qte_call, Deployed_Size, CP_Call, New_Call_Strike, "Call")
-
-            Order_execution_Check(New_Call_Strike, None, qte_call_hedge, None, qte_call, None, New_Call_Strike_hedges,
-                                  None)
+            if Type=="Normal":
+                limit_order_Sell(qte_call, Deployed_Size, CP_Call, New_Call_Strike, "Call")
+                Order_execution_Check(New_Call_Strike, None, qte_call_hedge, None, qte_call, None, New_Call_Strike_hedges,None)
+            elif Type=="Market":
+                Market_order_Sell(qte_call,Deployed_Size,New_Call_Strike,"Call","Sell")
+                running_log = reading_market_status("Running_log.txt")
+                SL_Call=running_log[str(New_Call_Strike)]["Initial Price"]
+                SL_Call_Trig = SL_Call - 0.05
+                SL_Initiate_order(qte_call, Deployed_Size, SL_Call, SL_Call_Trig, New_Call_Strike, "Call")
+                Market_order_Buy(qte_call_hedge,Deployed_Size,New_Call_Strike_hedges,"Call","Buy Hedge")
+            else:
+                pass
             ############################## SENDING THE ORDER TO THE MARKET #####################################
 
             return Active_strike_list_Call, Active_strike_list_Put
@@ -1936,188 +2382,26 @@ def Initial_date_compute(Current_expiry_date):
 
 #################################################### ALGO Code ##########################################################
 
-#################################################### STRIKES SELECTION ##################################################
-def get_website_content():
-    import time
-
-    url = "https://oxide.sensibull.com/v1/compute/cache/live_derivative_prices/256265"
-
-    while True:
-        response = requests.get(url)
-        if response.status_code == 200:
-            print("Succesfully got the data")
-            return response.json()
-        else:
-            print("Failed to fetch the URL:", response.status_code)
-            print("Retrying in 1 second...")
-            time.sleep(1)
-
-
-def Strikes_selection_func(Desired_delta):
-    present_market_status = reading_market_status()
-    Current_market_segment = present_market_status["Segment"]
-    Current_expiry_date = present_market_status["Expiry Day"]
-    Current_month_end = present_market_status["Month End"]
-
-    Segment_name = Current_market_segment
-    expiry_date = Current_expiry_date
-    Month_end = Current_month_end
-    content_enctoken = df.iloc[0, 0]
-    enctoken = content_enctoken
-    kite = KiteApp(enctoken=enctoken)
-
-    website_content = get_website_content()
-
-    date_obj = datetime.strptime(expiry_date, "%d-%b-%y")
-    expiry_date = date_obj.strftime("%d-%b-%Y")
-
-    final_new = Intraday_live_data.getoptionchain(Segment_name, expiry_date)
-    final_new.reset_index(drop=True, inplace=True)
-    Strikes_option_chain = final_new['strikePrice'].tolist()
-
-    modified_date = formatted_dates(expiry_date, Month_end)
-
-    Date_CE = []
-    Date_PE = []
-    Time_CE = []
-    Time_PE = []
-    Strikes_CE = []
-    Strikes_PE = []
-    Price_CE = []
-    Price_PE = []
-    Theta_CE = []
-    Theta_PE = []
-    delta_CE = []
-    delta_PE = []
-    gamma_CE = []
-    gamma_PE = []
-    Vega_CE = []
-    Vega_PE = []
-    IV_CE = []
-    IV_PE = []
-
-    for i in range(len(Strikes_option_chain)):
-        quote_CE = Segment_name + modified_date + str(Strikes_option_chain[i]) + "CE"
-        atm_token_ce = kite.ltp("NFO:" + quote_CE)
-        ATM_Token_CE = atm_token_ce["NFO:" + quote_CE]['instrument_token']
-
-        quote_PE = Segment_name + modified_date + str(Strikes_option_chain[i]) + "PE"
-        atm_token_pe = kite.ltp("NFO:" + quote_PE)
-        ATM_Token_PE = atm_token_pe["NFO:" + quote_PE]['instrument_token']
-
-        expiry_date_obj = datetime.strptime(expiry_date, "%d-%b-%Y")
-        new_expiry_date = expiry_date_obj.strftime("%Y-%m-%d")
-
-        if website_content:
-            content_length = len(website_content['data']['per_expiry_data'][new_expiry_date]['options'])
-
-            for j in range(content_length):
-
-                if website_content['data']['per_expiry_data'][new_expiry_date]['options'][j]['token'] == ATM_Token_CE:
-                    datetime_str = website_content['data']['per_expiry_data'][new_expiry_date]['options'][j][
-                        'last_trade_time']
-                    datetime_obj_utc = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=pytz.UTC)
-                    ist_timezone = pytz.timezone('Asia/Kolkata')
-                    datetime_obj_ist = datetime_obj_utc.astimezone(ist_timezone)
-                    date = datetime_obj_ist.strftime('%d-%m-%Y')
-                    time_ist = datetime_obj_ist.strftime('%H:%M:%S')
-
-                    Date_CE.append(date)
-                    Time_CE.append(time_ist)
-                    Strikes_CE.append(Strikes_option_chain[i])
-                    Price_CE.append(
-                        website_content['data']['per_expiry_data'][new_expiry_date]['options'][j]['last_price'])
-                    Theta_CE.append(
-                        website_content['data']['per_expiry_data'][new_expiry_date]['options'][j]['greeks_with_iv'][
-                            "theta"])
-                    delta_CE.append(
-                        website_content['data']['per_expiry_data'][new_expiry_date]['options'][j]['greeks_with_iv'][
-                            "delta"])
-                    gamma_CE.append(
-                        website_content['data']['per_expiry_data'][new_expiry_date]['options'][j]['greeks_with_iv'][
-                            "gamma"])
-                    Vega_CE.append(
-                        website_content['data']['per_expiry_data'][new_expiry_date]['options'][j]['greeks_with_iv'][
-                            "vega"])
-                    IV_CE.append(
-                        website_content['data']['per_expiry_data'][new_expiry_date]['options'][j]['greeks_with_iv'][
-                            "iv"])
-                else:
-                    pass
-
-                if website_content['data']['per_expiry_data'][new_expiry_date]['options'][j]['token'] == ATM_Token_PE:
-                    datetime_str = website_content['data']['per_expiry_data'][new_expiry_date]['options'][j][
-                        'last_trade_time']
-                    datetime_obj_utc = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=pytz.UTC)
-                    ist_timezone = pytz.timezone('Asia/Kolkata')
-                    datetime_obj_ist = datetime_obj_utc.astimezone(ist_timezone)
-                    date = datetime_obj_ist.strftime('%d-%m-%Y')
-                    time_ist = datetime_obj_ist.strftime('%H:%M:%S')
-
-                    Date_PE.append(date)
-                    Time_PE.append(time_ist)
-                    Strikes_PE.append(Strikes_option_chain[i])
-                    Price_PE.append(
-                        website_content['data']['per_expiry_data'][new_expiry_date]['options'][j]['last_price'])
-                    Theta_PE.append(
-                        website_content['data']['per_expiry_data'][new_expiry_date]['options'][j]['greeks_with_iv'][
-                            "theta"])
-                    delta_PE.append(
-                        website_content['data']['per_expiry_data'][new_expiry_date]['options'][j]['greeks_with_iv'][
-                            "delta"])
-                    gamma_PE.append(
-                        website_content['data']['per_expiry_data'][new_expiry_date]['options'][j]['greeks_with_iv'][
-                            "gamma"])
-                    Vega_PE.append(
-                        website_content['data']['per_expiry_data'][new_expiry_date]['options'][j]['greeks_with_iv'][
-                            "vega"])
-                    IV_PE.append(
-                        website_content['data']['per_expiry_data'][new_expiry_date]['options'][j]['greeks_with_iv'][
-                            "iv"])
-                else:
-                    pass
-
-    final_file_CE = {"Date": Date_CE, "Time": Time_CE, "Strike": Strikes_CE, "Price CE": Price_CE, "Theta CE": Theta_CE,
-                     "Delta CE": delta_CE, "Gamma CE": gamma_CE, "Vega CE": Vega_CE, "IV CE": IV_CE}
-    final_file_PE = {"Date": Date_PE, "Time": Time_PE, "Strike": Strikes_PE, "Price PE": Price_PE, "Theta PE": Theta_PE,
-                     "Delta PE": delta_PE, "Gamma PE": gamma_PE, "Vega PE": Vega_PE, "IV PE": IV_PE}
-
-    final_df_CE = pd.DataFrame(final_file_CE)
-    final_df_PE = pd.DataFrame(final_file_PE)
-
-    final_df_CE.to_csv(Path_backtest_Report + "Call_Strikes.csv", index=False)
-    closest_index_CE = (final_df_CE['Delta CE'] < Desired_delta).idxmax()
-
-    Desired_Strike_CE = final_df_CE.loc[closest_index_CE, "Strike"]
-    delta_CE = final_df_CE.loc[closest_index_CE, "Delta CE"]
-
-    final_df_PE['Delta PE'] = -1 * final_df_PE['Delta PE']
-    final_df_PE = final_df_PE.sort_values(by='Strike', ascending=False)
-
-    closest_to_zero_index = (final_df_PE['Delta PE'] < Desired_delta).idxmax()
-
-    Desired_Strike_PE = final_df_PE.loc[closest_to_zero_index, "Strike"]
-    delta_PE = final_df_PE.loc[closest_to_zero_index, "Delta PE"]
-
-    return Desired_Strike_CE, Desired_Strike_PE, delta_CE, delta_PE
-
-
-#################################################### STRIKES SELECTION ##################################################
-
 path_main = "D:/ashu/Finance/algo_trading/Zerodha_GUI/Kite_Zerodha-main/Kite_Zerodha-main/"
 Path_backtest_Report = "D:/ashu/Finance/algo_trading/Zerodha_GUI/Kite_Zerodha-main/Kite_Zerodha-main/Live_market_data_gathering/"
 
-df = pd.read_csv(path_main + "Enctoke_Expiry_month_end_info.csv")
-content_enctoken = df.iloc[0, 0]
-enctoken = content_enctoken
+with open(path_main+'kite_api_login_credentials.txt', 'r') as file:
+    data_str = file.read()
+
+data_dict=json.loads(data_str)
+logging.basicConfig(level=logging.DEBUG)
+kite = KiteConnect(api_key=data_dict['API_Key'])
+
+Access_token=data_dict["Acess_token"]
+kite.set_access_token(Access_token)
 
 ####################### Global Declared Variables ##############################
 
 ###################################### INITIAL DAY SETTINGS #####################################
 
-Interrupt = 0
-# call_strike=22650
-# put_strike=21500
+Interrupt = 1
+call_strike=23750
+put_strike=23000
 
 ###################################### INITIAL DAY SETTINGS #####################################
 
@@ -2143,6 +2427,9 @@ Initial_day = Initial_date_compute(Expiry_date)
 Initiate_time = "09:20"
 Desired_time = "09:30"
 Start_time="09:15"
+Market_close_time="15:30:00"
+last_trailing_time="15:24:00"
+
 desired_delta = 0.15
 
 Threshold_price = 1
@@ -2186,22 +2473,6 @@ while current_time <= end_time:
 # ####################### Global Declared Variables ##############################
 
 if Initial_day == 1 and Interrupt == 0:
-
-    time_diff_seconds = sleep_time_compute(Initiate_time)
-    print(f"Waiting until {Initiate_time}...")
-    time.sleep(time_diff_seconds)
-    print("Starting Morning Code.....")
-
-    while True:
-        try:
-            call_strike, put_strike, delta_CE, delta_PE = Strikes_selection_func(desired_delta)
-            print(f"Call Strike: {call_strike} Delta CE: {delta_CE} Put Strike: {put_strike} Delta PE: {delta_PE}")
-            console_output_log_recording(f"Call Strike: {call_strike} Delta CE: {delta_CE} Put Strike: {put_strike} Delta PE: {delta_PE}")
-            break
-        except Exception as e:
-            print("Error:", e)
-            print("Retrying to get the Strikes")
-            console_output_log_recording("Retrying to get the Strikes")
 
     Input_Strike_Call = call_strike
     Input_Strike_Put = put_strike

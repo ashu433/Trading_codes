@@ -14,6 +14,10 @@ import io
 import requests
 import json
 import shutil
+import logging
+from kiteconnect import KiteConnect
+from pyotp import TOTP
+from kiteconnect import KiteTicker
 
 
 def formatted_dates(expiry,month_end):
@@ -47,14 +51,23 @@ def formatted_dates(expiry,month_end):
 def sensex(quote_CE,quote_PE,strikes_sensex,xox):
     global token_not_present_in_data
 
-    atm_token_ce=kite.ltp("BFO:"+quote_CE)
-    atm_token_pe=kite.ltp("BFO:"+quote_PE)
-    if len(atm_token_ce)==0 or len(atm_token_pe)==0:
+
+    instrument_dump_BFO=kite.instruments("BFO")
+    instrument_BFO_df=pd.DataFrame(instrument_dump_BFO)
+
+    index_CE=instrument_BFO_df.index[instrument_BFO_df['tradingsymbol'] ==quote_CE].tolist()
+    index_PE=instrument_BFO_df.index[instrument_BFO_df['tradingsymbol'] ==quote_PE].tolist()
+
+    if len(index_CE)==0 or len(index_PE)==0:
         token_not_present_in_data.append(quote_CE)
         token_not_present_in_data.append(quote_PE)
     else:
-        ATM_Token_CE=atm_token_ce["BFO:"+quote_CE]['instrument_token']
-        ATM_Token_PE=atm_token_pe["BFO:"+quote_PE]['instrument_token']
+
+        atm_token_ce=instrument_BFO_df.loc[index_CE[0],"instrument_token"]
+        atm_token_pe=instrument_BFO_df.loc[index_PE[0],"instrument_token"]
+
+        ATM_Token_CE=atm_token_ce
+        ATM_Token_PE=atm_token_pe
 
         print(ATM_Token_CE)
         print(ATM_Token_PE)
@@ -208,6 +221,9 @@ def Options_index():
     Month_End=index_data["Month End"]
     month_end_status=Month_End.to_list()
 
+    instrument_dump_NFO=kite.instruments("NFO")
+    instrument_NFO_df=pd.DataFrame(instrument_dump_NFO)
+
     for i in range(len(Symbol_index)):
         from datetime import datetime
 
@@ -241,14 +257,19 @@ def Options_index():
             if Symbol_index[i]=="SENSEX":
                 sensex(quote_CE,quote_PE,strikes[j],xox)
             else:
-                atm_token_ce=kite.ltp("NFO:"+quote_CE)
-                atm_token_pe=kite.ltp("NFO:"+quote_PE)
-                if len(atm_token_ce)==0 or len(atm_token_pe)==0:
+                index_CE=instrument_NFO_df.index[instrument_NFO_df['tradingsymbol'] ==quote_CE].tolist()
+                index_PE=instrument_NFO_df.index[instrument_NFO_df['tradingsymbol'] ==quote_PE].tolist()
+
+                if len(index_CE)==0 or len(index_PE)==0:
                     token_not_present_in_data.append(quote_CE)
                     token_not_present_in_data.append(quote_PE)
                 else:
-                    ATM_Token_CE=atm_token_ce["NFO:"+quote_CE]['instrument_token']
-                    ATM_Token_PE=atm_token_pe["NFO:"+quote_PE]['instrument_token']
+
+                    atm_token_ce=instrument_NFO_df.loc[index_CE[0],"instrument_token"]
+                    atm_token_pe=instrument_NFO_df.loc[index_PE[0],"instrument_token"]
+
+                    ATM_Token_CE=atm_token_ce
+                    ATM_Token_PE=atm_token_pe
 
                     print(ATM_Token_CE)
                     print(ATM_Token_PE)
@@ -355,6 +376,8 @@ def stock_Options():
     with open(file_path, 'r') as file:
         expiry_date=file.read()
 
+    instrument_dump_NFO=kite.instruments("NFO")
+    instrument_NFO_df=pd.DataFrame(instrument_dump_NFO)
 
     for i in range(len(unique_symbol)):
 
@@ -378,15 +401,18 @@ def stock_Options():
             print(quote_CE)
             print(quote_PE)
 
-            atm_token_ce=kite.ltp("NFO:"+quote_CE)
-            atm_token_pe=kite.ltp("NFO:"+quote_PE)
+            index_CE=instrument_NFO_df.index[instrument_NFO_df['tradingsymbol'] ==quote_CE].tolist()
+            index_PE=instrument_NFO_df.index[instrument_NFO_df['tradingsymbol'] ==quote_PE].tolist()
 
-            if len(atm_token_ce)==0 or len(atm_token_pe)==0:
+            if len(index_CE)==0 or len(index_PE)==0:
                 token_not_present_in_data.append(quote_CE)
                 token_not_present_in_data.append(quote_PE)
             else:
-                ATM_Token_CE=atm_token_ce["NFO:"+quote_CE]['instrument_token']
-                ATM_Token_PE=atm_token_pe["NFO:"+quote_PE]['instrument_token']
+                atm_token_ce=instrument_NFO_df.loc[index_CE[0],"instrument_token"]
+                atm_token_pe=instrument_NFO_df.loc[index_PE[0],"instrument_token"]
+
+                ATM_Token_CE=atm_token_ce
+                ATM_Token_PE=atm_token_pe
 
                 print(ATM_Token_CE)
                 print(ATM_Token_PE)
@@ -492,6 +518,9 @@ def Future_index():
 
     rows=unique_df.shape[0]
 
+    instrument_dump_NFO=kite.instruments("NFO")
+    instrument_NFO_df=pd.DataFrame(instrument_dump_NFO)
+
     Instrument_list=[]
 
     for i in range(rows):
@@ -518,10 +547,8 @@ def Future_index():
 
     for k in range(len(Instrument_list)):
 
-        token=kite.ltp("NFO:"+Instrument_list[k])
-        token_id=token["NFO:"+Instrument_list[k]]['instrument_token']
-
-        print(token_id)
+        index_fut=instrument_NFO_df.index[instrument_NFO_df['tradingsymbol'] ==Instrument_list[k]].tolist()
+        token_id=instrument_NFO_df.loc[index_fut[0],"instrument_token"]
 
         import datetime
 
@@ -571,6 +598,9 @@ def Futures_stock():
     unique_df = Fut_Index.drop_duplicates(subset='SYMBOL', keep='first')
     unique_df=unique_df.reset_index(drop=True)
 
+    instrument_dump_NFO=kite.instruments("NFO")
+    instrument_NFO_df=pd.DataFrame(instrument_dump_NFO)
+
     rows=unique_df.shape[0]
 
     Instrument_list=[]
@@ -598,8 +628,8 @@ def Futures_stock():
 
     for k in range(len(Instrument_list)):
 
-        token=kite.ltp("NFO:"+Instrument_list[k])
-        token_id=token["NFO:"+Instrument_list[k]]['instrument_token']
+        index_fut=instrument_NFO_df.index[instrument_NFO_df['tradingsymbol'] ==Instrument_list[k]].tolist()
+        token_id=instrument_NFO_df.loc[index_fut[0],"instrument_token"]
 
         print(Instrument_list[k])
         print(token_id)
@@ -849,14 +879,18 @@ def F_O_Stocks_closing_price():
     common_symbols = [symbol for symbol in unique_symbol if symbol in old_symbol_list]
     non_common_symbols = [symbol for symbol in unique_symbol if symbol not in old_symbol_list] + [symbol for symbol in old_symbol_list if symbol not in unique_symbol]
 
+    instrument_dump_NSE=kite.instruments("NSE")
+    instrument_NSE_df=pd.DataFrame(instrument_dump_NSE)
+
     for symbol in common_symbols:
         import datetime
         quote=str(symbol)
         print(f"Collecting closing price data for {quote}")
         df_old=pd.read_csv(path_closing_price+quote+".csv")
 
-        token=kite.ltp("NSE:"+quote)
-        instrument_token=token["NSE:"+quote]["instrument_token"]
+        index=instrument_NSE_df.index[instrument_NSE_df['tradingsymbol'] ==quote].tolist()
+
+        instrument_token=instrument_NSE_df.loc[index[0],"instrument_token"]
         from_datetime = datetime.datetime.now() - datetime.timedelta(days=1)     # From last & days historical limit 100 days for 5 mins
         to_datetime = datetime.datetime.now()
 
@@ -923,6 +957,12 @@ def Sectors_indices_closing_price():
     list_1_min=["NIFTY 50", "NIFTY BANK","NIFTY FIN SERVICE","NIFTY MID SELECT","SENSEX"]
     Sectors_list=["IT","FMCG","HEALTHCARE","PHARMA","AUTO","REALTY","METAL","MEDIA","OIL AND GAS","CONSR DURBL","PSU BANK","INDIA VIX"]
 
+    instrument_dump_NSE=kite.instruments("NSE")
+    instrument_NSE_df=pd.DataFrame(instrument_dump_NSE)
+
+    instrument_dump_BSE=kite.instruments("BSE")
+    instrument_BSE_df=pd.DataFrame(instrument_dump_BSE)
+
     for index_1_min in list_1_min:
         import datetime
         quote=str(index_1_min)
@@ -930,12 +970,12 @@ def Sectors_indices_closing_price():
         df_old=pd.read_csv(path_closing_price+quote+".csv")
 
         if quote!="SENSEX":
-            token=kite.ltp("NSE:"+quote)
-            instrument_token=token["NSE:"+quote]["instrument_token"]
+            index=instrument_NSE_df.index[instrument_NSE_df['tradingsymbol'] ==quote].tolist()
+            instrument_token=instrument_NSE_df.loc[index[0],"instrument_token"]
 
         elif quote=="SENSEX":
-            token=kite.ltp("BSE:"+quote)
-            instrument_token=token["BSE:"+quote]["instrument_token"]
+            index=instrument_BSE_df.index[instrument_BSE_df['tradingsymbol'] ==quote].tolist()
+            instrument_token=instrument_BSE_df.loc[index[0],"instrument_token"]
 
         from_datetime = datetime.datetime.now() - datetime.timedelta(days=1)     # From last & days historical limit 60 days for 1 min
         to_datetime = datetime.datetime.now()
@@ -973,8 +1013,8 @@ def Sectors_indices_closing_price():
         print(f"Collecting closing price data for {quote}")
         df_old=pd.read_csv(path_closing_price+quote+".csv")
 
-        token=kite.ltp("NSE:"+quote)
-        instrument_token=token["NSE:"+quote]["instrument_token"]
+        index=instrument_NSE_df.index[instrument_NSE_df['tradingsymbol'] ==quote].tolist()
+        instrument_token=instrument_NSE_df.loc[index[0],"instrument_token"]
 
         from_datetime = datetime.datetime.now() - datetime.timedelta(days=1)     # From last & days
         to_datetime = datetime.datetime.now()
@@ -1111,7 +1151,7 @@ def Pre_market_data_collection(path,content_read):
     Sell_df=pd.DataFrame(Sell_list)
 
     Pre_market_data_1={"Date":Date,"Time":Time,"Advance":Advance,"Decline":Decline,"Unchanged":Unchanged,"Total Traded Value in Crores":Total_traded_value_in_cr,"Total Market Cap":Total_market_cap,"Total traded volume":Total_traded_volume
-                    ,"Symbol":Symbol,"Opening Price Today":Opening_price_today,"Closing Price":Closing_price,"Change":Change,"Percentage Change":Percent_change,"Final Setteled Quantity":Final_setteled_qty,
+                    ,"Symbol":Symbol,"Opening Price Today":Opening_price_today,"Closing Price Previous Day":Closing_price,"Change":Change,"Percentage Change":Percent_change,"Final Setteled Quantity":Final_setteled_qty,
                     "Total Turnover in Crore":Total_turn_over_in_cr,"Market Captilization":Market_cap_in_cr,"Year High":Year_high,"Year Low":Year_low}
 
     Pre_market_data_3={"ATO Buy Qty":ATO_Buy_Qty,"ATO Sell Qty":ATO_Sell_Qty,"Equilibrium Volume":Total_traded_volume_eqilibrim_qty,"Total Sell Quantity":Total_sell_Qty,"Total Buy Quantity":Total_Buy_Qty}
@@ -1157,19 +1197,30 @@ path_index="D:/ashu/Finance/Daily_F_O_data/Options/Index/"
 path_stocks_path="D:/ashu/Finance/Daily_F_O_data/Options/Stocks/"
 
 
+###################################### CALLING KITE API CREDITIANLS ###############################################
 
-df=pd.read_csv(path_main+"Enctoke_Expiry_month_end_info.csv")
-content_enctoken=df.iloc[0,0]
-enctoken = content_enctoken
-kite = KiteApp(enctoken=enctoken)
+with open(path_main+'kite_api_login_credentials.txt', 'r') as file:
+    data_str = file.read()
+
+data_dict=json.loads(data_str)
+logging.basicConfig(level=logging.DEBUG)
+kite = KiteConnect(api_key=data_dict['API_Key'])
+
+Access_token=data_dict["Acess_token"]
+kite.set_access_token(Access_token)
+
+
+###################################### CALLING KITE API CREDITIANLS ###############################################
 
 filter_time="15:30"
+
 
 from datetime import datetime
 
 today_date = datetime.today()
 formatted_todays_date = today_date.strftime('%d-%m-%Y')
 Holidays_list,Description_of_holidays,Week_on_holiday=Holidays_dates_determination()
+
 
 if formatted_todays_date in Holidays_list:
     print("Today is holiday")

@@ -1,1 +1,0 @@
-{"Market Trend": "Neutral", "Active Call Strikes": [22650], "Active Put Strikes": [21500], "Reversal status": 0, "Maximum call credit Spread": 1, "Maximum put credit Spread": 1, "Segment": "NIFTY", "Expiry Day": "16-May-24", "Month End": 0, "Initial Date": "10-May-2024"}

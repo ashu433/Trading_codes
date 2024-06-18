@@ -73,6 +73,7 @@ class KiteApp:
 
     def instruments(self, exchange=None):
         data = self.session.get(f"{self.root_url}/instruments",headers=self.headers).text.split("\n")
+        # print(data)
         Exchange = []
         for i in data[1:-1]:
             row = i.split(",")
