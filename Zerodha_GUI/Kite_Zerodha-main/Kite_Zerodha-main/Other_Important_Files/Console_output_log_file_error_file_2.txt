@@ -1,0 +1,3 @@
+Date: 23-07-2024 Time: 10:45:00: Modifiying the Put Strike 23700.
+Date: 23-07-2024 Time: 10:45:14: All the Orders are succesfully complete.
+Date: 23-07-2024 Time: 10:45:15: The error statement due to SL placement : Trigger price for stoploss buy orders cannot be above the upper circuit price. Please try placing the order with trigger price below 55.10. [Read more.](https://support.zerodha.com/category/trading-and-markets/margin-leverage-and-product-and-order-types/articles/what-are-stop-loss-orders-and-how-to-use-them).

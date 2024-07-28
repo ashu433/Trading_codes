@@ -7,7 +7,7 @@ import numpy as np
 Access_path_date="H:/My Drive/Daily_F_O_data/Options/Index/"
 Accesst_path_Spot_IR="H:/My Drive/Daily_F_O_data/"
 path_main="D:/ashu/Finance/algo_trading/Zerodha_GUI/Kite_Zerodha-main/Kite_Zerodha-main/"
-path_spot_vol="H:/My Drive/Daily_F_O_data/"
+path_spot_vol="H:/My Drive/Daily_F_O_data/Daily_closing_price_data/"
 Path_backtest_Report="D:/ashu/Finance/algo_trading/Zerodha_GUI/Kite_Zerodha-main/Kite_Zerodha-main/Back_Test_Files_Report/"
 
 Accepted_Expiry_Dates=["12-Mar-2020","09-Apr-2020","28-May-2020","19-Nov-2020","03-Dec-2020","28-Jan-2021","11-Mar-2021","01-Apr-2021","15-Apr-2021","22-Apr-2021",
@@ -165,11 +165,11 @@ Threshold_price=1
 Net_P_L=0
 Len_ce=0
 Len_pe=0
-Lot_size=50
+Lot_size=25
 max_credit_spreads=4
 Hedges_distance=600
 Distance_between_strikes=50
-size=10
+size=1
 ################### Variables of the startjee ##############
 
 def console_output_log_recording(content):
@@ -744,8 +744,8 @@ def Triggered_time_greater_closing_time_func(sl_hit_time,Date):
     target_time_df=Market_close_time
     print(f"Target time: {target_time_df}")
 
-    volatility_file=pd.read_csv(path_spot_vol+"India_Vix_Historical.csv")
-    Nifty_spot_file=pd.read_csv(path_spot_vol+"Nifty_50_Historical.csv")
+    volatility_file=pd.read_csv(path_spot_vol+"INDIA VIX.csv")
+    Nifty_spot_file=pd.read_csv(path_spot_vol+"NIFTY 50.csv")
 
     row_index_vol = volatility_file.index[(volatility_file['Time'] == target_time_df)&(volatility_file['Date'] == Date)].tolist()
     row_index_spot = Nifty_spot_file.index[(Nifty_spot_file['Time'] == sl_hit_time)&(Nifty_spot_file['Date'] == Date)].tolist()
@@ -791,9 +791,9 @@ def volatility_strike_pred(Date,Time,path_expiry_date_recurring,Startjee_1_dict_
     Triggered_time=round_to_nearest_5_minutes(Triggered_time)
 
     ts = pd.Timestamp(Date)
-    formatted_date = ts.strftime('%d-%m-%Y')
-    volatility_file=pd.read_csv(path_spot_vol+"India_Vix_Historical.csv")
-    Nifty_spot_file=pd.read_csv(path_spot_vol+"Nifty_50_Historical.csv")
+    formatted_date = ts.strftime('%Y-%m-%d')
+    volatility_file=pd.read_csv(path_spot_vol+"INDIA VIX.csv")
+    Nifty_spot_file=pd.read_csv(path_spot_vol+"NIFTY 50.csv")
 
     print(f"The triggered time is {Triggered_time} and the target time for the data frame is {target_time_df}")
 
@@ -804,6 +804,8 @@ def volatility_strike_pred(Date,Time,path_expiry_date_recurring,Startjee_1_dict_
         row_index_vol = volatility_file.index[(volatility_file['Time'] == Triggered_time)&(volatility_file['Date'] == formatted_date)].tolist()
         row_index_spot = Nifty_spot_file.index[(Nifty_spot_file['Time'] == Triggered_time)&(Nifty_spot_file['Date'] == formatted_date)].tolist()
 
+        print(volatility_file)
+        print(f"Triggered Time: {Triggered_time} and Date: {formatted_date} and row index vol {row_index_vol} and row index spot {row_index_spot}")
         volatility=volatility_file.loc[row_index_vol[0],"close"]
         Nifty_spot_price=Nifty_spot_file.loc[row_index_spot[0],"close"]
 
@@ -1905,6 +1907,9 @@ def routine_code(index_row,Active_call_Strike,Active_put_Strike,Active_Initial_S
             for i in range(run_len):
 
                 if Market_trend=="Neutral":
+
+                    print(f"Current day: {output_date}")
+                    console_output_log_recording(f"Current day: {output_date}")
                     CE_SL=Active_SL_Call[0]
                     PE_SL=Active_SL_Put[0]
 
@@ -3289,7 +3294,7 @@ for k in range(len(formatted_Date_of_Init)):
         with open(Path_backtest_Report+'Rejected_Strikes_list.txt', 'w') as file:
             file.write(str(rejected_strikes_list))
         
-        for j in range(num_days):
+        for j in range(1):
             if Day==0:
                 ############# Path Update ###################
                 path_init_date=f"{Access_path_date}{formatted_Date_of_Init[k]}/"
@@ -3426,6 +3431,7 @@ final_data={"Date of Initiation":date_init,"Date of Expiry":date_exp,"Market Sen
 Analysis_data_output={"Date":Date_ana,"Time":Time_ana,"Net Profit and Loss":Net_Profit_loss_ana,"Call Premium Collected": Call_preimum_ana,"Put Premium Collected": Put_premium_ana,
                       "Close CE_1":Call_CE_1_CP_ana,"SL Call 1":SL_1_Call_ana,"Close CE_2":Call_CE_2_CP_ana,"SL Call 2":SL_2_Call_ana,"Close CE_3":Call_CE_3_CP_ana,"SL Call 3":SL_3_Call_ana,"Close CE_4":Call_CE_4_CP_ana,"SL Call 4":SL_4_Call_ana,
                       "Close PE_1":Put_PE_1_CP_ana,"SL Put 1":SL_1_Put_ana,"Close PE_2":Put_PE_2_CP_ana,"SL Put 2":SL_2_Put_ana,"Close PE_3":Put_PE_3_CP_ana,"SL Put 3":SL_3_Put_ana,"Close PE_4":Put_PE_4_CP_ana,"SL Put 4":SL_4_Put_ana}
+
 Analysis_generated_df=pd.DataFrame(Analysis_data_output)
 Analysis_generated_df.to_csv(Path_backtest_Report+"Analysis_generated_df.csv",index=False)
 

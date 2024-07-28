@@ -1422,8 +1422,12 @@ def Trailing_SL():
                 Market_order_Sell(QE_CE_Hedge, Deployed_Size, CE_stk_Hedges, "Call", "Hedge Sell")
 
                 if max_put_credit_spreads >= max_credit_spreads or reversal_status == 1:
-                    print("Maximum Credit limit reached can't sell more strikes")
-                    console_output_log_recording("Maximum Credit limit reached can't sell more strikes")
+                    Active_strike_list_Call.remove(CE_stk)
+                    present_market_status["Active Call Strikes"] = Active_strike_list_Call
+                    writing_market_status(present_market_status)
+
+                    print("Maximum Credit limit reached can't sell more strikes or market reverses")
+                    console_output_log_recording("Maximum Credit limit reached can't sell more strikes or market reverses")
                 elif max_put_credit_spreads < max_credit_spreads and reversal_status == 0:
                     print("Adding new Strikes")
                     console_output_log_recording("Adding new Strikes")
@@ -1552,8 +1556,13 @@ def Trailing_SL():
                 Market_order_Sell(QE_PE_Hedge, Deployed_Size, PE_stk_Hedges, "Put", "Hedge Sell")
 
                 if max_call_credit_spreads >= max_credit_spreads or reversal_status == 1:
-                    print("Maximum Credit limit reached can't sell more strikes")
-                    console_output_log_recording("Maximum Credit limit reached can't sell more strikes")
+
+                    Active_strike_list_Put.remove(PE_stk)
+                    present_market_status["Active Put Strikes"] = Active_strike_list_Put
+                    writing_market_status(present_market_status)
+                
+                    print("Maximum Credit limit reached can't sell more strikes or market reverses")
+                    console_output_log_recording("Maximum Credit limit reached can't sell more strikes or market reverses")
 
                 elif max_call_credit_spreads < max_credit_spreads and reversal_status == 0:
                     print("Adding new Strikes")
@@ -2379,7 +2388,7 @@ def Initial_date_compute(Current_expiry_date):
 
 
 ############################################# INITIAL DATE SELECTION ####################################################
-
+ 
 #################################################### ALGO Code ##########################################################
 
 path_main = "D:/ashu/Finance/algo_trading/Zerodha_GUI/Kite_Zerodha-main/Kite_Zerodha-main/"
@@ -2541,14 +2550,22 @@ if Initial_day == 1 and Interrupt == 0:
     Trailing_SL()
 
 elif Initial_day == 0 and Interrupt == 0:
-    time_diff_seconds = sleep_time_compute(Start_time)
-    print(f"Waiting until {Start_time}...")
-    time.sleep(time_diff_seconds)
-    print("Starting Morning Code.....")
+    current_time = datetime.now()
+    Present_time = current_time.strftime("%H:%M:%S")
 
-    pause()
-    Morning_run()
-    Trailing_SL()
+    if Present_time<Start_time:
+        time_diff_seconds = sleep_time_compute(Start_time)
+        print(f"Waiting until {Start_time}...")
+        time.sleep(time_diff_seconds)
+        print("Starting Morning Code.....")
+
+        pause()
+        Morning_run()
+        Trailing_SL()
+    else:
+        print("Starting Morning Code.....")
+        Morning_run()
+        Trailing_SL()
 
 elif Interrupt == 1:
     print(f"Interrupt")

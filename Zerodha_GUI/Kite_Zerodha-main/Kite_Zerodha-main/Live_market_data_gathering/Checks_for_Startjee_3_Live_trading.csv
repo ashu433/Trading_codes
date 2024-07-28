@@ -1,0 +1,6 @@
+﻿Sno,Module,Checks,Meathedology,Status
+4,SL_Initiate_order,In Case of the error in the SL placement check if the SL price is updated according to the recommended price by the broker also check the other variables like Trailing SL is modified accordingly,1-Run the dummy try except statement in while loop to simulate this behaviour.                   2-Update the code when the error in the SL placement is seen for the SL_Initiate_order module.                3-Check the Trailing SL update in the running log file according to the reccomended price by the broker,
+5,Trailing_SL(),In case of the error in the SL placement check if the trending UP of the price is done or not ,Run the Whole code live trading code with 1 lot and check the running log and other log files at the end of day,
+6,Trailing_SL(),Check weather trailing of SL is done as expected or not,Run the Whole code live trading code with 1 lot and check the running log and other log files at the end of day,
+,,,,
+ ,,,,

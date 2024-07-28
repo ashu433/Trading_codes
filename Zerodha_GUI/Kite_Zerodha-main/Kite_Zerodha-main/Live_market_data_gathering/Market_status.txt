@@ -1,1 +1,1 @@
-{"Market Trend": "Trending Up", "Active Call Strikes": [23950], "Active Put Strikes": [23000, 23050], "Reversal status": 0, "Maximum call credit Spread": 1, "Maximum put credit Spread": 2, "Segment": "NIFTY", "Expiry Day": "20-Jun-24", "Month End": 0, "Initial Date": "14-Jun-2024"}
+{"Market Trend": "Trending Up", "Active Call Strikes": [], "Active Put Strikes": [24000, 24050, 24100, 24150], "Reversal status": 0, "Maximum call credit Spread": 1, "Maximum put credit Spread": 4, "Segment": "NIFTY", "Expiry Day": "01-Aug-24", "Month End": 0, "Initial Date": "26-Jul-2024"}

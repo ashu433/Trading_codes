@@ -22,7 +22,7 @@ print(kite.login_url())
 
 ############################# WRITING THE ACCESS TOKEN #############################################
 
-request_token="bU2ax2klOdrp7kOK2DxO8UlWYDQFthxO"
+request_token="mvIvWQWNctTWDglE7NJfKoAF3c7pq5bB"
 
 
 data = kite.generate_session(request_token, api_secret=data_dict["API_Secret_Key"])

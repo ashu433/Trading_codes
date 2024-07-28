@@ -1,0 +1,89 @@
+Date: 25-07-2024 Time: 10:24:00: Modifiying the Call Strike 24300 and Modifiying the Put Strike 24300.
+Date: 25-07-2024 Time: 10:24:16: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:16: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:17: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:17: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:18: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:18: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:19: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:19: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:20: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:20: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:21: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:21: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:23: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:23: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:24: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:24: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:25: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:25: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:26: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:26: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:27: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:27: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:28: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:28: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:29: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:29: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:30: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:30: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:31: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:31: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:32: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:32: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:33: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:33: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:34: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:34: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:36: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:36: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:37: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:37: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:38: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:38: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:39: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:39: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:40: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:40: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:41: Error: Order cannot be modified as it is being processed. Try later..
+Date: 25-07-2024 Time: 10:24:41: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:42: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:24:42: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:43: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:24:43: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:44: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:24:44: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:45: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:24:45: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:46: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:24:46: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:48: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:24:48: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:49: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:24:49: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:50: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:24:50: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:51: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:24:51: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:52: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:24:52: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:53: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:24:53: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:54: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:24:54: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:55: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:24:55: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:56: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:24:56: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:57: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:24:57: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:24:59: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:24:59: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:25:00: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:25:00: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:25:01: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:25:01: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:25:02: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:25:02: Retrying after 1 second for Modify SL order.
+Date: 25-07-2024 Time: 10:25:03: Error: Maximum allowed order modifications exceeded..
+Date: 25-07-2024 Time: 10:25:03: Retrying after 1 second for Modify SL order.

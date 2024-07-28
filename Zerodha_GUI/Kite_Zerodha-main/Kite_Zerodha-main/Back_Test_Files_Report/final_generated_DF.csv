@@ -1,5 +1,9 @@
 Date of Initiation,Date of Expiry,Market Sentiment,CE Strike 1,CE Strike 2,CE Strike 3,CE Strike 4,PE Strike 1,PE Strike 2,PE Strike 3,PE Strike 4,SL hit Time,SL hit Date,SL hit Week,Entry Time Call,Entry Time Put,Entry Time Date,Entry Time Week,Profit and Loss,Margin Used,Profit Loss percent,Overall Credit Spread Call,Overall Credit Spread Put,Overall Credit Spread Used,Reversal Status
-17-Apr-2020,23-Apr-2020,,9850.0,,,,8750.0,,,,,,,09:19,09:19,2020-04-17,Friday,,,,,,,
-17-Apr-2020,23-Apr-2020,,,,,,-8750.0,,,,10:33,2020-04-17,Friday,,,,,,,,,,,
-17-Apr-2020,23-Apr-2020,,,9800.0,,,,8500.0,,,,,,10:34,10:34,2020-04-17,Friday,,,,,,,
-17-Apr-2020,23-Apr-2020,Trending Down,,,,,,,,,,,,,,,,28800.0,92000.0,31.30434782608696,2.0,1.0,3.0,0.0
+26-Jul-2024,01-Aug-2024,,24850.0,,,,24000.0,,,,,,,09:19,09:19,2024-07-26,Friday,,,,,,,
+26-Jul-2024,01-Aug-2024,,-24850.0,,,,,,,,10:07,2024-07-26,Friday,,,,,,,,,,,
+26-Jul-2024,01-Aug-2024,,,25050.0,,,,24050.0,,,,,,10:09,10:09,2024-07-26,Friday,,,,,,,
+26-Jul-2024,01-Aug-2024,,,-25050.0,,,,,,,12:32,2024-07-26,Friday,,,,,,,,,,,
+26-Jul-2024,01-Aug-2024,,,,25250.0,,,,24100.0,,,,,12:34,12:34,2024-07-26,Friday,,,,,,,
+26-Jul-2024,01-Aug-2024,,,,-25250.0,,,,,,13:14,2024-07-26,Friday,,,,,,,,,,,
+26-Jul-2024,01-Aug-2024,Trending Up,,,,,,,,24150.0,,,,,13:14,,,-57.49999999999993,92000.0,-0.062499999999999924,1.0,4.0,5.0,0.0
+,,,,,,,,,,,,,,,,,,,,,,,,
